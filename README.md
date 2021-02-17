@@ -1,4 +1,4 @@
-# Asset Tracker Example for Azure [![npm version](https://img.shields.io/npm/v/@nordicsemiconductor/asset-tracker-cloud-azure.svg)](https://www.npmjs.com/package/@nordicsemiconductor/asset-tracker-cloud-azure)
+# Asset Tracker Example for Azure
 
 [![GitHub Actions](https://github.com/NordicSemiconductor/asset-tracker-cloud-azure-js/workflows/Test%20and%20Release/badge.svg)](https://github.com/NordicSemiconductor/asset-tracker-cloud-azure-js/actions)
 [![Known Vulnerabilities](https://snyk.io/test/github/NordicSemiconductor/asset-tracker-cloud-azure-js/badge.svg?targetFile=package.json)](https://snyk.io/test/github/NordicSemiconductor/asset-tracker-cloud-azure-js?targetFile=package.json)
