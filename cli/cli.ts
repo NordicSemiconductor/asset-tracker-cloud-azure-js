@@ -93,7 +93,7 @@ const getCurrentCreds = async () => {
 	return currentCreds
 }
 
-const bifravstCLI = async () => {
+const main = async () => {
 	const certsDir = path.resolve(process.cwd(), 'certificates')
 
 	const resourceGroup = resourceGroupName()
@@ -120,7 +120,7 @@ const bifravstCLI = async () => {
 				new StorageManagementClient(creds, creds.tokenInfo.subscription),
 		)
 
-	program.description('Bifravst Command Line Interface')
+	program.description('Cat Tracker Command Line Interface')
 
 	const commands = [
 		createCARootCommand({
@@ -199,7 +199,7 @@ const bifravstCLI = async () => {
 	}
 }
 
-bifravstCLI().catch((err) => {
+main().catch((err) => {
 	console.error(chalk.red(err))
 	process.exit(1)
 })

@@ -54,7 +54,7 @@ const updateDevice: AzureFunction = async (
 			}
 
 			await registry.updateTwin(
-				req.params.id,
+				req.params.id as string,
 				{
 					tags: rest,
 					properties: {

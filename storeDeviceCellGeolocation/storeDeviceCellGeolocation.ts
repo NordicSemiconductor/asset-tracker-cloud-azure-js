@@ -9,7 +9,7 @@ import {
 	TwinChangeEvent,
 } from '../lib/iotMessages'
 import { batchToDoc } from '../lib/batchToDoc'
-import { cellId } from '@bifravst/cell-geolocation-helpers'
+import { cellId } from '@nordicsemiconductor/cell-geolocation-helpers'
 import { exponential } from 'backoff'
 
 const { connectionString } = fromEnv({

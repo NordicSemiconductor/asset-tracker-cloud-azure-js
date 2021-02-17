@@ -1,5 +1,5 @@
 import { CommandDefinition } from './CommandDefinition'
-import { objectToEnv } from '@bifravst/object-to-env'
+import { objectToEnv } from '@nordicsemiconductor/object-to-env'
 import { fromEnv } from '../../lib/fromEnv'
 import { WebSiteManagementClient } from '@azure/arm-appservice'
 import { StorageManagementClient } from '@azure/arm-storage'

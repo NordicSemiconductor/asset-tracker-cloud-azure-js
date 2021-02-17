@@ -32,7 +32,7 @@ export const generateCAIntermediate = async (args: {
 		fs.readFile(caRootFiles.cert, 'utf-8'),
 	])
 
-	const intermediateName = `Bifravst Intermediate CA (${id})`
+	const intermediateName = `Cat Tracker Intermediate CA (${id})`
 
 	const intermediateCert = await new Promise<CertificateCreationResult>(
 		(resolve, reject) =>
@@ -46,7 +46,7 @@ export const generateCAIntermediate = async (args: {
 					serviceCertificate: rootCert,
 				},
 				(err, cert) => {
-					if (err) return reject(err)
+					if (err !== undefined) return reject(err)
 					resolve(cert)
 				},
 			),

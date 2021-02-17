@@ -11,18 +11,29 @@ on:
     - cron: "0 0 * * *"
 
 env:
-  DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+  CR_PAT: ${{ secrets.CR_PAT }}
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@master
-      - name: Build image
+
+      - name: Determine GitHub Container Registry repo name
         run: |
-          docker build -t bifravst/azure-dev .
-      - name: Publish image
-        run: |
-          docker login -u bifravst -p $DOCKER_PASSWORD
-          docker images
-          docker push bifravst/azure-dev
+          DOCKER_REPO_NAME=`echo ${{ github.event.repository.full_name }} | tr '[:upper:]' '[:lower:]'`
+          echo "DOCKER_REPO_NAME=${DOCKER_REPO_NAME}" >> $GITHUB_ENV
+          echo ${DOCKER_REPO_NAME} > docker_repo_name.conf
+
+      - name: Sign in to the GitHub Container Registry
+        run: echo ${CR_PAT} | docker login ghcr.io -u USERNAME --password-stdin
+
+      - run: docker build -t asset-tracker-cloud-azure .
+
+      - run:
+          docker tag asset-tracker-cloud-azure ghcr.io/${{ env.DOCKER_REPO_NAME
+          }}-builder:saga
+
+      - run: docker images
+
+      - run: docker push ghcr.io/${{ env.DOCKER_REPO_NAME }}-builder:saga

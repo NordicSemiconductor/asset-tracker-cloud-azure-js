@@ -1,6 +1,6 @@
 import * as chalk from 'chalk'
 import { CommandDefinition } from './CommandDefinition'
-import { randomWords } from '@bifravst/random-words'
+import { randomWords } from '@nordicsemiconductor/random-words'
 import { generateDeviceCertificate } from '../iot/generateDeviceCertificate'
 import { log, debug } from '../logging'
 import { list as listIntermediateCerts } from '../iot/intermediateRegistry'

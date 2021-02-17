@@ -3,7 +3,7 @@ import {
 	StepRunnerFunc,
 	InterpolatedStep,
 	regexMatcher,
-} from '@bifravst/e2e-bdd-test-runner'
+} from '@nordicsemiconductor/e2e-bdd-test-runner'
 import { generateDeviceCertificate } from '../../cli/iot/generateDeviceCertificate'
 import { connectDevice } from '../../cli/iot/connectDevice'
 import { IotDpsClient } from '@azure/arm-deviceprovisioningservices'

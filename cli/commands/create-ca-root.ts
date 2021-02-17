@@ -19,7 +19,7 @@ export const createCARootCommand = ({
 }): CommandDefinition => ({
 	command: 'create-ca-root',
 	action: async () => {
-		const certificateName = `bifravst-root-${v4()}`
+		const certificateName = `cat-tracker-root-${v4()}`
 
 		const root = await generateCARoot({
 			certsDir,

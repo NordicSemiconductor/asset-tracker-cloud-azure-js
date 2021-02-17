@@ -7,7 +7,7 @@ import { CosmosClient } from '@azure/cosmos'
 import {
 	cellId,
 	cellFromGeolocations,
-} from '@bifravst/cell-geolocation-helpers'
+} from '@nordicsemiconductor/cell-geolocation-helpers'
 import { isSome } from 'fp-ts/lib/Option'
 
 const { connectionString } = fromEnv({
@@ -35,7 +35,11 @@ const geolocateCell: AzureFunction = async (
 ): Promise<void> => {
 	log(context)({ req })
 
-	const { cell, area, mccmnc } = req.query
+	const { cell, area, mccmnc } = req.query as {
+		cell: string
+		area: string
+		mccmnc: string
+	}
 	const c = cellId({
 		cell: parseInt(cell, 10),
 		area: parseInt(area, 10),

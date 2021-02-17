@@ -1,5 +1,5 @@
 import { CommandDefinition } from './CommandDefinition'
-import { objectToEnv } from '@bifravst/object-to-env'
+import { objectToEnv } from '@nordicsemiconductor/object-to-env'
 import { StorageManagementClient } from '@azure/arm-storage'
 
 export const deviceUiConfigCommand = ({

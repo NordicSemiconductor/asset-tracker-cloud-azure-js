@@ -4,7 +4,7 @@ import { log } from '../lib/log'
 import { fromEnv } from '../lib/fromEnv'
 import { parseConnectionString } from '../lib/parseConnectionString'
 import { CosmosClient } from '@azure/cosmos'
-import { cellId } from '@bifravst/cell-geolocation-helpers'
+import { cellId } from '@nordicsemiconductor/cell-geolocation-helpers'
 import { resolveFromAPI } from './resolveFromAPI'
 import { isLeft } from 'fp-ts/lib/Either'
 
@@ -57,7 +57,11 @@ const geolocateCellFromUnwiredLabs: AzureFunction = async (
 		return
 	}
 
-	const { cell: c, area, mccmnc } = req.query
+	const { cell: c, area, mccmnc } = req.query as {
+		cell: string
+		area: string
+		mccmnc: string
+	}
 	const cell = {
 		cell: parseInt(c, 10),
 		area: parseInt(area, 10),

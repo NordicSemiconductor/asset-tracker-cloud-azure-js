@@ -48,7 +48,7 @@ export const getUserAccessToken = async ({
 	const apiScope = `https://${b2cTenant}.onmicrosoft.com/api`
 	const scopes = [
 		`${apiScope}/user_impersonation`,
-		`${apiScope}/bifravst.admin`,
+		`${apiScope}/cat-tracker.admin`,
 	]
 
 	const res = await fetch(

@@ -10,6 +10,7 @@ on:
 
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  # FIXME: remove bifravst reference before stable release
   APP_NAME: bifravst
   B2C_TENANT: bifravstciusers
   RESOURCE_GROUP_NAME: bifravst

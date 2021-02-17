@@ -9,6 +9,7 @@ env:
   AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
   APP_REG_CLIENT_ID: ${{ secrets.APP_REG_CLIENT_ID }}
   LOCATION: northeurope
+  # FIXME: remove bifravst reference before stable release
   RESOURCE_GROUP_NAME: bifravstprod
   APP_NAME: bifravstprod
   B2C_TENANT: bifravstprod
@@ -74,7 +75,7 @@ jobs:
         run: |
           echo Hosting at ${{ env.REACT_APP_WEB_APP_URL }}
           export EXTEND_ESLINT=true
-          git clone https://github.com/bifravst/app
+          git clone https://github.com/NordicSemiconductor/app
           cd app
           APP_TAG=`git tag --points-at HEAD | tr -d '\n'`
           APP_SHA=`git log -n 1 --pretty=format:"%H" | tr -d '\n'`

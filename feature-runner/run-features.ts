@@ -4,7 +4,7 @@ import {
 	randomStepRunners,
 	restStepRunners,
 	storageStepRunners,
-} from '@bifravst/e2e-bdd-test-runner'
+} from '@nordicsemiconductor/e2e-bdd-test-runner'
 import * as program from 'commander'
 import * as chalk from 'chalk'
 import * as path from 'path'
@@ -18,7 +18,7 @@ import { list } from '../cli/iot/intermediateRegistry'
 
 let ran = false
 
-type BifravstWorld = { apiEndpoint: string }
+type World = { apiEndpoint: string }
 
 program
 	.arguments('<featureDir>')
@@ -101,7 +101,7 @@ program
 			)
 			console.log()
 
-			const world: BifravstWorld = {
+			const world: World = {
 				apiEndpoint: `${apiEndpoint}api/`,
 			} as const
 			console.log(chalk.yellow.bold('World:'))
@@ -116,7 +116,7 @@ program
 				console.log()
 			}
 
-			const runner = new FeatureRunner<BifravstWorld>(world, {
+			const runner = new FeatureRunner<World>(world, {
 				dir: featureDir,
 				reporters: [
 					new ConsoleReporter({

@@ -2,7 +2,10 @@ import { CommandDefinition } from './CommandDefinition'
 import * as chalk from 'chalk'
 import { IotDpsClient } from '@azure/arm-deviceprovisioningservices'
 import { v4 } from 'uuid'
-import { uiServer, WebSocketConnection } from '@bifravst/device-ui-server'
+import {
+	uiServer,
+	WebSocketConnection,
+} from '@nordicsemiconductor/asset-tracker-cloud-device-ui-server'
 import { deviceTopics } from '../iot/deviceTopics'
 import { defaultConfig } from '../iot/defaultConfig'
 import { fromEnv } from '../../lib/fromEnv'
