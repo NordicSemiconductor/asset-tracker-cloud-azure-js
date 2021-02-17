@@ -134,7 +134,7 @@ program
 						generators: {
 							email: randomEmail,
 							password: randomPassword,
-							uuid: v4,
+							UUID: v4,
 						},
 					}),
 				)

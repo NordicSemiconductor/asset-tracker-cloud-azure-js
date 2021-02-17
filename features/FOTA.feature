@@ -29,12 +29,14 @@ Feature: Device Firmware Upgrade over the air
   Scenario: Configure the firmware job on the device
 
     Given the Content-Type header is "application/json; charset=utf-8"
+    And I have a random UUID in "fotaJobId"
     When I PATCH /device/{catId} with this JSON
       """
       {
         "firmware": {
           "fwVersion": "1.0.1",
-          "fwPackageURI": "{fwPackageURI}"
+          "fwPackageURI": "{fwPackageURI}",
+          "jobId": "{fotaJobId}"
         }
       }
       """
@@ -56,7 +58,8 @@ Feature: Device Firmware Upgrade over the air
             "host": "{fwLocationHost}",
             "path": "{fwLocationPath}"
           },
-				  "fwFragmentSize": 1800
+				  "fwFragmentSize": 1800,
+          "jobId": "{fotaJobId}"
         }
       }
       """

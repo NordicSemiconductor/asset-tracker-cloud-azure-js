@@ -5,6 +5,7 @@ import { ErrorInfo, ErrorType, toStatusCode } from '../lib/ErrorInfo'
 import { log } from '../lib/log'
 import { fromEnv } from '../lib/fromEnv'
 import * as url from 'url'
+import { v4 } from 'uuid'
 
 const { connectionString } = fromEnv({
 	connectionString: 'IOT_HUB_CONNECTION_STRING',
@@ -51,6 +52,7 @@ const updateDevice: AzureFunction = async (
 				}
 				// See https://developer.nordicsemi.com/nRF_Connect_SDK/doc/latest/nrf/include/net/azure_fota.html
 				firmware.fwFragmentSize = firmware.fwFragmentSize ?? 1800
+				firmware.jobId = firmware.jobId ?? v4()
 			}
 
 			await registry.updateTwin(
