@@ -87,7 +87,9 @@ jobs:
           APP_TAG=`git tag --points-at HEAD | tr -d '\n'`
           APP_SHA=`git log -n 1 --pretty=format:"%H" | tr -d '\n'`
           export REACT_APP_VERSION=${APP_TAG:-${APP_SHA}}
-          npm ci
+          cat package.json | jq --arg homepage "${{ env.REACT_APP_WEB_APP_URL }}" '.homepage = $homepage' > package.new.json
+          mv package.new.json package.json
+          npm ci --no-audit
           npm run build
       - name: Publish app
         run: |
