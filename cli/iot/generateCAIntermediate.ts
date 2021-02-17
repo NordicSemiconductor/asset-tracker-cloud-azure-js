@@ -5,6 +5,7 @@ import {
 } from './caFileLocations'
 import { createCertificate, CertificateCreationResult } from 'pem'
 import { caCertConfig } from './pemConfig'
+import { certificateName } from './certificateName'
 
 /**
  * Generates a CA intermediate certificate
@@ -32,7 +33,7 @@ export const generateCAIntermediate = async (args: {
 		fs.readFile(caRootFiles.cert, 'utf-8'),
 	])
 
-	const intermediateName = `Cat Tracker Intermediate CA (${id})`
+	const intermediateName = certificateName(`Cat Tracker Intermediate CA ${id}`)
 
 	const intermediateCert = await new Promise<CertificateCreationResult>(
 		(resolve, reject) =>

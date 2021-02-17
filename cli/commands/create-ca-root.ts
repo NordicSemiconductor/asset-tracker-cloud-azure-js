@@ -5,6 +5,7 @@ import { generateProofOfPosession } from '../iot/generateProofOfPosession'
 import { v4 } from 'uuid'
 import { generateCARoot } from '../iot/generateCARoot'
 import { log, debug } from '../logging'
+import { certificateName as cn } from '../iot/certificateName'
 
 export const createCARootCommand = ({
 	certsDir,
@@ -19,9 +20,7 @@ export const createCARootCommand = ({
 }): CommandDefinition => ({
 	command: 'create-ca-root',
 	action: async () => {
-		const certificateName = `cat-tracker-root-${v4()}`
-			.substring(0, 64)
-			.replace(/-$/, '')
+		const certificateName = cn(`cat-tracker-root-${v4()}`)
 
 		const root = await generateCARoot({
 			certsDir,
