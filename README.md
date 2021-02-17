@@ -12,5 +12,8 @@
 A reference implementation of a serverless backend for an IoT product developed
 in [TypeScript](https://www.typescriptlang.org/).
 
+> :construction: **The Asset Tracker Example for Azure
+> [is incomplete](https://github.com/NordicSemiconductor/asset-tracker-cloud-docs/discussions/12)!**
+
 > :information_source:
 > [Read the complete Asset Tracker Cloud Example documentation](https://nordicsemiconductor.github.io/asset-tracker-cloud-docs/).
