@@ -9,7 +9,9 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
 
-    environment: production
+    environment:
+      name: production
+      url: ${{ steps.web-app-deploy.outputs.web_app_url }}
 
     env:
       APP_REG_CLIENT_ID: ${{ secrets.APP_REG_CLIENT_ID }}
@@ -71,13 +73,15 @@ jobs:
           --account-name ${APP_NAME}app --static-website --404-document
           index.html --index-document index.html
       - name: Determine Web App settings
-        run: |
-          node cli react-config >> $GITHUB_ENV
+        run: node cli react-config >> $GITHUB_ENV
       - name: Build app
+        id: web-app-deploy
         run: |
           echo Hosting at ${{ env.REACT_APP_WEB_APP_URL }}
+          echo "::set-output name=web_app_url::${{ env.REACT_APP_WEB_APP_URL }}"
           export EXTEND_ESLINT=true
-          git clone https://github.com/NordicSemiconductor/app
+          OWNER=`echo $GITHUB_REPOSITORY | awk '{split($0,a,"/"); print a[1]}' | tr -d '\n'`
+          git clone https://github.com/$OWNER/asset-tracker-cloud-app-js app
           cd app
           APP_TAG=`git tag --points-at HEAD | tr -d '\n'`
           APP_SHA=`git log -n 1 --pretty=format:"%H" | tr -d '\n'`
@@ -88,11 +92,3 @@ jobs:
         run: |
           export APP_STORAGE_CONNECTION_STRING=`az storage account show-connection-string --name ${APP_NAME}app --query 'connectionString'` 
           az storage blob upload-batch --connection-string ${APP_STORAGE_CONNECTION_STRING} --account-name ${APP_NAME}app -s ./app/build -d '$web'
-      - name: Success
-        if: success()
-        uses: zattoo/deploy-status@v1
-        with:
-          token: ${{ github.token }}
-          environment: production
-          environment_url: ${{ env.REACT_APP_WEB_APP_URL }}
-          state: success
