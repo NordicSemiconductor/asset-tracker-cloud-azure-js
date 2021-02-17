@@ -20,6 +20,8 @@ export const createCARootCommand = ({
 	command: 'create-ca-root',
 	action: async () => {
 		const certificateName = `cat-tracker-root-${v4()}`
+			.substring(0, 64)
+			.replace(/-$/, '')
 
 		const root = await generateCARoot({
 			certsDir,
