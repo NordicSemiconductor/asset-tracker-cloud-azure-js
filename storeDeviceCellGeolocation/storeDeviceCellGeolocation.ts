@@ -9,7 +9,10 @@ import {
 	TwinChangeEvent,
 } from '../lib/iotMessages'
 import { batchToDoc } from '../lib/batchToDoc'
-import { cellId } from '@nordicsemiconductor/cell-geolocation-helpers'
+import {
+	cellId,
+	NetworkMode,
+} from '@nordicsemiconductor/cell-geolocation-helpers'
 import { exponential } from 'backoff'
 
 const { connectionString } = fromEnv({
@@ -98,7 +101,12 @@ const queryCellGeolocation: AzureFunction = async (
 							}
 							const { cell, mccmnc, area } = res[0]
 							resolve({
-								cellId: cellId({ cell, mccmnc, area }),
+								cellId: cellId({
+									nw: NetworkMode.LTEm, // FIXME: remove harcoded LTE-m network mode,
+									cell,
+									mccmnc,
+									area,
+								}),
 								cell,
 								mccmnc,
 								area,

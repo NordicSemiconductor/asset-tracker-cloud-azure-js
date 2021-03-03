@@ -4,7 +4,10 @@ import { log } from '../lib/log'
 import { fromEnv } from '../lib/fromEnv'
 import { parseConnectionString } from '../lib/parseConnectionString'
 import { CosmosClient } from '@azure/cosmos'
-import { cellId } from '@nordicsemiconductor/cell-geolocation-helpers'
+import {
+	cellId,
+	NetworkMode,
+} from '@nordicsemiconductor/cell-geolocation-helpers'
 import { resolveFromAPI } from './resolveFromAPI'
 import { isLeft } from 'fp-ts/lib/Either'
 
@@ -63,6 +66,7 @@ const geolocateCellFromUnwiredLabs: AzureFunction = async (
 		mccmnc: string
 	}
 	const cell = {
+		nw: NetworkMode.LTEm, // FIXME: remove harcoded LTE-m network mode
 		cell: parseInt(c, 10),
 		area: parseInt(area, 10),
 		mccmnc: parseInt(mccmnc, 10),

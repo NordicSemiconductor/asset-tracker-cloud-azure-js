@@ -7,6 +7,7 @@ import { CosmosClient } from '@azure/cosmos'
 import {
 	cellId,
 	cellFromGeolocations,
+	NetworkMode,
 } from '@nordicsemiconductor/cell-geolocation-helpers'
 import { isSome } from 'fp-ts/lib/Option'
 
@@ -41,6 +42,7 @@ const geolocateCell: AzureFunction = async (
 		mccmnc: string
 	}
 	const c = cellId({
+		nw: NetworkMode.LTEm, // FIXME: remove harcoded LTE-m network mode
 		cell: parseInt(cell, 10),
 		area: parseInt(area, 10),
 		mccmnc: parseInt(mccmnc, 10),
