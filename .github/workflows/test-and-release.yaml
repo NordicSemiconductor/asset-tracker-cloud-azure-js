@@ -42,7 +42,7 @@ jobs:
           sudo apt-get install azure-functions-core-tools-3
       - uses: actions/setup-node@v2
         with:
-          node-version: "14.x"
+          node-version: "15.x"
       - name: Keep npm cache around to speed up installs
         uses: actions/cache@v2
         with:
