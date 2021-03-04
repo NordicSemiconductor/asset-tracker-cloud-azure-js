@@ -1,4 +1,4 @@
-# Asset Tracker Example for Azure
+# nRF Asset Tracker for Azure
 
 [![GitHub Actions](https://github.com/NordicSemiconductor/asset-tracker-cloud-azure-js/workflows/Test%20and%20Release/badge.svg)](https://github.com/NordicSemiconductor/asset-tracker-cloud-azure-js/actions)
 [![Known Vulnerabilities](https://snyk.io/test/github/NordicSemiconductor/asset-tracker-cloud-azure-js/badge.svg?targetFile=package.json)](https://snyk.io/test/github/NordicSemiconductor/asset-tracker-cloud-azure-js?targetFile=package.json)
@@ -12,8 +12,8 @@
 A reference implementation of a serverless backend for an IoT product developed
 in [TypeScript](https://www.typescriptlang.org/).
 
-> :construction: **The Asset Tracker Example for Azure
+> :construction: **The nRF Asset Tracker for Azure
 > [is incomplete](https://github.com/NordicSemiconductor/asset-tracker-cloud-docs/discussions/12)!**
 
 > :information_source:
-> [Read the complete Asset Tracker Cloud Example documentation](https://nordicsemiconductor.github.io/asset-tracker-cloud-docs/).
+> [Read the complete nRF Asset Tracker documentation](https://nordicsemiconductor.github.io/asset-tracker-cloud-docs/).
