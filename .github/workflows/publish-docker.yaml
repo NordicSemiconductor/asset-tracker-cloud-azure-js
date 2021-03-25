@@ -21,7 +21,7 @@ jobs:
 
       - name: Determine GitHub Container Registry repo name
         run: |
-          DOCKER_REPO_NAME=`echo ${{ GITHUB_REPOSITORY }} | tr '[:upper:]' '[:lower:]'`
+          DOCKER_REPO_NAME=`echo ${GITHUB_REPOSITORY} | tr '[:upper:]' '[:lower:]'`
           echo "DOCKER_REPO_NAME=${DOCKER_REPO_NAME}" >> $GITHUB_ENV
 
       - name: Sign in to the GitHub Container Registry
