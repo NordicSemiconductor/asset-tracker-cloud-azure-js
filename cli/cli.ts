@@ -8,7 +8,6 @@ import { AzureCliCredentials } from '@azure/ms-rest-nodeauth'
 import { WebSiteManagementClient } from '@azure/arm-appservice'
 import { StorageManagementClient } from '@azure/arm-storage'
 import { createDeviceCertCommand } from './commands/create-device-cert'
-import { connectCommand } from './commands/connect'
 import { proofCARootPossessionCommand } from './commands/proof-ca-possession'
 import { createCAIntermediateCommand } from './commands/create-ca-intermediate'
 import {
@@ -141,11 +140,6 @@ const main = async () => {
 		}),
 		createDeviceCertCommand({
 			certsDir,
-		}),
-		connectCommand({
-			iotDpsClient: getIotDpsClient,
-			certsDir,
-			version,
 			resourceGroup,
 		}),
 		reactConfigCommand({
@@ -192,6 +186,7 @@ const main = async () => {
 	})
 
 	program.parse(process.argv)
+	program.version(version)
 
 	if (!ran) {
 		program.outputHelp(chalk.yellow)

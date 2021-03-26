@@ -4,11 +4,14 @@ import { randomWords } from '@nordicsemiconductor/random-words'
 import { generateDeviceCertificate } from '../iot/generateDeviceCertificate'
 import { log, debug } from '../logging'
 import { list as listIntermediateCerts } from '../iot/intermediateRegistry'
+import { deviceFileLocations } from '../iot/deviceFileLocations'
 
 export const createDeviceCertCommand = ({
 	certsDir,
+	resourceGroup,
 }: {
 	certsDir: string
+	resourceGroup: string
 }): CommandDefinition => ({
 	command: 'create-device-cert',
 	options: [
@@ -47,15 +50,20 @@ export const createDeviceCertCommand = ({
 			log,
 			debug,
 			intermediateCertId,
+			resourceGroup,
 		})
 		console.log(
 			chalk.magenta(`Certificate for device ${chalk.yellow(id)} generated.`),
 		)
 
+		const certJSON = deviceFileLocations({ certsDir, deviceId: id }).json
+		console.log()
 		console.log(
 			chalk.green('You can now connect to the broker using'),
-			chalk.greenBright(`node cli connect`),
-			chalk.blueBright(id),
+			chalk.greenBright(
+				'npm exec -- @nordicsemiconductor/asset-tracker-cloud-device-simulator-azure',
+			),
+			chalk.blueBright(certJSON),
 		)
 
 		console.log()

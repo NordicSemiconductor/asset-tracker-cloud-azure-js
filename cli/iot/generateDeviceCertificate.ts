@@ -18,10 +18,12 @@ export const generateDeviceCertificate = async ({
 	debug,
 	deviceId,
 	intermediateCertId,
+	resourceGroup,
 }: {
 	certsDir: string
 	deviceId: string
 	intermediateCertId: string
+	resourceGroup: string
 	log?: (...message: any[]) => void
 	debug?: (...message: any[]) => void
 }): Promise<{ deviceId: string }> => {
@@ -102,6 +104,24 @@ export const generateDeviceCertificate = async ({
 			.writeFile(deviceFiles.intermediateCertId, intermediateCertId, 'utf-8')
 			.then(() => {
 				debug?.(`${deviceFiles.intermediateCertId} written`)
+			}),
+		fs
+			.writeFile(
+				deviceFiles.json,
+				JSON.stringify(
+					{
+						resourceGroup,
+						privateKey: deviceFiles.privateKey,
+						clientCert: deviceFiles.certWithChain,
+						clientId: deviceId,
+					},
+					null,
+					2,
+				),
+				'utf-8',
+			)
+			.then(() => {
+				debug?.(`${deviceFiles.json} written`)
 			}),
 	])
 

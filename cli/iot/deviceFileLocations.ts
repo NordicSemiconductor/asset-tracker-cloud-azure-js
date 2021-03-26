@@ -6,7 +6,14 @@ export const deviceFileLocations = ({
 }: {
 	certsDir: string
 	deviceId: string
-}) => ({
+}): {
+	privateKey: string
+	cert: string
+	certWithChain: string
+	registration: string
+	intermediateCertId: string
+	json: string
+} => ({
 	privateKey: path.resolve(certsDir, `device-${deviceId}.key`),
 	cert: path.resolve(certsDir, `device-${deviceId}.pem`),
 	certWithChain: path.resolve(certsDir, `device-${deviceId}.bundle.pem`),
@@ -15,4 +22,5 @@ export const deviceFileLocations = ({
 		certsDir,
 		`device-${deviceId}.intermediateCertId`,
 	),
+	json: path.resolve(certsDir, `device-${deviceId}.json`),
 })

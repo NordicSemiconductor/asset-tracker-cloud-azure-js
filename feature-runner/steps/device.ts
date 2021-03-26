@@ -37,6 +37,7 @@ export const deviceStepRunners = ({
 				deviceId,
 				certsDir,
 				intermediateCertId,
+				resourceGroup,
 			})
 
 			return deviceId
