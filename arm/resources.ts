@@ -1,5 +1,5 @@
 export const resourceGroupName = (): string =>
-	process.env.RESOURCE_GROUP_NAME ?? 'cat-tracker'
+	process.env.APP_NAME ?? 'nrfassettracker'
 
 export const deploymentName = resourceGroupName
 

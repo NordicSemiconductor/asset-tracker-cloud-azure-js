@@ -13,7 +13,6 @@ env:
   # FIXME: remove bifravst reference before stable release
   APP_NAME: bifravst
   B2C_TENANT: bifravstciusers
-  RESOURCE_GROUP_NAME: bifravst
   LOCATION: northeurope
   APP_REG_CLIENT_ID: ${{ secrets.E2E_APP_REG_CLIENT_ID }}
   B2C_CLIENT_SECRET: ${{ secrets.E2E_B2C_CLIENT_SECRET }}
@@ -61,7 +60,7 @@ jobs:
           max_attempts: 3
           command: |
             az deployment group create \
-              --resource-group ${RESOURCE_GROUP_NAME} \
+              --resource-group ${APP_NAME} \
               --mode Complete \
               --name test-${{ github.sha }} \
               --template-file azuredeploy.json \
@@ -80,7 +79,7 @@ jobs:
           command: func azure functionapp publish ${APP_NAME}api --typescript
       - name: Determine API endpoint
         run: |
-          API_ENDPOINT=https://`az functionapp show -g ${RESOURCE_GROUP_NAME} -n ${APP_NAME}api --query 'defaultHostName' --output tsv | tr -d '\n'`/
+          API_ENDPOINT=https://`az functionapp show -g ${APP_NAME} -n ${APP_NAME}api --query 'defaultHostName' --output tsv | tr -d '\n'`/
           echo "API_ENDPOINT=${API_ENDPOINT}" >> $GITHUB_ENV
       - name: Cache certificates
         uses: actions/cache@v2

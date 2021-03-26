@@ -35,7 +35,7 @@ export const createCAIntermediateCommand = ({
 			dpsConnString,
 		)
 
-		const enrollmentGroupId = `cat-tracker-${id}`
+		const enrollmentGroupId = `nrfassettracker-${id}`
 
 		// FIXME: Remove undefined, once https://github.com/Azure/azure-iot-sdk-node/pull/663 is released
 		await dpsClient.createOrUpdateEnrollmentGroup({

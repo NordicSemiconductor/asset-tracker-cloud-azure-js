@@ -53,7 +53,7 @@ program
 				clientId: 'APP_REG_CLIENT_ID',
 				clientSecret: 'B2C_CLIENT_SECRET',
 				b2cTenantId: 'B2C_TENANT_ID',
-				resourceGroup: 'RESOURCE_GROUP_NAME',
+				resourceGroup: 'APP_NAME',
 				apiEndpoint: 'API_ENDPOINT',
 			})(process.env)
 
