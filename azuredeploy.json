@@ -41,9 +41,9 @@
     },
     "iotHubSkuName": {
       "type": "string",
-      "defaultValue": "F1",
+      "defaultValue": "S1",
       "metadata": {
-        "description": "Specifies the IotHub SKU."
+        "description": "Specifies the IotHub SKU. At minimum S1 is needed for IoT Device Update."
       }
     },
     "capacityUnits": {
