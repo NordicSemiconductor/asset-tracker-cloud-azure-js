@@ -21,12 +21,11 @@ jobs:
       APP_NAME: nrfassettrackerci
       B2C_TENANT: nrfassettrackerciusers
       LOCATION: northeurope
-      APP_REG_CLIENT_ID: ${{ secrets.E2E_APP_REG_CLIENT_ID }}
-      B2C_CLIENT_SECRET: ${{ secrets.E2E_B2C_CLIENT_SECRET }}
-      B2C_TENANT_ID: ${{ secrets.E2E_B2C_TENANT_ID }}
-      E2E_AZURE_CREDENTIALS: ${{ secrets.E2E_AZURE_CREDENTIALS }}
+      APP_REG_CLIENT_ID: ${{ secrets.APP_REG_CLIENT_ID }}
+      B2C_CLIENT_SECRET: ${{ secrets.B2C_CLIENT_SECRET }}
+      B2C_TENANT_ID: ${{ secrets.B2C_TENANT_ID }}
 
-    if: env.E2E_AZURE_CREDENTIALS != ''
+    if: ${{ env.ENABLE_E2E_TESTS == '1' }}
 
     steps:
       - uses: actions/checkout@v2
@@ -35,7 +34,7 @@ jobs:
       - name: Login to Azure
         uses: azure/login@v1
         with:
-          creds: ${{ secrets.E2E_AZURE_CREDENTIALS }}
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
       - run: az account list --output table
       - name: Install Azures Functions CLI
         run: |
