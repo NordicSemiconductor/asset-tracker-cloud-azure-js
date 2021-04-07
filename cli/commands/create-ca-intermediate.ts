@@ -59,7 +59,9 @@ export const createCAIntermediateCommand = ({
 				migrateDeviceData: true,
 				updateHubAssignment: true,
 			},
-			initialTwin: undefined as any,
+			initialTwin: {
+				tags: { ADUGroup: 'all' }, // Register support for Azure Device Update
+			} as any,
 			iotHubHostName: undefined as any,
 			iotHubs: undefined as any,
 			etag: undefined as any,
