@@ -19,8 +19,7 @@ jobs:
       LOCATION: northeurope
       APP_NAME: nrfassettrackerprod
       B2C_TENANT: nrfassettrackerprod
-
-    if: ${{ env.CD == '1' }}
+      AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
 
     steps:
       - uses: actions/checkout@v2
@@ -32,8 +31,10 @@ jobs:
           echo Version: ${VERSION}
           echo "VERSION=${VERSION}" >> $GITHUB_ENV
       - name: Install Azure CLI
+        if: env.AZURE_CREDENTIALS != ''
         run: curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
       - name: Install Azures Functions CLI
+        if: env.AZURE_CREDENTIALS != ''
         run: |
           curl https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > microsoft.gpg
           sudo mv microsoft.gpg /etc/apt/trusted.gpg.d/microsoft.gpg
@@ -41,10 +42,13 @@ jobs:
           sudo apt-get update
           sudo apt-get install azure-functions-core-tools-3
       - name: Login to Azure
+        if: env.AZURE_CREDENTIALS != ''
         uses: azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
-      - run: az account list --output table
+      - name: List Azure Accounts
+        if: env.AZURE_CREDENTIALS != ''
+        run: az account list --output table
       - uses: actions/setup-node@v2
         with:
           node-version: "15.x"
@@ -56,7 +60,9 @@ jobs:
       - name: Install dependencies
         run: npm ci --no-audit
       - run: npx tsc
-      - run: |
+      - name: Deploy
+        if: env.AZURE_CREDENTIALS != ''
+        run: |
           az deployment group create \
             --resource-group ${RESOURCE_GROUP:-nrfassettracker} \
             --mode Complete \
@@ -67,17 +73,23 @@ jobs:
               location=$LOCATION \
               appRegistrationClientId=$APP_REG_CLIENT_ID \
               b2cTenant=${B2C_TENANT}
-      - run:
+      - name: Publish Function App
+        if: env.AZURE_CREDENTIALS != ''
+        run:
           func azure functionapp publish ${APP_NAME:-nrfassettracker}api
           --typescript
+
       - name: Enable static site hosting for the app
+        if: env.AZURE_CREDENTIALS != ''
         run:
           az storage blob service-properties update --auth-mode login
           --account-name ${APP_NAME:-nrfassettracker}app --static-website
           --404-document index.html --index-document index.html
       - name: Determine Web App settings
+        if: env.AZURE_CREDENTIALS != ''
         run: node cli react-config >> $GITHUB_ENV
       - name: Build app
+        if: env.AZURE_CREDENTIALS != ''
         id: web-app-deploy
         run: |
           echo Hosting at ${{ env.REACT_APP_WEB_APP_URL }}
@@ -93,6 +105,7 @@ jobs:
           npm ci --no-audit
           npm run build
       - name: Publish app
+        if: env.AZURE_CREDENTIALS != ''
         run: |
           export APP_STORAGE_CONNECTION_STRING=`az storage account show-connection-string --name ${APP_NAME:-nrfassettracker}app --query 'connectionString'` 
           az storage blob upload-batch --connection-string ${APP_STORAGE_CONNECTION_STRING} --account-name ${APP_NAME:-nrfassettracker}app -s ./app/build -d '$web'

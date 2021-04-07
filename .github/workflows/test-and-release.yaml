@@ -24,19 +24,23 @@ jobs:
       APP_REG_CLIENT_ID: ${{ secrets.APP_REG_CLIENT_ID }}
       B2C_CLIENT_SECRET: ${{ secrets.B2C_CLIENT_SECRET }}
       B2C_TENANT_ID: ${{ secrets.B2C_TENANT_ID }}
-
-    if: ${{ env.ENABLE_E2E_TESTS == '1' }}
+      AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
 
     steps:
       - uses: actions/checkout@v2
       - name: Install Azure CLI
+        if: env.AZURE_CREDENTIALS != ''
         run: curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
       - name: Login to Azure
+        if: env.AZURE_CREDENTIALS != ''
         uses: azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
-      - run: az account list --output table
+      - name: List Azure accounts
+        if: env.AZURE_CREDENTIALS != ''
+        run: az account list --output table
       - name: Install Azures Functions CLI
+        if: env.AZURE_CREDENTIALS != ''
         run: |
           curl https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > microsoft.gpg
           sudo mv microsoft.gpg /etc/apt/trusted.gpg.d/microsoft.gpg
@@ -57,6 +61,7 @@ jobs:
       - name: Run Unit Tests
         run: npm test
       - name: Deploy solution
+        if: env.AZURE_CREDENTIALS != ''
         uses: nick-invision/retry@v2
         with:
           timeout_minutes: 10
@@ -75,6 +80,7 @@ jobs:
                 b2cTenant=${B2C_TENANT} \
                 b2cFlowName=B2C_1_developer
       - name: Deploy Function App
+        if: env.AZURE_CREDENTIALS != ''
         uses: nick-invision/retry@v2
         with:
           timeout_minutes: 10
@@ -84,10 +90,12 @@ jobs:
             func azure functionapp publish ${APP_NAME:-nrfassettracker}api
             --typescript
       - name: Determine API endpoint
+        if: env.AZURE_CREDENTIALS != ''
         run: |
           API_ENDPOINT=https://`az functionapp show --resource-group ${RESOURCE_GROUP:-nrfassettracker} -n ${APP_NAME:-nrfassettracker}api --query 'defaultHostName' --output tsv | tr -d '\n'`/
           echo "API_ENDPOINT=${API_ENDPOINT}" >> $GITHUB_ENV
       - name: Cache certificates
+        if: env.AZURE_CREDENTIALS != ''
         uses: actions/cache@v2
         with:
           path: ./certificates
@@ -97,15 +105,18 @@ jobs:
           echo "SKIP_CERT_GENERATION=1" >> $GITHUB_ENV
         continue-on-error: true
       - name: Create Intermediate CA certificate
-        if: env.SKIP_CERT_GENERATION != '1'
+        if: env.AZURE_CREDENTIALS != '' && env.SKIP_CERT_GENERATION != '1'
         run: |
           node cli create-ca-root
           node cli proof-ca-root-possession
           node cli create-ca-intermediate
-      - run: |
+      - name: Determine tenenant ID
+        if: env.AZURE_CREDENTIALS != ''
+        run: |
           TENANT_ID=`echo ${{ secrets.AZURE_CREDENTIALS }} | jq -r '.tenantId' | tr -d '\n'`
           echo "TENANT_ID=${TENANT_ID}" >> $GITHUB_ENV
       - name: Run End-to-End Tests
+        if: env.AZURE_CREDENTIALS != ''
         uses: nick-invision/retry@v2
         env:
           FORCE_COLOR: 3
@@ -114,6 +125,7 @@ jobs:
           max_attempts: 3
           command: npm run test:e2e
       - name: Delete device certificates
+        if: env.AZURE_CREDENTIALS != ''
         run: rm ./certificates/device-*
       - name: Semantic release
         if: success()
