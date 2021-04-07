@@ -24,6 +24,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Determine Version
+        if: env.AZURE_CREDENTIALS != ''
         run: |
           git fetch --depth=1 origin +refs/tags/*:refs/tags/*
           TAG=`git tag --contains ${{ github.sha }} | tr -d '\n'`
@@ -50,16 +51,21 @@ jobs:
         if: env.AZURE_CREDENTIALS != ''
         run: az account list --output table
       - uses: actions/setup-node@v2
+        if: env.AZURE_CREDENTIALS != ''
         with:
           node-version: "15.x"
       - name: Keep npm cache around to speed up installs
+        if: env.AZURE_CREDENTIALS != ''
         uses: actions/cache@v2
         with:
           path: ~/.npm
           key: ${{ runner.OS }}-build-${{ hashFiles('**/package-lock.json') }}
       - name: Install dependencies
+        if: env.AZURE_CREDENTIALS != ''
         run: npm ci --no-audit
-      - run: npx tsc
+      - name: Compile source
+        if: env.AZURE_CREDENTIALS != ''
+        run: npx tsc
       - name: Deploy
         if: env.AZURE_CREDENTIALS != ''
         run: |
