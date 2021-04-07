@@ -111,8 +111,8 @@ export const generateDeviceCertificate = async ({
 				JSON.stringify(
 					{
 						resourceGroup,
-						privateKey: deviceFiles.privateKey,
-						clientCert: deviceFiles.certWithChain,
+						privateKey: deviceCert.clientKey,
+						clientCert: certWithChain,
 						clientId: deviceId,
 					},
 					null,
