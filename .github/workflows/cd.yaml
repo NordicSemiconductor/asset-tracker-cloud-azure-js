@@ -19,8 +19,9 @@ jobs:
       LOCATION: northeurope
       APP_NAME: nrfassettrackerprod
       B2C_TENANT: nrfassettrackerprod
+      AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
 
-    if: ${{ secrets.E2E_AZURE_CREDENTIALS != '' }}
+    if: env.AZURE_CREDENTIALS != ''
 
     steps:
       - uses: actions/checkout@v2
