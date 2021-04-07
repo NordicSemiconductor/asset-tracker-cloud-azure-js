@@ -12,6 +12,7 @@ jobs:
 
     environment:
       name: production
+      url: ${{ steps.web-app-deploy.outputs.web_app_url }}
 
     env:
       APP_REG_CLIENT_ID: ${{ secrets.APP_REG_CLIENT_ID }}
