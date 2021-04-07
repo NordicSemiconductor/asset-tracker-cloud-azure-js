@@ -1,7 +1,5 @@
 export const resourceGroupName = (): string =>
-	process.env.APP_NAME ?? 'nrfassettracker'
-
-export const deploymentName = resourceGroupName
+	process.env.RESOURCE_GROUP ?? 'nrfassettracker'
 
 /**
  * Returns the name of the Device Provisioning Service

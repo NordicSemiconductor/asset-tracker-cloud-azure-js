@@ -8,20 +8,24 @@ on:
       - .github/workflows/publish-docker.yaml
       - .github/workflows/cd.yaml
 
-env:
-  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  # FIXME: remove bifravst reference before stable release
-  APP_NAME: bifravst
-  B2C_TENANT: bifravstciusers
-  LOCATION: northeurope
-  APP_REG_CLIENT_ID: ${{ secrets.E2E_APP_REG_CLIENT_ID }}
-  B2C_CLIENT_SECRET: ${{ secrets.E2E_B2C_CLIENT_SECRET }}
-  B2C_TENANT_ID: ${{ secrets.E2E_B2C_TENANT_ID }}
-  AZURE_CREDENTIALS: ${{ secrets.E2E_AZURE_CREDENTIALS }}
-
 jobs:
   tests:
     runs-on: ubuntu-latest
+
+    # Running CI in clean environment is currently not possible: https://github.com/NordicSemiconductor/asset-tracker-cloud-azure-js/issues/1
+    environment:
+      name: ci
+
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      APP_NAME: nrfassettrackerci
+      B2C_TENANT: nrfassettrackerciusers
+      LOCATION: northeurope
+      APP_REG_CLIENT_ID: ${{ secrets.E2E_APP_REG_CLIENT_ID }}
+      B2C_CLIENT_SECRET: ${{ secrets.E2E_B2C_CLIENT_SECRET }}
+      B2C_TENANT_ID: ${{ secrets.E2E_B2C_TENANT_ID }}
+
+    if: secrets.E2E_AZURE_CREDENTIALS != ''
 
     steps:
       - uses: actions/checkout@v2
@@ -60,12 +64,12 @@ jobs:
           max_attempts: 3
           command: |
             az deployment group create \
-              --resource-group ${APP_NAME} \
+              --resource-group ${RESOURCE_GROUP:-nrfassettracker} \
               --mode Complete \
               --name test-${{ github.sha }} \
               --template-file azuredeploy.json \
               --parameters \
-                appName=${APP_NAME} \
+                appName=${APP_NAME:-nrfassettracker} \
                 location=${LOCATION} \
                 appRegistrationClientId=${APP_REG_CLIENT_ID} \
                 b2cTenant=${B2C_TENANT} \
@@ -76,10 +80,12 @@ jobs:
           timeout_minutes: 10
           retry_wait_seconds: 18000
           max_attempts: 3
-          command: func azure functionapp publish ${APP_NAME}api --typescript
+          command:
+            func azure functionapp publish ${APP_NAME:-nrfassettracker}api
+            --typescript
       - name: Determine API endpoint
         run: |
-          API_ENDPOINT=https://`az functionapp show -g ${APP_NAME} -n ${APP_NAME}api --query 'defaultHostName' --output tsv | tr -d '\n'`/
+          API_ENDPOINT=https://`az functionapp show --resource-group ${RESOURCE_GROUP:-nrfassettracker} -n ${APP_NAME:-nrfassettracker}api --query 'defaultHostName' --output tsv | tr -d '\n'`/
           echo "API_ENDPOINT=${API_ENDPOINT}" >> $GITHUB_ENV
       - name: Cache certificates
         uses: actions/cache@v2
@@ -97,7 +103,7 @@ jobs:
           node cli proof-ca-root-possession
           node cli create-ca-intermediate
       - run: |
-          TENANT_ID=`echo ${AZURE_CREDENTIALS} | jq -r '.tenantId' | tr -d '\n'`
+          TENANT_ID=`echo ${{ secrets.AZURE_CREDENTIALS }} | jq -r '.tenantId' | tr -d '\n'`
           echo "TENANT_ID=${TENANT_ID}" >> $GITHUB_ENV
       - name: Run End-to-End Tests
         uses: nick-invision/retry@v2

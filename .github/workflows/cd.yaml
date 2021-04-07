@@ -17,9 +17,10 @@ jobs:
     env:
       APP_REG_CLIENT_ID: ${{ secrets.APP_REG_CLIENT_ID }}
       LOCATION: northeurope
-      # FIXME: remove bifravst reference before stable release
-      APP_NAME: bifravstprod
-      B2C_TENANT: bifravstprod
+      APP_NAME: nrfassettrackerprod
+      B2C_TENANT: nrfassettrackerprod
+
+    if: secrets.E2E_AZURE_CREDENTIALS != ''
 
     steps:
       - uses: actions/checkout@v2
@@ -57,21 +58,23 @@ jobs:
       - run: npx tsc
       - run: |
           az deployment group create \
-            --resource-group $APP_NAME \
+            --resource-group ${RESOURCE_GROUP:-nrfassettracker} \
             --mode Complete \
             --name cd-${{ env.VERSION }} \
             --template-file azuredeploy.json \
             --parameters \
-              appName=$APP_NAME \
+              appName=${APP_NAME:-nrfassettracker} \
               location=$LOCATION \
               appRegistrationClientId=$APP_REG_CLIENT_ID \
               b2cTenant=${B2C_TENANT}
-      - run: func azure functionapp publish ${APP_NAME}api --typescript
+      - run:
+          func azure functionapp publish ${APP_NAME:-nrfassettracker}api
+          --typescript
       - name: Enable static site hosting for the app
         run:
           az storage blob service-properties update --auth-mode login
-          --account-name ${APP_NAME}app --static-website --404-document
-          index.html --index-document index.html
+          --account-name ${APP_NAME:-nrfassettracker}app --static-website
+          --404-document index.html --index-document index.html
       - name: Determine Web App settings
         run: node cli react-config >> $GITHUB_ENV
       - name: Build app
@@ -91,5 +94,5 @@ jobs:
           npm run build
       - name: Publish app
         run: |
-          export APP_STORAGE_CONNECTION_STRING=`az storage account show-connection-string --name ${APP_NAME}app --query 'connectionString'` 
-          az storage blob upload-batch --connection-string ${APP_STORAGE_CONNECTION_STRING} --account-name ${APP_NAME}app -s ./app/build -d '$web'
+          export APP_STORAGE_CONNECTION_STRING=`az storage account show-connection-string --name ${APP_NAME:-nrfassettracker}app --query 'connectionString'` 
+          az storage blob upload-batch --connection-string ${APP_STORAGE_CONNECTION_STRING} --account-name ${APP_NAME:-nrfassettracker}app -s ./app/build -d '$web'

@@ -13,7 +13,6 @@ import { createCAIntermediateCommand } from './commands/create-ca-intermediate'
 import {
 	iotDeviceProvisioningServiceName,
 	resourceGroupName,
-	deploymentName,
 } from '../arm/resources'
 import fetch from 'node-fetch'
 import { reactConfigCommand } from './commands/react-config'
@@ -28,7 +27,6 @@ const ioTHubDPSConnectionString = ({
 	resourceGroupName,
 	credentials,
 }: {
-	deploymentName: string
 	resourceGroupName: string
 	credentials: () => Promise<AzureCliCredentials>
 }) => async (): Promise<string> => {
@@ -96,12 +94,10 @@ const main = async () => {
 	const certsDir = path.resolve(process.cwd(), 'certificates')
 
 	const resourceGroup = resourceGroupName()
-	const deployment = deploymentName()
 	const dpsName = iotDeviceProvisioningServiceName()
 
 	const getIotHubConnectionString = ioTHubDPSConnectionString({
 		resourceGroupName: resourceGroup,
-		deploymentName: deployment,
 		credentials: getCurrentCreds,
 	})
 	const getIotDpsClient = async () =>
