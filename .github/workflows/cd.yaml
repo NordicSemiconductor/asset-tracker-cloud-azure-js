@@ -20,7 +20,7 @@ jobs:
       APP_NAME: nrfassettrackerprod
       B2C_TENANT: nrfassettrackerprod
 
-    if: secrets.E2E_AZURE_CREDENTIALS != ''
+    if: ${{ secrets.E2E_AZURE_CREDENTIALS != '' }}
 
     steps:
       - uses: actions/checkout@v2

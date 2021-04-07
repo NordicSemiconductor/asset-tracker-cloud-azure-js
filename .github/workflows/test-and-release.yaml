@@ -25,7 +25,7 @@ jobs:
       B2C_CLIENT_SECRET: ${{ secrets.E2E_B2C_CLIENT_SECRET }}
       B2C_TENANT_ID: ${{ secrets.E2E_B2C_TENANT_ID }}
 
-    if: secrets.E2E_AZURE_CREDENTIALS != ''
+    if: ${{ secrets.E2E_AZURE_CREDENTIALS != '' }}
 
     steps:
       - uses: actions/checkout@v2
