@@ -7,15 +7,17 @@ import { v4 } from 'uuid'
 import { log, debug } from '../logging'
 
 export const createCAIntermediateCommand = ({
-	certsDir,
+	certsDir: certsDirPromise,
 	ioTHubDPSConnectionString,
 }: {
-	certsDir: string
+	certsDir: () => Promise<string>
 	ioTHubDPSConnectionString: () => Promise<string>
 }): CommandDefinition => ({
 	command: 'create-ca-intermediate',
 	action: async () => {
 		const id = v4()
+
+		const certsDir = await certsDirPromise()
 
 		const intermediate = await generateCAIntermediate({
 			id,

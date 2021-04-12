@@ -10,14 +10,14 @@ export const proofCARootPossessionCommand = ({
 	resourceGroup,
 	dpsName,
 }: {
-	certsDir: string
+	certsDir: () => Promise<string>
 	resourceGroup: string
 	dpsName: string
 	iotDpsClient: () => Promise<IotDpsClient>
 }): CommandDefinition => ({
 	command: 'proof-ca-root-possession',
 	action: async () => {
-		const certLocations = CARootFileLocations(certsDir)
+		const certLocations = CARootFileLocations(await certsDir())
 
 		const certificateName = (
 			await fs.readFile(certLocations.name, 'utf-8')

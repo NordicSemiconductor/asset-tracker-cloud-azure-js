@@ -14,73 +14,14 @@ import {
 	iotDeviceProvisioningServiceName,
 	resourceGroupName,
 } from '../arm/resources'
-import fetch from 'node-fetch'
 import { reactConfigCommand } from './commands/react-config'
 import { flashCommand } from './commands/flash'
+import { ioTHubDPSInfo } from './iot/ioTHubDPSInfo'
+import { creds } from './creds'
 
 const version = JSON.parse(
 	fs.readFileSync(path.join(process.cwd(), 'package.json'), 'utf-8'),
 ).version
-
-const ioTHubDPSConnectionString = ({
-	resourceGroupName,
-	credentials,
-}: {
-	resourceGroupName: string
-	credentials: () => Promise<AzureCliCredentials>
-}) => async (): Promise<string> => {
-	const creds = await credentials()
-	const subscriptionId = creds.tokenInfo.subscription
-	const token = await creds.getToken()
-
-	return Promise.all([
-		fetch(
-			`https://management.azure.com/subscriptions/${subscriptionId}/resourceGroups/${resourceGroupName}/providers/Microsoft.Devices/provisioningServices/${resourceGroupName}ProvisioningService/listkeys?api-version=2018-01-22`,
-			{
-				method: 'POST',
-				headers: {
-					Authorization: `Bearer ${token.accessToken}`,
-					'Content-type': `application/json`,
-				},
-			},
-		),
-		fetch(
-			`https://management.azure.com/subscriptions/${subscriptionId}/resourceGroups/${resourceGroupName}/providers/Microsoft.Devices/provisioningServices/${resourceGroupName}ProvisioningService?api-version=2018-01-22`,
-			{
-				headers: {
-					Authorization: `Bearer ${token.accessToken}`,
-					'Content-type': `application/json`,
-				},
-			},
-		),
-	])
-		.then(async (res) => Promise.all(res.map(async (r) => r.json())))
-		.then(
-			([
-				{ value },
-				{
-					properties: { serviceOperationsHostName },
-				},
-			]) =>
-				`HostName=${serviceOperationsHostName};SharedAccessKeyName=provisioningserviceowner;SharedAccessKey=${value[0].primaryKey}`,
-		)
-}
-
-const creds = async () => {
-	const creds = await AzureCliCredentials.create()
-
-	const {
-		tokenInfo: { subscription },
-	} = creds
-
-	console.error(chalk.magenta('Subscription:'), chalk.yellow(subscription))
-	console.error(
-		chalk.magenta('Resource Group:'),
-		chalk.yellow(resourceGroupName()),
-	)
-
-	return creds
-}
 
 let currentCreds: Promise<AzureCliCredentials>
 
@@ -90,15 +31,19 @@ const getCurrentCreds = async () => {
 }
 
 const main = async () => {
-	const certsDir = path.resolve(process.cwd(), 'certificates')
-
 	const resourceGroup = resourceGroupName()
 	const dpsName = iotDeviceProvisioningServiceName()
 
-	const getIotHubConnectionString = ioTHubDPSConnectionString({
+	const getIotHubInfo = ioTHubDPSInfo({
 		resourceGroupName: resourceGroup,
 		credentials: getCurrentCreds,
 	})
+
+	const certsDir = async (): Promise<string> =>
+		getIotHubInfo().then(({ hostname }) =>
+			path.resolve(process.cwd(), 'certificates', hostname),
+		)
+
 	const getIotDpsClient = async () =>
 		getCurrentCreds().then(
 			(creds) => new IotDpsClient(creds as any, creds.tokenInfo.subscription), // FIXME: This removes a TypeScript incompatibility error
@@ -131,7 +76,8 @@ const main = async () => {
 		}),
 		createCAIntermediateCommand({
 			certsDir,
-			ioTHubDPSConnectionString: getIotHubConnectionString,
+			ioTHubDPSConnectionString: async () =>
+				getIotHubInfo().then(({ connectionString }) => connectionString),
 		}),
 		createDeviceCertCommand({
 			certsDir,

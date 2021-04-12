@@ -79,7 +79,7 @@ const getLatestFirmware = async ({
 export const flashCommand = ({
 	certsDir,
 }: {
-	certsDir: string
+	certsDir: () => Promise<string>
 }): CommandDefinition => ({
 	command: 'flash <deviceId>',
 	options: [
@@ -135,7 +135,7 @@ export const flashCommand = ({
 		)
 
 		const certs = deviceFileLocations({
-			certsDir,
+			certsDir: await certsDir(),
 			deviceId,
 		})
 

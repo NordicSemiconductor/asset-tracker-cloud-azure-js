@@ -15,6 +15,8 @@ import { fromEnv } from '../lib/fromEnv'
 import { deviceStepRunners } from './steps/device'
 import { v4 } from 'uuid'
 import { list } from '../cli/iot/intermediateRegistry'
+import { ioTHubDPSInfo } from '../cli/iot/ioTHubDPSInfo'
+import { creds } from '../cli/creds'
 
 let ran = false
 
@@ -57,7 +59,12 @@ program
 				apiEndpoint: 'API_ENDPOINT',
 			})(process.env)
 
-			const certsDir = path.join(process.cwd(), 'certificates')
+			const certsDir = await ioTHubDPSInfo({
+				resourceGroupName: resourceGroup,
+				credentials: creds,
+			})().then(({ hostname }) =>
+				path.join(process.cwd(), 'certificates', hostname),
+			)
 
 			console.log(
 				chalk.yellow('Resource Group:          '),

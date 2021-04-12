@@ -24,7 +24,7 @@ export const generateCARoot = async ({
 	try {
 		await fs.stat(certsDir)
 	} catch {
-		await fs.mkdir(certsDir)
+		await fs.mkdir(certsDir, { recursive: true })
 		debug(`Created ${certsDir}`)
 	}
 
@@ -52,7 +52,7 @@ export const generateCARoot = async ({
 					config: caCertConfig(name),
 				},
 				(err, cert) => {
-					if (err) return reject(err)
+					if (err !== null && err !== undefined) return reject(err)
 					resolve(cert)
 				},
 			),

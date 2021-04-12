@@ -7,10 +7,10 @@ import { list as listIntermediateCerts } from '../iot/intermediateRegistry'
 import { deviceFileLocations } from '../iot/deviceFileLocations'
 
 export const createDeviceCertCommand = ({
-	certsDir,
+	certsDir: certsDirPromise,
 	resourceGroup,
 }: {
-	certsDir: string
+	certsDir: () => Promise<string>
 	resourceGroup: string
 }): CommandDefinition => ({
 	command: 'create-device-cert',
@@ -33,6 +33,8 @@ export const createDeviceCertCommand = ({
 		intermediateCertId: string
 	}) => {
 		const id = deviceId || (await randomWords({ numWords: 3 })).join('-')
+
+		const certsDir = await certsDirPromise()
 
 		if (!intermediateCertId) {
 			const intermediateCerts = await listIntermediateCerts({ certsDir })

@@ -8,12 +8,12 @@ import { log, debug } from '../logging'
 import { certificateName as cn } from '../iot/certificateName'
 
 export const createCARootCommand = ({
-	certsDir,
+	certsDir: certsDirPromise,
 	iotDpsClient,
 	resourceGroup,
 	dpsName,
 }: {
-	certsDir: string
+	certsDir: () => Promise<string>
 	resourceGroup: string
 	dpsName: string
 	iotDpsClient: () => Promise<IotDpsClient>
@@ -21,6 +21,8 @@ export const createCARootCommand = ({
 	command: 'create-ca-root',
 	action: async () => {
 		const certificateName = cn(`nrfassettracker-root-${v4()}`)
+
+		const certsDir = await certsDirPromise()
 
 		const root = await generateCARoot({
 			certsDir,
