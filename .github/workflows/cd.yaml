@@ -20,6 +20,7 @@ jobs:
       LOCATION: ${{ secrets.LOCATION }}
       APP_NAME: ${{ secrets.APP_NAME }}
       B2C_TENANT: ${{ secrets.B2C_TENANT }}
+      RESOURCE_GROUP: ${{ secrets.RESOURCE_GROUP }}
 
     steps:
       - uses: actions/checkout@v2
