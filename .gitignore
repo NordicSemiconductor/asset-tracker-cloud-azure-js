@@ -9,4 +9,5 @@ certificates/
 build/
 local.settings.json
 ci-credentials.json
+cd-credentials.json
 log.log

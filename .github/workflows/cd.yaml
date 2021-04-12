@@ -15,11 +15,11 @@ jobs:
       url: ${{ steps.web-app-deploy.outputs.web_app_url }}
 
     env:
-      APP_REG_CLIENT_ID: ${{ secrets.APP_REG_CLIENT_ID }}
-      LOCATION: northeurope
-      APP_NAME: nrfassettrackerprod
-      B2C_TENANT: nrfassettrackerprod
       AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
+      APP_REG_CLIENT_ID: ${{ secrets.APP_REG_CLIENT_ID }}
+      LOCATION: ${{ secrets.LOCATION }}
+      APP_NAME: ${{ secrets.APP_NAME }}
+      B2C_TENANT: ${{ secrets.B2C_TENANT }}
 
     steps:
       - uses: actions/checkout@v2
