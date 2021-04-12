@@ -6,7 +6,6 @@ import { createCARootCommand } from './commands/create-ca-root'
 import { IotDpsClient } from '@azure/arm-deviceprovisioningservices'
 import { AzureCliCredentials } from '@azure/ms-rest-nodeauth'
 import { WebSiteManagementClient } from '@azure/arm-appservice'
-import { StorageManagementClient } from '@azure/arm-storage'
 import { createDeviceCertCommand } from './commands/create-device-cert'
 import { proofCARootPossessionCommand } from './commands/proof-ca-possession'
 import { createCAIntermediateCommand } from './commands/create-ca-intermediate'
@@ -53,11 +52,6 @@ const main = async () => {
 			(creds) =>
 				new WebSiteManagementClient(creds, creds.tokenInfo.subscription),
 		)
-	const getStoreageClient = async () =>
-		getCurrentCreds().then(
-			(creds) =>
-				new StorageManagementClient(creds, creds.tokenInfo.subscription),
-		)
 
 	program.description('Cat Tracker Command Line Interface')
 
@@ -85,7 +79,6 @@ const main = async () => {
 		}),
 		reactConfigCommand({
 			websiteClient: getWebsiteClient,
-			storageClient: getStoreageClient,
 			resourceGroup,
 		}),
 		flashCommand({
