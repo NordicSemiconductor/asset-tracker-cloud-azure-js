@@ -279,7 +279,7 @@
             },
             {
               "name": "WEBSITE_NODE_DEFAULT_VERSION",
-              "value": "node|14"
+              "value": "~14"
             },
             {
               "name": "IOT_HUB_CONNECTION_STRING",
