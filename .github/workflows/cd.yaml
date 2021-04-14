@@ -12,7 +12,7 @@ jobs:
 
     environment:
       name: production
-      url: ${{ steps.web-app-deploy.outputs.web_app_url }}
+      url: ${{ steps.web-app-url.outputs.web_app_url }}
 
     env:
       AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
@@ -21,6 +21,9 @@ jobs:
       APP_NAME: ${{ secrets.APP_NAME }}
       B2C_TENANT: ${{ secrets.B2C_TENANT }}
       RESOURCE_GROUP: ${{ secrets.RESOURCE_GROUP }}
+      
+    outputs:
+      web_app_url: ${{ steps.web-app-url.outputs.web_app_url }}
 
     steps:
       - uses: actions/checkout@v2
@@ -95,16 +98,13 @@ jobs:
         if: env.AZURE_CREDENTIALS != ''
         run: node cli react-config >> $GITHUB_ENV
       - name: Determine public URL
+        id: web-app-url
         run: |
           PUBLIC_URL=`az storage account show -g ${RESOURCE_GROUP:-nrfassettracker} -n ${APP_NAME:-nrfassettracker}app --query 'primaryEndpoints.web' --output tsv | tr -d '\n'`
           echo "::set-output name=web_app_url::${PUBLIC_URL}"
           echo "PUBLIC_URL=${PUBLIC_URL}" >> $GITHUB_ENV
-        outputs:
-          web_app_url:
-            description: "Web application URL"
       - name: Build app
         if: env.AZURE_CREDENTIALS != ''
-        id: web-app-deploy
         run: |
           export EXTEND_ESLINT=true
           OWNER=`echo $GITHUB_REPOSITORY | awk '{split($0,a,"/"); print a[1]}' | tr -d '\n'`
