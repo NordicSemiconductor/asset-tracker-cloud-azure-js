@@ -85,7 +85,6 @@ jobs:
         run:
           func azure functionapp publish ${APP_NAME:-nrfassettracker}api
           --typescript
-
       - name: Enable static site hosting for the app
         if: env.AZURE_CREDENTIALS != ''
         run:
@@ -95,12 +94,18 @@ jobs:
       - name: Determine Web App settings
         if: env.AZURE_CREDENTIALS != ''
         run: node cli react-config >> $GITHUB_ENV
+      - name: Determine public URL
+        run: |
+          PUBLIC_URL=`az storage account show -g ${RESOURCE_GROUP:-nrfassettracker} -n ${APP_NAME:-nrfassettracker}app --query 'primaryEndpoints.web' --output tsv | tr -d '\n'`
+          echo "::set-output name=web_app_url::${PUBLIC_URL}"
+          echo "PUBLIC_URL=${PUBLIC_URL}" >> $GITHUB_ENV
+        outputs:
+          web_app_url:
+            description: "Web application URL"
       - name: Build app
         if: env.AZURE_CREDENTIALS != ''
         id: web-app-deploy
         run: |
-          echo Hosting at ${{ env.REACT_APP_WEB_APP_URL }}
-          echo "::set-output name=web_app_url::${{ env.REACT_APP_WEB_APP_URL }}"
           export EXTEND_ESLINT=true
           OWNER=`echo $GITHUB_REPOSITORY | awk '{split($0,a,"/"); print a[1]}' | tr -d '\n'`
           git clone https://github.com/$OWNER/asset-tracker-cloud-app-js app
@@ -108,7 +113,6 @@ jobs:
           APP_TAG=`git tag --points-at HEAD | tr -d '\n'`
           APP_SHA=`git log -n 1 --pretty=format:"%H" | tr -d '\n'`
           export REACT_APP_VERSION=${APP_TAG:-${APP_SHA}}
-          export PUBLIC_URL=${{ env.REACT_APP_WEB_APP_URL }}
           npm ci --no-audit
           npm run build
       - name: Publish app
