@@ -30,7 +30,7 @@ jobs:
         with:
           context: .
           load: true
-          tags: ${DOCKER_REPO_NAME}:saga
+          tags: ${{ env.DOCKER_REPO_NAME }}:saga
       - name: Inspect image
         run: |
-          docker image inspect ${DOCKER_REPO_NAME}:saga
+          docker image inspect ${{ env.DOCKER_REPO_NAME }}:saga
