@@ -21,7 +21,8 @@ jobs:
       APP_NAME: ${{ secrets.APP_NAME }}
       B2C_TENANT: ${{ secrets.B2C_TENANT }}
       RESOURCE_GROUP: ${{ secrets.RESOURCE_GROUP }}
-      
+      UNWIRED_LABS_API_KEY: ${{ secrets.UNWIRED_LABS_API_KEY }}
+
     outputs:
       web_app_url: ${{ steps.web-app-url.outputs.web_app_url }}
 
@@ -82,7 +83,8 @@ jobs:
               appName=${APP_NAME:-nrfassettracker} \
               location=$LOCATION \
               appRegistrationClientId=$APP_REG_CLIENT_ID \
-              b2cTenant=${B2C_TENANT}
+              b2cTenant=${B2C_TENANT} \
+              unwiredlabsApiKey=${UNWIRED_LABS_API_KEY}
       - name: Publish Function App
         if: env.AZURE_CREDENTIALS != ''
         run:
