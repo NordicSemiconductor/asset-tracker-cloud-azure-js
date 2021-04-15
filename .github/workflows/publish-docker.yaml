@@ -25,7 +25,8 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: .
-          tags: saga
+          load: true
+          tags: ${{ github.repository }}:saga
       - name: Inspect image
         run: |
-          docker image inspect ${{ env.DOCKER_IMAGE }}
+          docker image inspect ${{ github.repository }}:saga
