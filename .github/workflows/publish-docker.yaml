@@ -29,7 +29,6 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: .
-          load: true
           tags: ${{ env.DOCKER_REPO_NAME }}:saga
           push: true
       - name: Inspect image
