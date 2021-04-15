@@ -12,4 +12,4 @@ jobs:
     steps:
       - uses: actions/checkout@master
 
-      - run: docker build -t ${{ github.repository }}:saga .
+      - run: docker build .
