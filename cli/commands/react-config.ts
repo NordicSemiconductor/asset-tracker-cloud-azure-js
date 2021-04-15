@@ -5,16 +5,18 @@ import { WebSiteManagementClient } from '@azure/arm-appservice'
 
 export const reactConfigCommand = ({
 	websiteClient,
+	appName,
 	resourceGroup,
 }: {
 	websiteClient: () => Promise<WebSiteManagementClient>
+	appName: string
 	resourceGroup: string
 }): CommandDefinition => ({
 	command: 'react-config',
 	action: async () => {
 		const [{ hostNames }] = await Promise.all([
 			websiteClient().then(async (client) =>
-				client.webApps.get(resourceGroup, `${resourceGroup}api`),
+				client.webApps.get(resourceGroup, `${appName}api`),
 			),
 		])
 

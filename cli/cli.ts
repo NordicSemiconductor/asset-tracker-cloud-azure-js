@@ -12,11 +12,13 @@ import { createCAIntermediateCommand } from './commands/create-ca-intermediate'
 import {
 	iotDeviceProvisioningServiceName,
 	resourceGroupName,
+	appName,
 } from '../arm/resources'
 import { reactConfigCommand } from './commands/react-config'
 import { flashCommand } from './commands/flash'
 import { ioTHubDPSInfo } from './iot/ioTHubDPSInfo'
 import { creds } from './creds'
+import { functionsSettingsCommand } from './commands/functions-settings'
 
 const version = JSON.parse(
 	fs.readFileSync(path.join(process.cwd(), 'package.json'), 'utf-8'),
@@ -80,6 +82,12 @@ const main = async () => {
 		reactConfigCommand({
 			websiteClient: getWebsiteClient,
 			resourceGroup,
+			appName: appName(),
+		}),
+		functionsSettingsCommand({
+			websiteClient: getWebsiteClient,
+			resourceGroup,
+			appName: appName(),
 		}),
 		flashCommand({
 			certsDir,
