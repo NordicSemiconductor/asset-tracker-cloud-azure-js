@@ -1,10 +1,9 @@
-import * as chalk from 'chalk'
 import { CommandDefinition } from './CommandDefinition'
 import { generateCAIntermediate } from '../iot/generateCAIntermediate'
 import { ProvisioningServiceClient } from 'azure-iot-provisioning-service'
 import { add as addToIntermediateRegistry } from '../iot/intermediateRegistry'
 import { v4 } from 'uuid'
-import { log, debug } from '../logging'
+import { log, debug, setting, next, newline } from '../logging'
 
 export const createCAIntermediateCommand = ({
 	certsDir: certsDirPromise,
@@ -25,7 +24,7 @@ export const createCAIntermediateCommand = ({
 			log,
 			debug,
 		})
-		console.log(chalk.magenta(`CA intermediate certificate generated.`))
+		debug(`CA intermediate certificate generated.`)
 
 		await addToIntermediateRegistry({ certsDir, id })
 
@@ -71,18 +70,16 @@ export const createCAIntermediateCommand = ({
 			lastUpdatedDateTimeUtc: undefined as any,
 		})
 
-		console.log(
-			chalk.magenta(
-				`Created enrollment group for CA intermediate certificiate`,
-			),
-			chalk.yellow(enrollmentGroupId),
+		setting(
+			`Created enrollment group for CA intermediate certificiate`,
+			enrollmentGroupId,
 		)
 
-		console.log()
+		newline()
 
-		console.log(
-			chalk.green('You can now generate device certificates using'),
-			chalk.blueBright('node cli create-device-cert'),
+		next(
+			'You can now generate device certificates using',
+			'node cli create-device-cert',
 		)
 	},
 	help:

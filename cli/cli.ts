@@ -1,5 +1,4 @@
 import * as program from 'commander'
-import * as chalk from 'chalk'
 import * as path from 'path'
 import * as fs from 'fs'
 import { createCARootCommand } from './commands/create-ca-root'
@@ -19,6 +18,7 @@ import { flashCommand } from './commands/flash'
 import { ioTHubDPSInfo } from './iot/ioTHubDPSInfo'
 import { creds } from './creds'
 import { functionsSettingsCommand } from './commands/functions-settings'
+import { error, help } from './logging'
 
 const version = JSON.parse(
 	fs.readFileSync(path.join(process.cwd(), 'package.json'), 'utf-8'),
@@ -78,6 +78,8 @@ const main = async () => {
 		createDeviceCertCommand({
 			certsDir,
 			resourceGroup,
+			iotDpsClient: getIotDpsClient,
+			dpsName,
 		}),
 		reactConfigCommand({
 			websiteClient: getWebsiteClient,
@@ -95,26 +97,21 @@ const main = async () => {
 	]
 
 	let ran = false
-	commands.forEach(({ command, action, help, options }) => {
+	commands.forEach(({ command, action, help: h, options }) => {
 		const cmd = program.command(command)
 		cmd
 			.action(async (...args) => {
 				try {
 					ran = true
 					await action(...args)
-				} catch (error) {
-					console.error(
-						chalk.red.inverse(' ERROR '),
-						chalk.red(`${command} failed!`),
-					)
-					console.error(chalk.red.inverse(' ERROR '), chalk.red(error))
+				} catch (e) {
+					error(`${command} failed!`)
+					error(e)
 					process.exit(1)
 				}
 			})
 			.on('--help', () => {
-				console.log('')
-				console.log(chalk.yellow(help))
-				console.log('')
+				help(h)
 			})
 		if (options) {
 			options.forEach(({ flags, description, defaultValue }) =>
@@ -127,12 +124,12 @@ const main = async () => {
 	program.version(version)
 
 	if (!ran) {
-		program.outputHelp(chalk.yellow)
+		program.outputHelp()
 		throw new Error('No command selected!')
 	}
 }
 
 main().catch((err) => {
-	console.error(chalk.red(err))
+	error(err)
 	process.exit(1)
 })

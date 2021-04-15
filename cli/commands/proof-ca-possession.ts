@@ -1,8 +1,8 @@
-import * as chalk from 'chalk'
 import { CommandDefinition } from './CommandDefinition'
 import { IotDpsClient } from '@azure/arm-deviceprovisioningservices'
 import { promises as fs } from 'fs'
 import { CARootFileLocations } from '../iot/caFileLocations'
+import { newline, next, setting, success } from '../logging'
 
 export const proofCARootPossessionCommand = ({
 	certsDir,
@@ -36,7 +36,7 @@ export const proofCARootPossessionCommand = ({
 			'utf-8',
 		)
 
-		console.log(chalk.magenta('Certificate:'), chalk.yellow(certificateName))
+		setting('Certificate', certificateName)
 
 		await armDpsClient.dpsCertificate.verifyCertificate(
 			certificateName,
@@ -48,11 +48,11 @@ export const proofCARootPossessionCommand = ({
 			dpsName,
 		)
 
-		console.log(chalk.magenta('Verified root CA certificate.'))
-		console.log()
-		console.log(
-			chalk.green('You can now create a CA intermediate certificate using'),
-			chalk.blueBright('node cli create-ca-intermediate'),
+		success('Verified root CA certificate.')
+		newline()
+		next(
+			'You can now create a CA intermediate certificate using',
+			'node cli create-ca-intermediate',
 		)
 	},
 	help:

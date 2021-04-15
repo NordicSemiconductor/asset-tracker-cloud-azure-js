@@ -1,10 +1,9 @@
-import * as chalk from 'chalk'
 import { CommandDefinition } from './CommandDefinition'
 import { IotDpsClient } from '@azure/arm-deviceprovisioningservices'
 import { generateProofOfPosession } from '../iot/generateProofOfPosession'
 import { v4 } from 'uuid'
 import { generateCARoot } from '../iot/generateCARoot'
-import { log, debug } from '../logging'
+import { log, debug, success, setting, newline, next } from '../logging'
 import { certificateName as cn } from '../iot/certificateName'
 
 export const createCARootCommand = ({
@@ -30,7 +29,7 @@ export const createCARootCommand = ({
 			log,
 			debug,
 		})
-		console.log(chalk.magenta(`CA root certificate generated.`))
+		success(`CA root certificate generated.`)
 
 		// Register root CA certificate on DPS
 
@@ -45,10 +44,8 @@ export const createCARootCommand = ({
 			},
 		)
 
-		console.log(
-			chalk.magenta(`CA root registered with DPS`),
-			chalk.yellow(dpsName),
-		)
+		success(`CA root registered with DPS`)
+		setting('DPS name', dpsName)
 
 		// Create verification cert
 
@@ -77,16 +74,14 @@ export const createCARootCommand = ({
 			verificationCode: properties.verificationCode,
 		})
 
-		console.log(
-			chalk.magenta(`Generated verification certificate for verification code`),
-			chalk.yellow(properties.verificationCode),
-		)
+		success(`Generated verification certificate for verification code`)
+		setting('Verification Code', properties.verificationCode)
 
-		console.log()
+		newline()
 
-		console.log(
-			chalk.green('You can now verify the proof of posession using'),
-			chalk.blueBright('node cli proof-ca-root-possession'),
+		next(
+			'You can now verify the proof of posession using',
+			'node cli proof-ca-root-possession',
 		)
 	},
 	help:

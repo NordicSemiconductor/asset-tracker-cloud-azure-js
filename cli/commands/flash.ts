@@ -10,9 +10,9 @@ import {
 } from '@nordicsemiconductor/firmware-ci-device-helpers'
 import { deviceFileLocations } from '../iot/deviceFileLocations'
 import { Octokit } from '@octokit/rest'
-import * as chalk from 'chalk'
 import * as https from 'https'
 import { v4 } from 'uuid'
+import { progress, success } from '../logging'
 
 const defaultPort = '/dev/ttyACM0'
 const defaultSecTag = 42
@@ -62,7 +62,7 @@ const getLatestFirmware = async ({
 	if (hexfile === undefined) throw new Error(`Failed to detect latest release.`)
 
 	const downloadTarget = path.join(os.tmpdir(), `${v4()}.hex`)
-	console.log(chalk.magenta(`Downloading`), chalk.blue(hexfile.name))
+	progress(`Downloading`, hexfile.name)
 
 	await new Promise((resolve) => {
 		const file = fs.createWriteStream(downloadTarget)
@@ -115,10 +115,7 @@ export const flashCommand = ({
 		const hexfile =
 			firmware ?? (await getLatestFirmware({ dk, nbiot, nodebug }))
 
-		console.log(
-			chalk.magenta(`Connecting to device`),
-			chalk.blue(port ?? defaultPort),
-		)
+		progress(`Connecting to device`, port ?? defaultPort)
 
 		const connection = await connect({
 			atHostHexfile:
@@ -129,10 +126,7 @@ export const flashCommand = ({
 			progress: console.log,
 		})
 
-		console.log(
-			chalk.magenta(`Flashing credentials`),
-			chalk.blue(port ?? defaultPort),
-		)
+		progress(`Flashing credentials`, port ?? defaultPort)
 
 		const certs = deviceFileLocations({
 			certsDir: await certsDir(),
@@ -150,7 +144,7 @@ export const flashCommand = ({
 			privateKey: fs.readFileSync(certs.privateKey, 'utf-8'),
 		})
 
-		console.log(chalk.magenta(`Flashing firmware`), chalk.blue(hexfile))
+		progress(`Flashing firmware`, hexfile)
 
 		await flash({
 			hexfile,
@@ -158,7 +152,7 @@ export const flashCommand = ({
 
 		await connection.connection.end()
 
-		console.log(chalk.green(`Done`))
+		success('Done')
 	},
 	help: 'Flash credentials and latest firmware release to a device using JLink',
 })
