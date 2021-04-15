@@ -349,12 +349,23 @@
           "properties": {
             "siteAuthEnabled": true,
             "siteAuthSettings": {
+              "configVersion": "v2",
               "enabled": true,
               "unauthenticatedClientAction": "RedirectToLoginPage",
               "tokenStoreEnabled": true,
               "defaultProvider": "AzureActiveDirectory",
               "clientId": "[parameters('appRegistrationClientId')]",
-              "issuer": "[concat('https://',parameters('b2cTenant'),'.b2clogin.com/',parameters('b2cTenant'),'.onmicrosoft.com/v2.0/.well-known/openid-configuration?p=',parameters('b2cFlowName'),'')]"
+              "issuer": "[concat('https://',parameters('b2cTenant'),'.b2clogin.com/',parameters('b2cTenant'),'.onmicrosoft.com/',parameters('b2cFlowName'),'/v2.0/')]",
+              "runtimeVersion": "~1",
+              "httpApiPrefixPath": "/.auth",
+              "allowedExternalRedirectUrls": [
+                "[concat('https://', parameters('appName'), 'app.z16.web.core.windows.net/')]",
+                "http://localhost:3000/"
+              ],
+              "tokenRefreshExtensionHours": 72,
+              "allowedAudiences": [],
+              "isAadAutoProvisioned": false,
+              "aadClaimsAuthorization": "{\"allowed_groups\":null,\"allowed_client_applications\":null}"
             }
           }
         }
