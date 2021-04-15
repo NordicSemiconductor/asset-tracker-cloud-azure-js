@@ -25,3 +25,6 @@ jobs:
         with:
           context: .
           tags: saga
+      - name: Inspect image
+        run: |
+          docker image inspect ${{ env.DOCKER_IMAGE }}
