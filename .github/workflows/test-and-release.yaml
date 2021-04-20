@@ -1,6 +1,7 @@
 name: Test and Release
 
 on:
+  workflow_dispatch:
   push:
     paths-ignore:
       - Dockerfile
@@ -18,9 +19,9 @@ jobs:
 
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      APP_NAME: nrfassettrackerci
-      B2C_TENANT: nrfassettrackerciusers
-      LOCATION: northeurope
+      APP_NAME: ${{ secrets.APP_NAME }}
+      B2C_TENANT: ${{ secrets.B2C_TENANT }}
+      LOCATION: ${{ secrets.LOCATION }}
       APP_REG_CLIENT_ID: ${{ secrets.APP_REG_CLIENT_ID }}
       B2C_CLIENT_SECRET: ${{ secrets.B2C_CLIENT_SECRET }}
       B2C_TENANT_ID: ${{ secrets.B2C_TENANT_ID }}
