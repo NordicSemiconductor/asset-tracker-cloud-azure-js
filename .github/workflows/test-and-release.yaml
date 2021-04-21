@@ -91,14 +91,6 @@ jobs:
           command:
             func azure functionapp publish ${APP_NAME:-nrfassettrackerci}api
             --typescript
-      - name: Determine API endpoint
-        if: env.AZURE_CREDENTIALS != ''
-        run: |
-          API_ENDPOINT=https://`az functionapp show \
-            --resource-group ${RESOURCE_GROUP:-nrfassettrackerci} \
-            -n ${APP_NAME:-nrfassettrackerci}api \
-            --query 'defaultHostName' --output tsv | tr -d '\n'`/
-          echo "API_ENDPOINT=${API_ENDPOINT}" >> $GITHUB_ENV
       - name: Cache certificates
         if: env.AZURE_CREDENTIALS != ''
         uses: actions/cache@v2
