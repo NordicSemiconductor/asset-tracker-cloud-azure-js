@@ -4,6 +4,7 @@ import {
 	randomStepRunners,
 	restStepRunners,
 	storageStepRunners,
+	RestClient,
 } from '@nordicsemiconductor/e2e-bdd-test-runner'
 import * as program from 'commander'
 import * as chalk from 'chalk'
@@ -16,7 +17,9 @@ import { deviceStepRunners } from './steps/device'
 import { v4 } from 'uuid'
 import { list } from '../cli/iot/intermediateRegistry'
 import { ioTHubDPSInfo } from '../cli/iot/ioTHubDPSInfo'
-import { creds } from '../cli/creds'
+import { WebSiteManagementClient } from '@azure/arm-appservice'
+import { settings, error, heading, debug } from '../cli/logging'
+import { AzureCliCredentials } from '@azure/ms-rest-nodeauth'
 
 let ran = false
 
@@ -49,78 +52,68 @@ program
 				clientSecret,
 				b2cTenantId,
 				resourceGroup,
-				apiEndpoint,
+				appName,
 			} = fromEnv({
 				b2cTenant: 'B2C_TENANT',
 				clientId: 'APP_REG_CLIENT_ID',
 				clientSecret: 'B2C_CLIENT_SECRET',
 				b2cTenantId: 'B2C_TENANT_ID',
-				resourceGroup: 'APP_NAME',
-				apiEndpoint: 'API_ENDPOINT',
+				resourceGroup: 'RESOURCE_GROUP',
+				appName: 'APP_NAME',
 			})(process.env)
+
+			const credentials = await AzureCliCredentials.create()
+
+			const apiEndpoint = ((
+				await new WebSiteManagementClient(
+					credentials,
+					credentials.tokenInfo.subscription,
+				).webApps.get(resourceGroup, `${appName}api`)
+			).hostNames ?? [])[0]
+
+			if (apiEndpoint === undefined) {
+				error(`Could not determine API endpoint!`)
+				process.exit(1)
+			}
+			const apiEndpointUrl = `https://${apiEndpoint}/`
 
 			const certsDir = await ioTHubDPSInfo({
 				resourceGroupName: resourceGroup,
-				credentials: creds,
+				credentials,
 			})().then(({ hostname }) =>
 				path.join(process.cwd(), 'certificates', hostname),
 			)
 
-			console.log(
-				chalk.yellow('Resource Group:          '),
-				chalk.blueBright(resourceGroup),
-			)
-			console.log(
-				chalk.yellow('API endpoint:            '),
-				chalk.blueBright(apiEndpoint),
-			)
-			console.log(
-				chalk.yellow('AD B2C Tenant:           '),
-				chalk.blueBright(b2cTenant),
-			)
-			console.log(
-				chalk.yellow('AD B2C Tenant ID:        '),
-				chalk.blueBright(b2cTenantId),
-			)
-			console.log(
-				chalk.yellow('AD B2C Client ID:        '),
-				chalk.blueBright(clientId),
-			)
-			console.log(
-				chalk.yellow('AD B2C Client Secret:    '),
-				chalk.blueBright(
-					`${clientSecret.substr(0, 5)}***${clientSecret.substr(-5)}`,
-				),
-			)
-			console.log(
-				chalk.yellow('Certificate dir:         '),
-				chalk.blueBright(certsDir),
-			)
 			const intermediateCerts = await list({ certsDir })
 			const intermediateCertId = intermediateCerts[0]
 			if (intermediateCertId === undefined) {
-				console.error(chalk.red(`Intermediate certificate not found!`))
+				error(`Intermediate certificate not found!`)
 				process.exit(1)
 			}
-			console.log(
-				chalk.yellow('Intermediate certificate:'),
-				chalk.blueBright(intermediateCertId),
-			)
-			console.log()
+
+			settings({
+				Subscription: credentials.tokenInfo.subscription,
+				'Resource Group': resourceGroup,
+				'Application Name': appName,
+				'API endpoint': apiEndpointUrl,
+				'AD B2C Tenant': b2cTenant,
+				'AD B2C Tenant ID': b2cTenantId,
+				'AD B2C Client ID': clientId,
+				'AD B2C Client Secret': `${clientSecret.substr(
+					0,
+					5,
+				)}***${clientSecret.substr(-5)}`,
+				'Certificate dir': certsDir,
+				'Intermediate certificate': intermediateCertId,
+			})
 
 			const world: World = {
-				apiEndpoint: `${apiEndpoint}api/`,
+				apiEndpoint: `${apiEndpointUrl}api/`,
 			} as const
-			console.log(chalk.yellow.bold('World:'))
-			console.log()
-			console.log(world)
-			console.log()
+			heading('World')
+			settings(world)
 			if (!retry) {
-				console.log()
-				console.log(chalk.yellow.bold('Test Runner:'))
-				console.log()
-				console.log('', chalk.red('❌'), chalk.red('Retries disabled.'))
-				console.log()
+				debug('Test Runner:', chalk.red('❌'), chalk.red('Retries disabled.'))
 			}
 
 			const runner = new FeatureRunner<World>(world, {
@@ -153,7 +146,32 @@ program
 						b2cTenantId,
 					}),
 				)
-				.addStepRunners(restStepRunners())
+				.addStepRunners(
+					restStepRunners({
+						client: new RestClient({
+							parseBody: async (res) => {
+								// Azure does not send content-length any more, see https://github.com/NordicSemiconductor/asset-tracker-cloud-azure-js/issues/40
+								const text = await res.text()
+								if (text.length === 0)
+									return {
+										contentLength: 0,
+									}
+								// We might have content nevertheless
+								return {
+									contentLength: text.length,
+									text,
+									json: (() => {
+										try {
+											return JSON.parse(text)
+										} catch {
+											return undefined
+										}
+									})(),
+								}
+							},
+						}),
+					}),
+				)
 				.addStepRunners(
 					deviceStepRunners({ certsDir, resourceGroup, intermediateCertId }),
 				)
@@ -166,8 +184,8 @@ program
 				}
 				process.exit()
 			} catch (error) {
-				console.error(chalk.red('Running the features failed!'))
-				console.error(chalk.red(error.message))
+				error('Running the features failed!')
+				error(error.message)
 				process.exit(1)
 			}
 		},
@@ -175,6 +193,6 @@ program
 	.parse(process.argv)
 
 if (!ran) {
-	program.outputHelp(chalk.red)
+	program.outputHelp()
 	process.exit(1)
 }

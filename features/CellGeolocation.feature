@@ -7,6 +7,7 @@ Feature: Cell Geolocation API
     Background:
 
         Given I am run after the "Connect a Cat Tracker" feature
+        And I am run after the "Login" feature
         And I am run after the "Device: Update Shadow" feature
 
     Scenario: Device enters a cell
