@@ -71,12 +71,12 @@ jobs:
           max_attempts: 3
           command: |
             az deployment group create \
-              --resource-group ${RESOURCE_GROUP:-nrfassettracker} \
+              --resource-group ${RESOURCE_GROUP:-nrfassettrackerci} \
               --mode Complete \
               --name test-${{ github.sha }} \
               --template-file azuredeploy.json \
               --parameters \
-                appName=${APP_NAME:-nrfassettracker} \
+                appName=${APP_NAME:-nrfassettrackerci} \
                 location=${LOCATION} \
                 appRegistrationClientId=${APP_REG_CLIENT_ID} \
                 b2cTenant=${B2C_TENANT} \
@@ -89,12 +89,15 @@ jobs:
           retry_wait_seconds: 18000
           max_attempts: 3
           command:
-            func azure functionapp publish ${APP_NAME:-nrfassettracker}api
+            func azure functionapp publish ${APP_NAME:-nrfassettrackerci}api
             --typescript
       - name: Determine API endpoint
         if: env.AZURE_CREDENTIALS != ''
         run: |
-          API_ENDPOINT=https://`az functionapp show --resource-group ${RESOURCE_GROUP:-nrfassettracker} -n ${APP_NAME:-nrfassettracker}api --query 'defaultHostName' --output tsv | tr -d '\n'`/
+          API_ENDPOINT=https://`az functionapp show \
+            --resource-group ${RESOURCE_GROUP:-nrfassettrackerci} \
+            -n ${APP_NAME:-nrfassettrackerci}api \
+            --query 'defaultHostName' --output tsv | tr -d '\n'`/
           echo "API_ENDPOINT=${API_ENDPOINT}" >> $GITHUB_ENV
       - name: Cache certificates
         if: env.AZURE_CREDENTIALS != ''
@@ -117,7 +120,7 @@ jobs:
       - name: Determine tenenant ID
         if: env.AZURE_CREDENTIALS != ''
         run: |
-          TENANT_ID=`echo ${{ secrets.AZURE_CREDENTIALS }} | jq -r '.tenantId' | tr -d '\n'`
+          TENANT_ID=`echo ${{ env.AZURE_CREDENTIALS }} | jq -r '.tenantId' | tr -d '\n'`
           echo "TENANT_ID=${TENANT_ID}" >> $GITHUB_ENV
       - name: Run End-to-End Tests
         if: env.AZURE_CREDENTIALS != ''
