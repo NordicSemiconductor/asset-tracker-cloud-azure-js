@@ -87,8 +87,6 @@ const publishDeviceUpdatesToSignalR: AzureFunction = async (
 	log(context)({ signalRMessages })
 
 	context.bindings.signalRMessages = signalRMessages
-
-	context.done()
 }
 
 export default publishDeviceUpdatesToSignalR

@@ -58,7 +58,6 @@ const queryCellGeolocation: AzureFunction = async (
 	}
 
 	if (gpsUpdates.length == 0) {
-		context.done()
 		return
 	}
 
@@ -138,14 +137,11 @@ const queryCellGeolocation: AzureFunction = async (
 	log(context)({ roamingPositions })
 
 	if (roamingPositions.length === 0) {
-		context.done()
 		return
 	}
 
 	// Persist in CosmosDB
 	context.bindings.deviceCellGeolocation = JSON.stringify(roamingPositions)
-
-	context.done()
 }
 
 export default queryCellGeolocation

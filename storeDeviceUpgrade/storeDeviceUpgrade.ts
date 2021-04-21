@@ -1,5 +1,5 @@
 import { AzureFunction, Context, HttpRequest } from '@azure/functions'
-import { r } from '../lib/http'
+import { result } from '../lib/http'
 import { log } from '../lib/log'
 import { v4 } from 'uuid'
 import {
@@ -49,12 +49,10 @@ const storeDeviceUpgrade: AzureFunction = async (
 		})
 		const url = `https://${fotaStorageAccountName}.blob.core.windows.net/${fotaStorageContainer}/${blobName}`
 		log(context)(`Upload block blob ${blobName} successfully`, url)
-		context.res = r({ success: true, url })
+		context.res = result(context)({ success: true, url })
 	} catch (error) {
-		log(context)({
-			error: error.message,
-		})
-		context.res = r({ error: error.message }, 500)
+		context.log.error({ error })
+		context.res = result(context)({ error: error.message }, 500)
 	}
 }
 

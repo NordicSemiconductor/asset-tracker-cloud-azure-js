@@ -35,8 +35,6 @@ const storeDeviceUpdateInCosmosDB: AzureFunction = async (
 
 	context.bindings.deviceUpdate = JSON.stringify(document)
 	log(context)({ document })
-
-	context.done()
 }
 
 export default storeDeviceUpdateInCosmosDB

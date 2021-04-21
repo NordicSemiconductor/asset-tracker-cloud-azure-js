@@ -1,6 +1,6 @@
 import { AzureFunction, Context, HttpRequest } from '@azure/functions'
 import { Registry } from 'azure-iothub'
-import { r } from '../lib/http'
+import { result } from '../lib/http'
 import { ErrorInfo, ErrorType, toStatusCode } from '../lib/ErrorInfo'
 import { log } from '../lib/log'
 import { fromEnv } from '../lib/fromEnv'
@@ -21,7 +21,7 @@ const deleteDevice: AzureFunction = async (
 		)
 		const res = await devices.nextAsTwin()
 		if (res.result.length === 0) {
-			context.res = r(
+			context.res = result(context)(
 				{
 					type: ErrorType.EntityNotFound,
 					message: `Device ${req.params.id} not found!`,
@@ -30,12 +30,10 @@ const deleteDevice: AzureFunction = async (
 			)
 		}
 		await registry.delete(req.params.id as string)
-		context.res = r({ success: true }, 202)
+		context.res = result(context)({ success: true }, 202)
 	} catch (error) {
-		log(context)({
-			error: error.message,
-		})
-		context.res = r({ error: error.message }, 500)
+		context.log.error({ error })
+		context.res = result(context)({ error: error.message }, 500)
 	}
 }
 

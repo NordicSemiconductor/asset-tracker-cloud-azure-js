@@ -1,17 +1,14 @@
-import { AzureFunction, Context, HttpRequest } from '@azure/functions'
-import { r } from '../lib/http'
-import { log } from '../lib/log'
+import { AzureFunction, Context } from '@azure/functions'
+import { result } from '../lib/http'
 
 const getSignalRConnectionInfo: AzureFunction = async (
 	context: Context,
-	req: HttpRequest,
 	connectionInfo: {
 		url: string
 		accessToken: string
 	},
 ): Promise<void> => {
-	log(context)({ req, connectionInfo })
-	context.res = r(connectionInfo)
+	context.res = result(context)(connectionInfo)
 }
 
 export default getSignalRConnectionInfo

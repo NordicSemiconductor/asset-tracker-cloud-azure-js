@@ -1,5 +1,5 @@
 import { AzureFunction, Context, HttpRequest } from '@azure/functions'
-import { r } from '../lib/http'
+import { result } from '../lib/http'
 import { log } from '../lib/log'
 import { fromEnv } from '../lib/fromEnv'
 import { parseConnectionString } from '../lib/parseConnectionString'
@@ -58,14 +58,17 @@ const geolocateCell: AzureFunction = async (
 		const location = fromDeviceLocations(locations)
 
 		if (isSome(location)) {
-			context.res = r(location.value)
+			context.res = result(context)(location.value)
 			log(context)({ location: location.value })
 		} else {
-			context.res = r({ error: `Could not resolve cell ${c}` }, 404)
+			context.res = result(context)(
+				{ error: `Could not resolve cell ${c}` },
+				404,
+			)
 		}
 	} catch (error) {
-		console.error({ error })
-		context.res = r({ error: error.message }, 500)
+		context.log.error({ error })
+		context.res = result(context)({ error: error.message }, 500)
 	}
 }
 

@@ -1,6 +1,6 @@
 import { AzureFunction, Context, HttpRequest } from '@azure/functions'
 import { log } from '../lib/log'
-import { r } from '../lib/http'
+import { result } from '../lib/http'
 import { CosmosClient } from '@azure/cosmos'
 import { parseConnectionString } from '../lib/parseConnectionString'
 import { fromEnv } from '../lib/fromEnv'
@@ -26,15 +26,14 @@ const queryHistoricalDeviceData: AzureFunction = async (
 ): Promise<void> => {
 	log(context)({ req })
 	try {
-		const result = {
+		const res = {
 			result: (await container.items.query(req.body.query).fetchAll())
 				.resources,
 		}
-		log(context)({ result })
-		context.res = r(result)
+		context.res = result(context)(res)
 	} catch (error) {
-		console.error({ error })
-		context.res = r({ error: error.message }, 500)
+		context.log.error({ error })
+		context.res = result(context)({ error: error.message }, 500)
 	}
 }
 

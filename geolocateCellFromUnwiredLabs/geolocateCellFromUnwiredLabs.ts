@@ -1,5 +1,5 @@
 import { AzureFunction, Context, HttpRequest } from '@azure/functions'
-import { r } from '../lib/http'
+import { result } from '../lib/http'
 import { log } from '../lib/log'
 import { fromEnv } from '../lib/fromEnv'
 import { parseConnectionString } from '../lib/parseConnectionString'
@@ -55,8 +55,10 @@ const geolocateCellFromUnwiredLabs: AzureFunction = async (
 	log(context)({ req })
 
 	if (locate === undefined) {
-		context.res = r({ error: `No Unwired Labs API key defined.` }, 402)
-		context.done()
+		context.res = result(context)(
+			{ error: `No Unwired Labs API key defined.` },
+			402,
+		)
 		return
 	}
 
@@ -82,14 +84,17 @@ const geolocateCellFromUnwiredLabs: AzureFunction = async (
 
 		if (locations?.[0] !== undefined) {
 			if (locations[0].lat !== undefined) {
-				context.res = r(locations[0])
+				context.res = result(context)(locations[0])
 			} else {
-				context.res = r({ error: `Unknown cell ${id}` }, 404)
+				context.res = result(context)({ error: `Unknown cell ${id}` }, 404)
 			}
 		} else {
 			const maybeLocation = await locate(cell)
 			if (isLeft(maybeLocation)) {
-				context.res = r({ error: `Could not resolve cell ${id}` }, 404)
+				context.res = result(context)(
+					{ error: `Could not resolve cell ${id}` },
+					404,
+				)
 				context.bindings.cellGeolocation = JSON.stringify({
 					cellId: id,
 					...cell,
@@ -104,10 +109,9 @@ const geolocateCellFromUnwiredLabs: AzureFunction = async (
 			}
 		}
 	} catch (error) {
-		console.error({ error })
-		context.res = r({ error: error.message }, 500)
+		context.log.error({ error })
+		context.res = result(context)({ error: error.message }, 500)
 	}
-	context.done()
 }
 
 export default geolocateCellFromUnwiredLabs

@@ -1,5 +1,5 @@
 import { AzureFunction, Context, HttpRequest } from '@azure/functions'
-import { r } from '../lib/http'
+import { result } from '../lib/http'
 import { v4 } from 'uuid'
 import {
 	BlobServiceClient,
@@ -52,7 +52,7 @@ const storeImage: AzureFunction = async (
 		uploadBlobResponse.requestId,
 	)
 
-	context.res = r(
+	context.res = result(context)(
 		{
 			url: `https://${avatarStorageAccountName}.blob.core.windows.net/${avatarStorageContainer}/${blobName}`,
 		},

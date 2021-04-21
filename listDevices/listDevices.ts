@@ -1,6 +1,6 @@
 import { AzureFunction, Context, HttpRequest } from '@azure/functions'
 import { Registry } from 'azure-iothub'
-import { r } from '../lib/http'
+import { result } from '../lib/http'
 import { log } from '../lib/log'
 import { fromEnv } from '../lib/fromEnv'
 
@@ -19,12 +19,10 @@ const listDevices: AzureFunction = async (
 			'SELECT deviceId, tags.name FROM devices',
 		)
 		const res = await devices.nextAsTwin()
-		context.res = r(res.result)
+		context.res = result(context)(res.result)
 	} catch (error) {
-		log(context)({
-			error: error.message,
-		})
-		context.res = r({ error: error.message }, 500)
+		context.log.error({ error })
+		context.res = result(context)({ error: error.message }, 500)
 	}
 }
 
