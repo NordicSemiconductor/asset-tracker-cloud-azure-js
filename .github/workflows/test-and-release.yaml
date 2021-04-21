@@ -67,7 +67,7 @@ jobs:
         uses: nick-invision/retry@v2
         with:
           timeout_minutes: 10
-          retry_wait_seconds: 18000
+          retry_wait_seconds: 300
           max_attempts: 3
           command: |
             az deployment group create \
@@ -86,7 +86,7 @@ jobs:
         uses: nick-invision/retry@v2
         with:
           timeout_minutes: 10
-          retry_wait_seconds: 18000
+          retry_wait_seconds: 300
           max_attempts: 3
           command:
             func azure functionapp publish ${APP_NAME:-nrfassettrackerci}api
