@@ -26,6 +26,7 @@ jobs:
       B2C_CLIENT_SECRET: ${{ secrets.B2C_CLIENT_SECRET }}
       B2C_TENANT_ID: ${{ secrets.B2C_TENANT_ID }}
       AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
+      RESOURCE_GROUP: ${{ secrets.RESOURCE_GROUP }}
 
     steps:
       - uses: actions/checkout@v2
