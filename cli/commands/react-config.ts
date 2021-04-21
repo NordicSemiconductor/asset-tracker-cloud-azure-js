@@ -14,12 +14,9 @@ export const reactConfigCommand = ({
 }): CommandDefinition => ({
 	command: 'react-config',
 	action: async () => {
-		const [{ hostNames }] = await Promise.all([
-			websiteClient().then(async (client) =>
-				client.webApps.get(resourceGroup, `${appName}api`),
-			),
-		])
-
+		const { hostNames } = await websiteClient().then(async (client) =>
+			client.webApps.get(resourceGroup, `${appName}api`),
+		)
 		process.stdout.write(
 			objectToEnv(
 				{

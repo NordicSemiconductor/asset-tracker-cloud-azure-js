@@ -6,12 +6,13 @@ export const ioTHubDPSInfo = ({
 	credentials,
 }: {
 	resourceGroupName: string
-	credentials: () => Promise<AzureCliCredentials>
+	credentials: AzureCliCredentials | (() => Promise<AzureCliCredentials>)
 }) => async (): Promise<{
 	hostname: string
 	connectionString: string
 }> => {
-	const creds = await credentials()
+	const creds =
+		typeof credentials === 'function' ? await credentials() : credentials
 	const subscriptionId = creds.tokenInfo.subscription
 	const token = await creds.getToken()
 

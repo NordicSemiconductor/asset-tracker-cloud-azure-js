@@ -16,9 +16,8 @@ import {
 import { reactConfigCommand } from './commands/react-config'
 import { flashCommand } from './commands/flash'
 import { ioTHubDPSInfo } from './iot/ioTHubDPSInfo'
-import { creds } from './creds'
 import { functionsSettingsCommand } from './commands/functions-settings'
-import { error, help } from './logging'
+import { error, help, settings } from './logging'
 
 const version = JSON.parse(
 	fs.readFileSync(path.join(process.cwd(), 'package.json'), 'utf-8'),
@@ -27,7 +26,18 @@ const version = JSON.parse(
 let currentCreds: Promise<AzureCliCredentials>
 
 const getCurrentCreds = async () => {
-	if (currentCreds === undefined) currentCreds = creds()
+	if (currentCreds === undefined)
+		currentCreds = (async (): Promise<AzureCliCredentials> => {
+			const creds = await AzureCliCredentials.create()
+			const {
+				tokenInfo: { subscription },
+			} = creds
+			settings({
+				Subscription: subscription,
+				'Resource Group': resourceGroupName(),
+			})
+			return creds
+		})()
 	return currentCreds
 }
 
