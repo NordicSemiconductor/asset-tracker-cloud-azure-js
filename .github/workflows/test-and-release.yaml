@@ -96,7 +96,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ./certificates
-          key: certificates-${{ env.TENANT_ID }}
+          key: certificates
       - name: Check if intermediate cert exists
         if: env.AZURE_CREDENTIALS != ''
         run: |
@@ -109,11 +109,6 @@ jobs:
           node cli create-ca-root
           node cli proof-ca-root-possession
           node cli create-ca-intermediate
-      - name: Determine tenenant ID
-        if: env.AZURE_CREDENTIALS != ''
-        run: |
-          TENANT_ID=`echo ${{ env.AZURE_CREDENTIALS }} | jq -r '.tenantId' | tr -d '\n'`
-          echo "TENANT_ID=${TENANT_ID}" >> $GITHUB_ENV
       - name: Run End-to-End Tests
         if: env.AZURE_CREDENTIALS != ''
         uses: nick-invision/retry@v2
