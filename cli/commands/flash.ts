@@ -15,7 +15,7 @@ import { v4 } from 'uuid'
 import { progress, success } from '../logging'
 
 const defaultPort = '/dev/ttyACM0'
-const defaultSecTag = 42
+const defaultSecTag = 11
 
 const getLatestFirmware = async ({
 	nbiot,
@@ -54,6 +54,7 @@ const getLatestFirmware = async ({
 	const hexfile = assets.find(
 		({ name }) =>
 			name.includes('.hex') &&
+			name.includes('azure') &&
 			name.includes(dk ? 'nRF9160DK' : 'Thingy91') &&
 			name.includes(nbiot ? 'nbiot' : 'ltem') &&
 			(nodebug ? name.includes('nodebug') : !name.includes('nodebug')),
