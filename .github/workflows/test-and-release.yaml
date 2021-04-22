@@ -120,7 +120,7 @@ jobs:
           command: npm run test:e2e
       - name: Delete device certificates
         if: env.AZURE_CREDENTIALS != ''
-        run: rm ./certificates/device-*
+        run: rm ./certificates/*/device-*
       - name: Semantic release
         if: success()
         continue-on-error: true
