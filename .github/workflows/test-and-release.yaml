@@ -100,7 +100,7 @@ jobs:
       - name: Check if intermediate cert exists
         if: env.AZURE_CREDENTIALS != ''
         run: |
-          ls ./certificates/CA.intermediate.* 1> /dev/null 2>&1
+          ls ./certificates/*/CA.intermediate.* 1> /dev/null 2>&1
           echo "SKIP_CERT_GENERATION=1" >> $GITHUB_ENV
         continue-on-error: true
       - name: Create Intermediate CA certificate
