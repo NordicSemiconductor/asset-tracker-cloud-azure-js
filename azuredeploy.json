@@ -46,6 +46,14 @@
         "description": "Specifies the IotHub SKU. At minimum S1 is needed for IoT Device Update."
       }
     },
+    "aduInstanceName": {
+      "type": "string",
+      "minLength": 3,
+      "metadata": {
+        "description": "Specifies the name of the ADU instance. There is a limit of 2 instances per subscription, so the ADU instance needs to be shared between multiple IoT hubs"
+      },
+      "defaultValue": "nRFAssetTrackerADU"
+    },
     "capacityUnits": {
       "type": "int",
       "minValue": 1,
@@ -184,7 +192,7 @@
       "dependsOn": ["[concat(parameters('appName'), 'IotHub')]"]
     },
     {
-      "name": "[concat(parameters('appName'), 'ADU')]",
+      "name": "[parameters('aduInstanceName')]",
       "type": "Microsoft.DeviceUpdate/accounts",
       "apiVersion": "2020-03-01-preview",
       "location": "[parameters('location')]",
@@ -193,7 +201,7 @@
       "dependsOn": []
     },
     {
-      "name": "[concat(parameters('appName'), 'ADU/ADUInstance')]",
+      "name": "[concat(parameters('aduInstanceName'), '/', parameters('appName'))]",
       "type": "Microsoft.DeviceUpdate/accounts/instances",
       "apiVersion": "2020-03-01-preview",
       "location": "[parameters('location')]",
@@ -209,7 +217,7 @@
       "tags": {},
       "dependsOn": [
         "[concat(parameters('appName'), 'IotHub')]",
-        "[concat(parameters('appName'), 'ADU')]"
+        "[parameters('aduInstanceName')]"
       ]
     },
     {

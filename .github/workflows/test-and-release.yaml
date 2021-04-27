@@ -77,6 +77,7 @@ jobs:
               --template-file azuredeploy.json \
               --parameters \
                 appName=${APP_NAME:-nrfassettrackerci} \
+                aduInstanceName=${ADU_INSTANCE_NAME:-nRFAssetTrackerADU} \
                 location=${LOCATION} \
                 appRegistrationClientId=${APP_REG_CLIENT_ID} \
                 b2cTenant=${B2C_TENANT} \

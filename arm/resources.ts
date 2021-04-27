@@ -3,6 +3,9 @@ export const resourceGroupName = (): string =>
 
 export const appName = (): string => process.env.APP_NAME ?? 'nrfassettracker'
 
+export const aduInstanceName = (): string =>
+	process.env.ADU_INSTANCE_NAME ?? 'nRFAssetTrackerADU'
+
 /**
  * Returns the name of the Device Provisioning Service
  */
