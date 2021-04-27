@@ -73,7 +73,7 @@ jobs:
           max_attempts: 3
           command: |
             az deployment group create \
-              --resource-group ${ADU_RESOURCE_GROUP:-aduInstanceName} \
+              --resource-group ${ADU_RESOURCE_GROUP:-nRFAssetTrackerADU} \
               --mode Complete \
               --name cd-${{ env.VERSION }} \
               --template-file azuredeploy.adu.json \

@@ -82,7 +82,7 @@ jobs:
         if: env.AZURE_CREDENTIALS != ''
         run: |
           az deployment group create \
-            --resource-group ${ADU_RESOURCE_GROUP:-aduInstanceName} \
+            --resource-group ${ADU_RESOURCE_GROUP:-nRFAssetTrackerADU} \
             --mode Complete \
             --name cd-${{ env.VERSION }} \
             --template-file azuredeploy.adu.json \
