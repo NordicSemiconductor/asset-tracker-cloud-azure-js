@@ -184,6 +184,35 @@
       "dependsOn": ["[concat(parameters('appName'), 'IotHub')]"]
     },
     {
+      "name": "[concat(parameters('appName'), 'ADU')]",
+      "type": "Microsoft.DeviceUpdate/accounts",
+      "apiVersion": "2020-03-01-preview",
+      "location": "[parameters('location')]",
+      "properties": {},
+      "tags": {},
+      "dependsOn": []
+    },
+    {
+      "name": "[concat(parameters('appName'), 'ADU/ADUInstance')]",
+      "type": "Microsoft.DeviceUpdate/accounts/instances",
+      "apiVersion": "2020-03-01-preview",
+      "location": "[parameters('location')]",
+      "properties": {
+        "iotHubs": [
+          {
+            "resourceId": "[variables('iotHubResourceId')]",
+            "ioTHubConnectionString": "[concat('HostName=', reference(resourceId('Microsoft.Devices/IoTHubs', concat(parameters('appName'), 'IotHub')), providers('Microsoft.Devices', 'IoTHubs').apiVersions[0]).hostName, ';SharedAccessKeyName=iothubowner;SharedAccessKey=', listKeys(resourceId('Microsoft.Devices/IotHubs', concat(parameters('appName'), 'IotHub')), providers('Microsoft.Devices', 'IoTHubs').apiVersions[0]).value[0].primaryKey)]",
+            "eventHubConnectionString": "[concat('Endpoint=', reference(resourceId('Microsoft.Devices/IoTHubs', concat(parameters('appName'), 'IotHub')), providers('Microsoft.Devices', 'IoTHubs').apiVersions[0]).eventHubEndpoints.events.endpoint, ';SharedAccessKeyName=iothubowner;SharedAccessKey=', listKeys(resourceId('Microsoft.Devices/IotHubs', concat(parameters('appName'), 'IotHub')), providers('Microsoft.Devices', 'IoTHubs').apiVersions[0]).value[0].primaryKey, ';EntityPath=', reference(resourceId('Microsoft.Devices/IoTHubs', concat(parameters('appName'), 'IotHub')), providers('Microsoft.Devices', 'IoTHubs').apiVersions[0]).eventHubEndpoints.events.path)]"
+          }
+        ]
+      },
+      "tags": {},
+      "dependsOn": [
+        "[concat(parameters('appName'), 'IotHub')]",
+        "[concat(parameters('appName'), 'ADU')]"
+      ]
+    },
+    {
       "type": "Microsoft.Storage/storageAccounts",
       "apiVersion": "2019-06-01",
       "name": "[concat(parameters('appName'), 'app')]",
