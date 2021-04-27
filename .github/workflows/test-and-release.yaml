@@ -75,7 +75,7 @@ jobs:
             az deployment group create \
               --resource-group ${ADU_RESOURCE_GROUP:-nRFAssetTrackerADU} \
               --mode Complete \
-              --name cd-${{ env.VERSION }} \
+              --name test-${{ github.sha }} \
               --template-file azuredeploy.adu.json \
               --parameters \
                 aduInstanceName=${ADU_INSTANCE_NAME:-nRFAssetTrackerADU} \
