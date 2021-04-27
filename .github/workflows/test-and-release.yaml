@@ -27,6 +27,8 @@ jobs:
       B2C_TENANT_ID: ${{ secrets.B2C_TENANT_ID }}
       AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
       RESOURCE_GROUP: ${{ secrets.RESOURCE_GROUP }}
+      ADU_RESOURCE_GROUP: ${{ secrets.ADU_RESOURCE_GROUP }}
+      ADU_INSTANCE_NAME: ${{ secrets.ADU_INSTANCE_NAME }}
 
     steps:
       - uses: actions/checkout@v2
@@ -70,6 +72,14 @@ jobs:
           retry_wait_seconds: 300
           max_attempts: 3
           command: |
+            az deployment group create \
+              --resource-group ${ADU_RESOURCE_GROUP:-aduInstanceName} \
+              --mode Complete \
+              --name cd-${{ env.VERSION }} \
+              --template-file azuredeploy.adu.json \
+              --parameters \
+                aduInstanceName=${ADU_INSTANCE_NAME:-nRFAssetTrackerADU} \
+                location=$LOCATION
             az deployment group create \
               --resource-group ${RESOURCE_GROUP:-nrfassettrackerci} \
               --mode Complete \

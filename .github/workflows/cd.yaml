@@ -27,6 +27,8 @@ jobs:
       B2C_TENANT: ${{ secrets.B2C_TENANT }}
       RESOURCE_GROUP: ${{ secrets.RESOURCE_GROUP }}
       UNWIRED_LABS_API_KEY: ${{ secrets.UNWIRED_LABS_API_KEY }}
+      ADU_RESOURCE_GROUP: ${{ secrets.ADU_RESOURCE_GROUP }}
+      ADU_INSTANCE_NAME: ${{ secrets.ADU_INSTANCE_NAME }}
 
     outputs:
       web_app_url: ${{ steps.web-app-url.outputs.web_app_url }}
@@ -79,6 +81,14 @@ jobs:
       - name: Deploy
         if: env.AZURE_CREDENTIALS != ''
         run: |
+          az deployment group create \
+            --resource-group ${ADU_RESOURCE_GROUP:-aduInstanceName} \
+            --mode Complete \
+            --name cd-${{ env.VERSION }} \
+            --template-file azuredeploy.adu.json \
+            --parameters \
+              aduInstanceName=${ADU_INSTANCE_NAME:-nRFAssetTrackerADU} \
+              location=$LOCATION
           az deployment group create \
             --resource-group ${RESOURCE_GROUP:-nrfassettracker} \
             --mode Complete \
