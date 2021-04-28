@@ -73,25 +73,26 @@ jobs:
           max_attempts: 3
           command: |
             az deployment group create \
-              --resource-group ${ADU_RESOURCE_GROUP:-nRFAssetTrackerADU} \
-              --mode Complete \
-              --name test-${{ github.sha }} \
-              --template-file azuredeploy.adu.json \
-              --parameters \
-                aduInstanceName=${ADU_INSTANCE_NAME:-nRFAssetTrackerADU} \
-                location=$LOCATION
-            az deployment group create \
               --resource-group ${RESOURCE_GROUP:-nrfassettrackerci} \
               --mode Complete \
               --name test-${{ github.sha }} \
               --template-file azuredeploy.json \
               --parameters \
                 appName=${APP_NAME:-nrfassettrackerci} \
-                aduInstanceName=${ADU_INSTANCE_NAME:-nRFAssetTrackerADU} \
                 location=${LOCATION} \
                 appRegistrationClientId=${APP_REG_CLIENT_ID} \
                 b2cTenant=${B2C_TENANT} \
                 b2cFlowName=B2C_1_developer
+            az deployment group create \
+              --resource-group ${ADU_RESOURCE_GROUP:-nRFAssetTrackerADU} \
+              --mode Incremental # Incremental is used here to allow the creation of an ADU instance per solution independently  \
+              --name test-${{ env.VERSION }} \
+              --template-file azuredeploy.adu.json \
+              --parameters \
+                aduInstanceName=${ADU_INSTANCE_NAME:-nRFAssetTrackerADU} \
+                nrfAssetTrackerResourceGroup=${RESOURCE_GROUP:-nrfassettrackerci} \
+                nrfAssetTrackerAppName=${APP_NAME:-nrfassettrackerci} \
+                location=$LOCATION
       - name: Deploy Function App
         if: env.AZURE_CREDENTIALS != ''
         uses: nick-invision/retry@v2
