@@ -88,20 +88,19 @@ jobs:
             --template-file azuredeploy.json \
             --parameters \
               appName=${APP_NAME:-nrfassettracker} \
-              location=$LOCATION \
               appRegistrationClientId=$APP_REG_CLIENT_ID \
               b2cTenant=${B2C_TENANT} \
               unwiredlabsApiKey=${UNWIRED_LABS_API_KEY}
+          # Incremental mode is used here to allow the creation of an ADU instance per solution independently
           az deployment group create \
             --resource-group ${ADU_RESOURCE_GROUP:-nRFAssetTrackerADU} \
-            --mode Incremental # Incremental is used here to allow the creation of an ADU instance per solution independently \
+            --mode Incremental \
             --name cd-${{ env.VERSION }} \
             --template-file azuredeploy.adu.json \
             --parameters \
               aduInstanceName=${ADU_INSTANCE_NAME:-nRFAssetTrackerADU} \
               nrfAssetTrackerResourceGroup=${RESOURCE_GROUP:-nrfassettracker} \
-              nrfAssetTrackerAppName=${APP_NAME:-nrfassettracker} \
-              location=$LOCATION
+              nrfAssetTrackerAppName=${APP_NAME:-nrfassettracker}
       - name: Publish Function App
         if: env.AZURE_CREDENTIALS != ''
         run:

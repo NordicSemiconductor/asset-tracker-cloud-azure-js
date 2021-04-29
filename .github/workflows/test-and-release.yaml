@@ -79,20 +79,19 @@ jobs:
               --template-file azuredeploy.json \
               --parameters \
                 appName=${APP_NAME:-nrfassettrackerci} \
-                location=${LOCATION} \
                 appRegistrationClientId=${APP_REG_CLIENT_ID} \
                 b2cTenant=${B2C_TENANT} \
                 b2cFlowName=B2C_1_developer
+            # Incremental mode is used here to allow the creation of an ADU instance per solution independently
             az deployment group create \
               --resource-group ${ADU_RESOURCE_GROUP:-nRFAssetTrackerADU} \
-              --mode Incremental # Incremental is used here to allow the creation of an ADU instance per solution independently  \
+              --mode Incremental \
               --name test-${{ env.VERSION }} \
               --template-file azuredeploy.adu.json \
               --parameters \
                 aduInstanceName=${ADU_INSTANCE_NAME:-nRFAssetTrackerADU} \
                 nrfAssetTrackerResourceGroup=${RESOURCE_GROUP:-nrfassettrackerci} \
-                nrfAssetTrackerAppName=${APP_NAME:-nrfassettrackerci} \
-                location=$LOCATION
+                nrfAssetTrackerAppName=${APP_NAME:-nrfassettrackerci}
       - name: Deploy Function App
         if: env.AZURE_CREDENTIALS != ''
         uses: nick-invision/retry@v2
