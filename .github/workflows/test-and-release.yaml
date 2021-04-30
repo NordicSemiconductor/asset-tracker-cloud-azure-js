@@ -84,12 +84,12 @@ jobs:
                 b2cFlowName=B2C_1_developer
             # Incremental mode is used here to allow the creation of an ADU instance per solution independently
             az deployment group create \
-              --resource-group ${ADU_RESOURCE_GROUP:-nRFAssetTrackerADU} \
+              --resource-group ${ADU_RESOURCE_GROUP:-nRFAssetTrackerADUCI} \
               --mode Incremental \
               --name test-${{ github.sha }} \
               --template-file azuredeploy.adu.json \
               --parameters \
-                aduInstanceName=${ADU_INSTANCE_NAME:-nRFAssetTrackerADU} \
+                aduInstanceName=${ADU_INSTANCE_NAME:-nRFAssetTrackerADUCI} \
                 nrfAssetTrackerResourceGroup=${RESOURCE_GROUP:-nrfassettrackerci} \
                 nrfAssetTrackerAppName=${APP_NAME:-nrfassettrackerci}
       - name: Deploy Function App
