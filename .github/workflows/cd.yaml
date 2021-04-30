@@ -78,7 +78,7 @@ jobs:
       - name: Compile source
         if: env.AZURE_CREDENTIALS != ''
         run: npx tsc
-      - name: Deploy
+      - name: Deploy solution
         if: env.AZURE_CREDENTIALS != ''
         run: |
           az deployment group create \
@@ -91,6 +91,9 @@ jobs:
               appRegistrationClientId=$APP_REG_CLIENT_ID \
               b2cTenant=${B2C_TENANT} \
               unwiredlabsApiKey=${UNWIRED_LABS_API_KEY}
+      - name: Deploy ADU
+        if: env.AZURE_CREDENTIALS != ''
+        run: |
           # Incremental mode is used here to allow the creation of an ADU instance per solution independently
           az deployment group create \
             --resource-group ${ADU_RESOURCE_GROUP:-nRFAssetTrackerADU} \
