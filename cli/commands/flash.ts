@@ -39,14 +39,14 @@ const getLatestFirmware = async ({
 	const latestRelease = (
 		await octokit.repos.listReleases({
 			owner: 'NordicSemiconductor',
-			repo: 'asset-tracker-cloud-firmware',
+			repo: 'asset-tracker-cloud-firmware-aws',
 			per_page: 1,
 		})
 	).data[0]
 	const assets = (
 		await octokit.repos.listReleaseAssets({
 			owner: 'NordicSemiconductor',
-			repo: 'asset-tracker-cloud-firmware',
+			repo: 'asset-tracker-cloud-firmware-aws',
 			release_id: latestRelease.id,
 		})
 	).data
