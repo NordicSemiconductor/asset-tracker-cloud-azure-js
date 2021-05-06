@@ -27,8 +27,6 @@ jobs:
       B2C_TENANT_ID: ${{ secrets.B2C_TENANT_ID }}
       AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
       RESOURCE_GROUP: ${{ secrets.RESOURCE_GROUP }}
-      ADU_RESOURCE_GROUP: ${{ secrets.ADU_RESOURCE_GROUP }}
-      ADU_INSTANCE_NAME: ${{ secrets.ADU_INSTANCE_NAME }}
 
     steps:
       - uses: actions/checkout@v2
@@ -82,24 +80,6 @@ jobs:
                 appRegistrationClientId=${APP_REG_CLIENT_ID} \
                 b2cTenant=${B2C_TENANT} \
                 b2cFlowName=B2C_1_developer
-      - name: Deploy ADU
-        if: env.AZURE_CREDENTIALS != ''
-        uses: nick-invision/retry@v2
-        with:
-          timeout_minutes: 10
-          retry_wait_seconds: 300
-          max_attempts: 3
-          command: |
-            # Incremental mode is used here to allow the creation of an ADU instance per solution independently
-            az deployment group create \
-              --resource-group ${ADU_RESOURCE_GROUP:-nRFAssetTrackerADUCI} \
-              --mode Incremental \
-              --name test-${{ github.sha }} \
-              --template-file azuredeploy.adu.json \
-              --parameters \
-                aduInstanceName=${ADU_INSTANCE_NAME:-nRFAssetTrackerADUCI} \
-                nrfAssetTrackerResourceGroup=${RESOURCE_GROUP:-nrfassettrackerci} \
-                nrfAssetTrackerAppName=${APP_NAME:-nrfassettrackerci}
       - name: Deploy Function App
         if: env.AZURE_CREDENTIALS != ''
         uses: nick-invision/retry@v2
