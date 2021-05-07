@@ -39,14 +39,14 @@ const getLatestFirmware = async ({
 	const latestRelease = (
 		await octokit.repos.listReleases({
 			owner: 'NordicSemiconductor',
-			repo: 'asset-tracker-cloud-firmware-aws',
+			repo: 'asset-tracker-cloud-firmware-azure',
 			per_page: 1,
 		})
 	).data[0]
 	const assets = (
 		await octokit.repos.listReleaseAssets({
 			owner: 'NordicSemiconductor',
-			repo: 'asset-tracker-cloud-firmware-aws',
+			repo: 'asset-tracker-cloud-firmware-azure',
 			release_id: latestRelease.id,
 		})
 	).data
@@ -54,7 +54,6 @@ const getLatestFirmware = async ({
 	const hexfile = assets.find(
 		({ name }) =>
 			name.includes('.hex') &&
-			name.includes('azure') &&
 			name.includes(dk ? 'nRF9160DK' : 'Thingy91') &&
 			name.includes(nbiot ? 'nbiot' : 'ltem') &&
 			(nodebug ? name.includes('nodebug') : !name.includes('nodebug')),
