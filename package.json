@@ -105,5 +105,11 @@
   "jest": {
     "preset": "ts-jest",
     "testRegex": ".+.spec.ts$"
+  },
+  "deploy": {
+    "webApp": {
+      "repository": "https://github.com/NordicSemiconductor/asset-tracker-cloud-app-js.git",
+      "branch": "saga"
+    }
   }
 }

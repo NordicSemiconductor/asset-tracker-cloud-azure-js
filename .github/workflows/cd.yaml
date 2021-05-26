@@ -113,8 +113,9 @@ jobs:
         if: env.AZURE_CREDENTIALS != ''
         run: |
           export EXTEND_ESLINT=true
-          OWNER=`echo $GITHUB_REPOSITORY | awk '{split($0,a,"/"); print a[1]}' | tr -d '\n'`
-          git clone https://github.com/$OWNER/asset-tracker-cloud-app-js app
+          WEBAPP_REPO=`cat package.json | jq -r '.deploy.webApp.repository'`
+          WEBAPP_BRANCH=`cat package.json | jq -r '.deploy.webApp.branch'`
+          git clone --branch $WEBAPP_BRANCH --single-branch $WEBAPP_REPO app
           cd app
           APP_TAG=`git tag --points-at HEAD | tr -d '\n'`
           APP_SHA=`git log -n 1 --pretty=format:"%H" | tr -d '\n'`
