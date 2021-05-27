@@ -72,14 +72,13 @@ export const createDeviceCertCommand = ({
 			`node cli flash ${id}`,
 		)
 
-		const { properties } = await (await iotDpsClient()).iotDpsResource.get(
-			dpsName,
-			resourceGroup,
-		)
+		const { properties } = await (
+			await iotDpsClient()
+		).iotDpsResource.get(dpsName, resourceGroup)
 
 		heading('Firmware configuration')
-		setting('DPS hostname', properties.serviceOperationsHostName as string),
-			setting('ID scope', properties.idScope as string)
+		setting('DPS hostname', properties.serviceOperationsHostName as string)
+		setting('ID scope', properties.idScope as string)
 	},
 	help: 'Generate a device certificate and register a device in the registry.',
 })
