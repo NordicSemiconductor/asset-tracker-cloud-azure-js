@@ -4,6 +4,7 @@ import { parse, URLSearchParams } from 'url'
 import { DeviceRegistrationState } from 'azure-iot-provisioning-service/dist/interfaces'
 import { dpsTopics } from './dpsTopics'
 import { deviceFileLocations } from './deviceFileLocations'
+import { globalIotHubDPSHostname } from './ioTHubDPSInfo'
 
 /**
  * Connect the device to the Azure IoT Hub.
@@ -12,10 +13,10 @@ import { deviceFileLocations } from './deviceFileLocations'
 export const connectDevice = async ({
 	deviceId,
 	certsDir,
-	dps,
+	dpsIdScope,
 	log,
 }: {
-	dps: () => Promise<{ serviceOperationsHostName: string; idScope: string }>
+	dpsIdScope: () => Promise<string>
 	deviceId: string
 	log?: (...args: any[]) => void
 	certsDir: string
@@ -37,13 +38,13 @@ export const connectDevice = async ({
 				// Connect to Device Provisioning Service using MQTT
 				// @see https://docs.microsoft.com/en-us/azure/iot-dps/iot-dps-mqtt-support
 
-				const { serviceOperationsHostName: dpsHostname, idScope } = await dps()
+				const idScope = await dpsIdScope()
 
-				log?.(`Connecting to`, dpsHostname)
+				log?.(`Connecting to`, globalIotHubDPSHostname)
 				log?.(`ID scope`, idScope)
 
 				const client = connect({
-					host: dpsHostname,
+					host: globalIotHubDPSHostname,
 					port: 8883,
 					key: deviceKey,
 					cert: deviceCert,

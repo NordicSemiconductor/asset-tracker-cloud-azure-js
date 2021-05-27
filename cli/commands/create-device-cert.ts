@@ -6,6 +6,7 @@ import { list as listIntermediateCerts } from '../iot/intermediateRegistry'
 import { deviceFileLocations } from '../iot/deviceFileLocations'
 import { setting, heading } from '../logging'
 import { IotDpsClient } from '@azure/arm-deviceprovisioningservices'
+import { globalIotHubDPSHostname } from '../iot/ioTHubDPSInfo'
 
 export const createDeviceCertCommand = ({
 	certsDir: certsDirPromise,
@@ -77,7 +78,7 @@ export const createDeviceCertCommand = ({
 		).iotDpsResource.get(dpsName, resourceGroup)
 
 		heading('Firmware configuration')
-		setting('DPS hostname', properties.serviceOperationsHostName as string)
+		setting('DPS hostname', globalIotHubDPSHostname)
 		setting('ID scope', properties.idScope as string)
 	},
 	help: 'Generate a device certificate and register a device in the registry.',

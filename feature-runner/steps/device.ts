@@ -48,7 +48,7 @@ export const deviceStepRunners = ({
 			const connection = await connectDevice({
 				deviceId,
 				certsDir,
-				dps: async () => {
+				dpsIdScope: async () => {
 					const creds = await AzureCliCredentials.create()
 					const dpsClient = new IotDpsClient(
 						creds as any,
@@ -58,10 +58,7 @@ export const deviceStepRunners = ({
 						`${resourceGroup}ProvisioningService`,
 						resourceGroup,
 					)
-					return dps.properties as {
-						serviceOperationsHostName: string
-						idScope: string
-					}
+					return dps.properties.idScope as string
 				},
 			})
 			connections[deviceId] = connection

@@ -1,5 +1,5 @@
 import { CommandDefinition } from './CommandDefinition'
-import { ioTHubDPSInfo } from '../iot/ioTHubDPSInfo'
+import { globalIotHubDPSHostname, ioTHubDPSInfo } from '../iot/ioTHubDPSInfo'
 import { setting } from '../logging'
 import { IotDpsClient } from '@azure/arm-deviceprovisioningservices'
 import { AzureCliCredentials } from '@azure/ms-rest-nodeauth'
@@ -26,14 +26,14 @@ export const infoCommand = ({
 	],
 	action: async ({ output }: { output?: string }) => {
 		const {
-			properties: { serviceOperationsHostName, idScope },
+			properties: { idScope },
 		} = await (await iotDpsClient()).iotDpsResource.get(dpsName, resourceGroup)
 
 		const info: Record<string, string> = {
 			subscription: (await credentials()).tokenInfo.subscription,
 			resourceGroup,
 			iotHubHostname: (await getIotHubInfo()).hostname,
-			iotHubDpsHostname: serviceOperationsHostName as string,
+			iotHubDpsHostname: globalIotHubDPSHostname,
 			iotHubDpsIdScope: idScope as string,
 		}
 		if (output !== undefined) {
