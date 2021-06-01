@@ -62,7 +62,11 @@ const geolocateCellFromUnwiredLabs: AzureFunction = async (
 		return
 	}
 
-	const { cell: c, area, mccmnc } = req.query as {
+	const {
+		cell: c,
+		area,
+		mccmnc,
+	} = req.query as {
 		cell: string
 		area: string
 		mccmnc: string
@@ -106,6 +110,7 @@ const geolocateCellFromUnwiredLabs: AzureFunction = async (
 					...maybeLocation.right,
 				})
 				log(context)({ location: maybeLocation.right })
+				context.res = result(context)(maybeLocation.right)
 			}
 		}
 	} catch (error) {
