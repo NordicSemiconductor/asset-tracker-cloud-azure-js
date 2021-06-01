@@ -54,14 +54,13 @@ export const createCARootCommand = ({
 			resourceGroup,
 			dpsName,
 		)
-		const {
-			properties,
-		} = await armDpsClient.dpsCertificate.generateVerificationCode(
-			certificateName,
-			etag as string,
-			resourceGroup,
-			dpsName,
-		)
+		const { properties } =
+			await armDpsClient.dpsCertificate.generateVerificationCode(
+				certificateName,
+				etag as string,
+				resourceGroup,
+				dpsName,
+			)
 
 		if (properties?.verificationCode === undefined) {
 			throw new Error(`Failed to generate verification code`)
@@ -84,6 +83,5 @@ export const createCARootCommand = ({
 			'node cli proof-ca-root-possession',
 		)
 	},
-	help:
-		'Creates a CA root certificate and registers it with the IoT Device Provisioning Service',
+	help: 'Creates a CA root certificate and registers it with the IoT Device Provisioning Service',
 })

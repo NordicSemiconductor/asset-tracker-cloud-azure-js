@@ -55,6 +55,5 @@ export const proofCARootPossessionCommand = ({
 			'node cli create-ca-intermediate',
 		)
 	},
-	help:
-		'Verifies the root CA certificate which is registered with the Device Provisioning System',
+	help: 'Verifies the root CA certificate which is registered with the Device Provisioning System',
 })

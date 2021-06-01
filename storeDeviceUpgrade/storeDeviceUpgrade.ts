@@ -22,9 +22,8 @@ const blobServiceClient = new BlobServiceClient(
 	`https://${fotaStorageAccountName}.blob.core.windows.net`,
 	sharedKeyCredential,
 )
-const containerClient = blobServiceClient.getContainerClient(
-	fotaStorageContainer,
-)
+const containerClient =
+	blobServiceClient.getContainerClient(fotaStorageContainer)
 
 const storeDeviceUpgrade: AzureFunction = async (
 	context: Context,

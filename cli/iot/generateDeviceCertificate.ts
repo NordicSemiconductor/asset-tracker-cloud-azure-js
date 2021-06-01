@@ -38,15 +38,12 @@ export const generateDeviceCertificate = async ({
 		deviceId,
 	})
 
-	const [
-		intermediatePrivateKey,
-		intermediateCert,
-		rootCert,
-	] = await Promise.all([
-		fs.readFile(caIntermediateFiles.privateKey, 'utf-8'),
-		fs.readFile(caIntermediateFiles.cert, 'utf-8'),
-		fs.readFile(caRootFiles.cert, 'utf-8'),
-	])
+	const [intermediatePrivateKey, intermediateCert, rootCert] =
+		await Promise.all([
+			fs.readFile(caIntermediateFiles.privateKey, 'utf-8'),
+			fs.readFile(caIntermediateFiles.cert, 'utf-8'),
+			fs.readFile(caRootFiles.cert, 'utf-8'),
+		])
 
 	await run({
 		command: 'openssl',

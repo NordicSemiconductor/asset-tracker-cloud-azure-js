@@ -32,9 +32,8 @@ export const createCAIntermediateCommand = ({
 
 		const dpsConnString = await ioTHubDPSConnectionString()
 
-		const dpsClient = ProvisioningServiceClient.fromConnectionString(
-			dpsConnString,
-		)
+		const dpsClient =
+			ProvisioningServiceClient.fromConnectionString(dpsConnString)
 
 		const enrollmentGroupId = `nrfassettracker-${id}`
 
@@ -82,6 +81,5 @@ export const createCAIntermediateCommand = ({
 			'node cli create-device-cert',
 		)
 	},
-	help:
-		'Creates a CA intermediate certificate registers it with an IoT Device Provisioning Service enrollment group',
+	help: 'Creates a CA intermediate certificate registers it with an IoT Device Provisioning Service enrollment group',
 })
