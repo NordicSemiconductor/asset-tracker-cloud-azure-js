@@ -12,7 +12,7 @@ import { deviceFileLocations } from '../iot/deviceFileLocations'
 import { Octokit } from '@octokit/rest'
 import * as https from 'https'
 import { v4 } from 'uuid'
-import { progress, success } from '../logging'
+import { error, next, progress, success } from '../logging'
 
 const defaultPort = '/dev/ttyACM0'
 const defaultSecTag = 11
@@ -112,6 +112,23 @@ export const flashCommand = ({
 		deviceId: string,
 		{ dk, nbiot, nodebug, port, firmware, secTag },
 	) => {
+		const certs = deviceFileLocations({
+			certsDir: await certsDir(),
+			deviceId,
+		})
+
+		try {
+			fs.statSync(certs.certWithChain)
+			fs.statSync(certs.privateKey)
+		} catch {
+			error(`Could not find the certificate for device ${deviceId}!`)
+			next(
+				'You can generate device certificates using',
+				`node cli create-device-cert -d ${deviceId}`,
+			)
+			process.exit(1)
+		}
+
 		const hexfile =
 			firmware ?? (await getLatestFirmware({ dk, nbiot, nodebug }))
 
@@ -127,11 +144,6 @@ export const flashCommand = ({
 		})
 
 		progress(`Flashing credentials`, port ?? defaultPort)
-
-		const certs = deviceFileLocations({
-			certsDir: await certsDir(),
-			deviceId,
-		})
 
 		await flashCredentials({
 			at: connection.connection.at,
