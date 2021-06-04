@@ -12,7 +12,8 @@ import { deviceFileLocations } from '../iot/deviceFileLocations'
 import { Octokit } from '@octokit/rest'
 import * as https from 'https'
 import { v4 } from 'uuid'
-import { error, next, progress, success } from '../logging'
+import { error, next, progress, success, warn } from '../logging'
+import * as semver from 'semver'
 
 const defaultPort = '/dev/ttyACM0'
 const defaultSecTag = 11
@@ -142,6 +143,18 @@ export const flashCommand = ({
 			debug: console.log,
 			progress: console.log,
 		})
+
+		const mfwv = (await connection.connection.at('AT+CGMR'))[0]
+		if (mfwv !== undefined) {
+			progress(`Firmware version:`, mfwv)
+			const v = mfwv.split('_')[2]
+			if (semver.satisfies(v, '>=1.3.0')) {
+				progress(`Resetting modem settings`, port ?? defaultPort)
+				await connection.connection.at('AT%XFACTORYRESET=0')
+			} else {
+				warn(`Please update your modem firmware!`)
+			}
+		}
 
 		progress(`Flashing credentials`, port ?? defaultPort)
 

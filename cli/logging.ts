@@ -40,6 +40,10 @@ export const error = (message: string): void => {
 	console.error(chalk.red.inverse(' ERROR '), chalk.red(message))
 }
 
+export const warn = (message: string): void => {
+	console.error(chalk.yellow.inverse(' WARNING '), chalk.yellow(message))
+}
+
 export const help = (message: string): void => {
 	console.error('')
 	console.error(chalk.yellow(message))
