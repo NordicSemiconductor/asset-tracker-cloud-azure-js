@@ -117,9 +117,9 @@ jobs:
           WEBAPP_BRANCH=`cat package.json | jq -r '.deploy.webApp.branch'`
           git clone --branch $WEBAPP_BRANCH --single-branch $WEBAPP_REPO app
           cd app
-          APP_TAG=`git tag --points-at HEAD | tr -d '\n'`
-          APP_SHA=`git log -n 1 --pretty=format:"%H" | tr -d '\n'`
-          export REACT_APP_VERSION=${APP_TAG:-${APP_SHA}}
+          git fetch --tags
+          export REACT_APP_VERSION=$(git describe --tags `git rev-list --tags --max-count=1`)
+          git checkout $REACT_APP_VERSION
           npm ci --no-audit
           npm run build
       - name: Publish app
