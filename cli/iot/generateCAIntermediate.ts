@@ -7,6 +7,8 @@ import { createCertificate, CertificateCreationResult } from 'pem'
 import { caCertConfig } from './pemConfig'
 import { certificateName } from './certificateName'
 
+export const defaultIntermediateCAValidityInDays = 365
+
 /**
  * Generates a CA intermediate certificate
  * @see https://github.com/Azure/azure-iot-sdk-node/blob/5a7cd40145575175b4a100bbc84758f8a87c6d37/provisioning/tools/create_test_cert.js
@@ -17,6 +19,7 @@ export const generateCAIntermediate = async (args: {
 	id: string
 	log: (...message: any[]) => void
 	debug: (...message: any[]) => void
+	daysValid?: number
 }): Promise<CertificateCreationResult> => {
 	const { certsDir, log, debug, id } = args
 	const caRootFiles = CARootFileLocations(certsDir)
@@ -41,7 +44,7 @@ export const generateCAIntermediate = async (args: {
 				{
 					commonName: intermediateName,
 					serial: Math.floor(Math.random() * 1000000000),
-					days: 365,
+					days: args.daysValid ?? defaultIntermediateCAValidityInDays,
 					config: caCertConfig(intermediateName),
 					serviceKey: rootPrivateKey,
 					serviceCertificate: rootCert,

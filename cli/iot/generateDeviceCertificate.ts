@@ -9,6 +9,8 @@ import { createCertificate, CertificateCreationResult } from 'pem'
 import { leafCertConfig } from './pemConfig'
 import { run } from '../process/run'
 
+export const defaultDeviceCertificateValidityInDays = 10950
+
 /**
  * Generates a certificate for a device, signed with the CA
  */
@@ -19,6 +21,7 @@ export const generateDeviceCertificate = async ({
 	deviceId,
 	intermediateCertId,
 	resourceGroup,
+	daysValid,
 }: {
 	certsDir: string
 	deviceId: string
@@ -26,6 +29,7 @@ export const generateDeviceCertificate = async ({
 	resourceGroup: string
 	log?: (...message: any[]) => void
 	debug?: (...message: any[]) => void
+	daysValid?: number
 }): Promise<{ deviceId: string }> => {
 	log?.(`Generating certificate for device ${deviceId}`)
 	const caRootFiles = CARootFileLocations(certsDir)
@@ -66,7 +70,7 @@ export const generateDeviceCertificate = async ({
 				{
 					commonName: deviceId,
 					serial: Math.floor(Math.random() * 1000000000),
-					days: 365,
+					days: daysValid ?? defaultDeviceCertificateValidityInDays,
 					config: leafCertConfig(deviceId),
 					serviceKey: intermediatePrivateKey,
 					serviceCertificate: intermediateCert,

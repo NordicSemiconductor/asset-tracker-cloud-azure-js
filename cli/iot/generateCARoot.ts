@@ -3,6 +3,8 @@ import { CARootFileLocations } from './caFileLocations'
 import { createCertificate, CertificateCreationResult } from 'pem'
 import { caCertConfig } from './pemConfig'
 
+export const defaultCAValidityInDays = 365
+
 /**
  * Generates a CA Root certificate
  *
@@ -14,11 +16,13 @@ export const generateCARoot = async ({
 	name,
 	log,
 	debug,
+	daysValid,
 }: {
 	certsDir: string
 	name: string
 	log: (...message: any[]) => void
 	debug: (...message: any[]) => void
+	daysValid?: number
 }): Promise<CertificateCreationResult> => {
 	const caFiles = CARootFileLocations(certsDir)
 	try {
@@ -47,7 +51,7 @@ export const generateCARoot = async ({
 				{
 					commonName: name,
 					serial: Math.floor(Math.random() * 1000000000),
-					days: 365,
+					days: daysValid ?? defaultCAValidityInDays,
 					selfSigned: true,
 					config: caCertConfig(name),
 				},

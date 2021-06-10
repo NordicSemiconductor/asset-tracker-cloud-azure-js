@@ -1,5 +1,8 @@
 import { CommandDefinition } from './CommandDefinition'
-import { generateCAIntermediate } from '../iot/generateCAIntermediate'
+import {
+	generateCAIntermediate,
+	defaultIntermediateCAValidityInDays,
+} from '../iot/generateCAIntermediate'
 import { ProvisioningServiceClient } from 'azure-iot-provisioning-service'
 import { add as addToIntermediateRegistry } from '../iot/intermediateRegistry'
 import { v4 } from 'uuid'
@@ -13,7 +16,13 @@ export const createCAIntermediateCommand = ({
 	ioTHubDPSConnectionString: () => Promise<string>
 }): CommandDefinition => ({
 	command: 'create-ca-intermediate',
-	action: async () => {
+	options: [
+		{
+			flags: '-e, --expires <expires>',
+			description: `Validity of device certificate in days. Defaults to ${defaultIntermediateCAValidityInDays} days.`,
+		},
+	],
+	action: async ({ expires }: { expires?: string }) => {
 		const id = v4()
 
 		const certsDir = await certsDirPromise()
@@ -23,6 +32,7 @@ export const createCAIntermediateCommand = ({
 			certsDir,
 			log,
 			debug,
+			daysValid: expires !== undefined ? parseInt(expires, 10) : undefined,
 		})
 		debug(`CA intermediate certificate generated.`)
 

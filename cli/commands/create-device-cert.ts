@@ -1,6 +1,9 @@
 import { CommandDefinition } from './CommandDefinition'
 import { randomWords } from '@nordicsemiconductor/random-words'
-import { generateDeviceCertificate } from '../iot/generateDeviceCertificate'
+import {
+	generateDeviceCertificate,
+	defaultDeviceCertificateValidityInDays,
+} from '../iot/generateDeviceCertificate'
 import { log, debug, success, newline, next } from '../logging'
 import { list as listIntermediateCerts } from '../iot/intermediateRegistry'
 import { deviceFileLocations } from '../iot/deviceFileLocations'
@@ -30,19 +33,25 @@ export const createDeviceCertCommand = ({
 			description:
 				'ID of the CA intermediate certificate to use, if left blank the first will be used',
 		},
+		{
+			flags: '-e, --expires <expires>',
+			description: `Validity of device certificate in days. Defaults to ${defaultDeviceCertificateValidityInDays} days.`,
+		},
 	],
 	action: async ({
 		deviceId,
 		intermediateCertId,
+		expires,
 	}: {
-		deviceId: string
-		intermediateCertId: string
+		deviceId?: string
+		intermediateCertId?: string
+		expires?: string
 	}) => {
-		const id = deviceId || (await randomWords({ numWords: 3 })).join('-')
+		const id = deviceId ?? (await randomWords({ numWords: 3 })).join('-')
 
 		const certsDir = await certsDirPromise()
 
-		if (!intermediateCertId) {
+		if (intermediateCertId === undefined) {
 			const intermediateCerts = await listIntermediateCerts({ certsDir })
 			intermediateCertId = intermediateCerts[0]
 		}
@@ -56,6 +65,7 @@ export const createDeviceCertCommand = ({
 			debug,
 			intermediateCertId,
 			resourceGroup,
+			daysValid: expires !== undefined ? parseInt(expires, 10) : undefined,
 		})
 		success(`Certificate for device generated.`)
 		setting('Certificate ID', id)

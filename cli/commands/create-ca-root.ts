@@ -2,7 +2,7 @@ import { CommandDefinition } from './CommandDefinition'
 import { IotDpsClient } from '@azure/arm-deviceprovisioningservices'
 import { generateProofOfPosession } from '../iot/generateProofOfPosession'
 import { v4 } from 'uuid'
-import { generateCARoot } from '../iot/generateCARoot'
+import { generateCARoot, defaultCAValidityInDays } from '../iot/generateCARoot'
 import { log, debug, success, setting, newline, next } from '../logging'
 import { certificateName as cn } from '../iot/certificateName'
 
@@ -18,7 +18,13 @@ export const createCARootCommand = ({
 	iotDpsClient: () => Promise<IotDpsClient>
 }): CommandDefinition => ({
 	command: 'create-ca-root',
-	action: async () => {
+	options: [
+		{
+			flags: '-e, --expires <expires>',
+			description: `Validity of device certificate in days. Defaults to ${defaultCAValidityInDays} days.`,
+		},
+	],
+	action: async ({ expires }: { expires?: string }) => {
 		const certificateName = cn(`nrfassettracker-root-${v4()}`)
 
 		const certsDir = await certsDirPromise()
@@ -28,6 +34,7 @@ export const createCARootCommand = ({
 			name: certificateName,
 			log,
 			debug,
+			daysValid: expires !== undefined ? parseInt(expires, 10) : undefined,
 		})
 		success(`CA root certificate generated.`)
 
