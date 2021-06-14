@@ -33,7 +33,7 @@
     "@azure/ms-rest-azure-js": "2.1.0",
     "@azure/ms-rest-js": "2.5.1",
     "@azure/ms-rest-nodeauth": "3.0.10",
-    "@azure/storage-blob": "12.5.0",
+    "@azure/storage-blob": "12.6.0",
     "@nordicsemiconductor/cell-geolocation-helpers": "3.0.7",
     "@nordicsemiconductor/object-to-env": "2.0.1",
     "@nordicsemiconductor/random-words": "5.0.0",
