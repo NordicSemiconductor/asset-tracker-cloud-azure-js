@@ -4,7 +4,6 @@ import {
 	randomStepRunners,
 	restStepRunners,
 	storageStepRunners,
-	RestClient,
 } from '@nordicsemiconductor/e2e-bdd-test-runner'
 import * as program from 'commander'
 import * as chalk from 'chalk'
@@ -146,32 +145,7 @@ program
 						b2cTenantId,
 					}),
 				)
-				.addStepRunners(
-					restStepRunners({
-						client: new RestClient({
-							parseBody: async (res) => {
-								// Azure does not send content-length any more, see https://github.com/NordicSemiconductor/asset-tracker-cloud-azure-js/issues/40
-								const text = await res.text()
-								if (text.length === 0)
-									return {
-										contentLength: 0,
-									}
-								// We might have content nevertheless
-								return {
-									contentLength: text.length,
-									text,
-									json: (() => {
-										try {
-											return JSON.parse(text)
-										} catch {
-											return undefined
-										}
-									})(),
-								}
-							},
-						}),
-					}),
-				)
+				.addStepRunners(restStepRunners())
 				.addStepRunners(
 					deviceStepRunners({ certsDir, resourceGroup, intermediateCertId }),
 				)
