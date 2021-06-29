@@ -6,7 +6,7 @@ import {
 	storageStepRunners,
 	RestClient,
 } from '@nordicsemiconductor/e2e-bdd-test-runner'
-import * as program from 'commander'
+import { program } from 'commander'
 import * as chalk from 'chalk'
 import * as path from 'path'
 import { randomEmail } from './lib/randomEmail'
