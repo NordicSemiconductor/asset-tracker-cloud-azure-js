@@ -27,7 +27,7 @@
   "license": "BSD-3-Clause",
   "dependencies": {
     "@azure/arm-appservice": "8.1.1",
-    "@azure/arm-deviceprovisioningservices": "2.2.0",
+    "@azure/arm-deviceprovisioningservices": "2.2.1",
     "@azure/cosmos": "3.12.3",
     "@azure/functions": "1.2.3",
     "@azure/ms-rest-azure-js": "2.1.0",
