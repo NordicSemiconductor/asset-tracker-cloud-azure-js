@@ -13,6 +13,7 @@ export const deviceFileLocations = ({
 	registration: string
 	intermediateCertId: string
 	json: string
+	csr: string
 } => ({
 	privateKey: path.resolve(certsDir, `device-${deviceId}.key`),
 	cert: path.resolve(certsDir, `device-${deviceId}.pem`),
@@ -23,4 +24,5 @@ export const deviceFileLocations = ({
 		`device-${deviceId}.intermediateCertId`,
 	),
 	json: path.resolve(certsDir, `device-${deviceId}.json`),
+	csr: path.resolve(certsDir, `device-${deviceId}.csr`),
 })

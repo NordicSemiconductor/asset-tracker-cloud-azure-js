@@ -10,8 +10,9 @@ import { deviceFileLocations } from '../iot/deviceFileLocations'
 import { setting, heading } from '../logging'
 import { IotDpsClient } from '@azure/arm-deviceprovisioningservices'
 import { globalIotHubDPSHostname } from '../iot/ioTHubDPSInfo'
+import { createSimulatorKeyAndCSR } from '../iot/createSimulatorKeyAndCSR'
 
-export const createDeviceCertCommand = ({
+export const createSimulatorCertCommand = ({
 	certsDir: certsDirPromise,
 	resourceGroup,
 	iotDpsClient,
@@ -22,7 +23,7 @@ export const createDeviceCertCommand = ({
 	resourceGroup: string
 	dpsName: string
 }): CommandDefinition => ({
-	command: 'create-device-cert',
+	command: 'create-simulator-cert',
 	options: [
 		{
 			flags: '-d, --deviceId <deviceId>',
@@ -58,6 +59,13 @@ export const createDeviceCertCommand = ({
 
 		setting('Intermediate certificate', intermediateCertId)
 
+		await createSimulatorKeyAndCSR({
+			deviceId: id,
+			certsDir,
+			log,
+			debug,
+		})
+
 		await generateDeviceCertificate({
 			deviceId: id,
 			certsDir,
@@ -77,12 +85,6 @@ export const createDeviceCertCommand = ({
 			`npm exec -- @nordicsemiconductor/asset-tracker-cloud-device-simulator-azure ${certJSON}`,
 		)
 
-		newline()
-		next(
-			'You can now flash the credentials to your device',
-			`node cli flash ${id}`,
-		)
-
 		const { properties } = await (
 			await iotDpsClient()
 		).iotDpsResource.get(dpsName, resourceGroup)
@@ -91,5 +93,5 @@ export const createDeviceCertCommand = ({
 		setting('DPS hostname', globalIotHubDPSHostname)
 		setting('ID scope', properties.idScope as string)
 	},
-	help: 'Generate a device certificate and register a device in the registry.',
+	help: 'Generate a certificate for a simulated device and register a device in the registry.',
 })

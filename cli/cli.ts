@@ -5,7 +5,7 @@ import { createCARootCommand } from './commands/create-ca-root'
 import { IotDpsClient } from '@azure/arm-deviceprovisioningservices'
 import { AzureCliCredentials } from '@azure/ms-rest-nodeauth'
 import { WebSiteManagementClient } from '@azure/arm-appservice'
-import { createDeviceCertCommand } from './commands/create-device-cert'
+import { createSimulatorCertCommand } from './commands/create-simulator-cert'
 import { proofCARootPossessionCommand } from './commands/proof-ca-possession'
 import { createCAIntermediateCommand } from './commands/create-ca-intermediate'
 import {
@@ -14,11 +14,12 @@ import {
 	appName,
 } from '../arm/resources'
 import { reactConfigCommand } from './commands/react-config'
-import { flashCommand } from './commands/flash'
+import { flashFirmwareCommand } from './commands/flash-firmware'
 import { ioTHubDPSInfo } from './iot/ioTHubDPSInfo'
 import { functionsSettingsCommand } from './commands/functions-settings'
 import { error, help } from './logging'
 import { infoCommand } from './commands/info'
+import { createAndProvisionDeviceCertCommand } from './commands/create-and-provision-device-cert'
 
 const version = JSON.parse(
 	fs.readFileSync(path.join(process.cwd(), 'package.json'), 'utf-8'),
@@ -82,7 +83,13 @@ const main = async () => {
 			ioTHubDPSConnectionString: async () =>
 				getIotHubInfo().then(({ connectionString }) => connectionString),
 		}),
-		createDeviceCertCommand({
+		createAndProvisionDeviceCertCommand({
+			certsDir,
+			resourceGroup,
+			iotDpsClient: getIotDpsClient,
+			dpsName,
+		}),
+		createSimulatorCertCommand({
 			certsDir,
 			resourceGroup,
 			iotDpsClient: getIotDpsClient,
@@ -98,9 +105,7 @@ const main = async () => {
 			resourceGroup,
 			appName: appName(),
 		}),
-		flashCommand({
-			certsDir,
-		}),
+		flashFirmwareCommand(),
 	]
 
 	let ran = false

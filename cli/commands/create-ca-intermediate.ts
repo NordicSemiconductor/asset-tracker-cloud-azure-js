@@ -88,7 +88,7 @@ export const createCAIntermediateCommand = ({
 
 		next(
 			'You can now generate device certificates using',
-			'node cli create-device-cert',
+			'node cli create-and-provision-device-cert',
 		)
 	},
 	help: 'Creates a CA intermediate certificate registers it with an IoT Device Provisioning Service enrollment group',
