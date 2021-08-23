@@ -16,6 +16,7 @@ import { expect } from 'chai'
 import * as chaiSubset from 'chai-subset'
 chai.use(chaiSubset)
 import * as fetchPonyfill from 'fetch-ponyfill'
+import { createSimulatorKeyAndCSR } from '../../cli/iot/createSimulatorKeyAndCSR'
 const { fetch } = fetchPonyfill()
 
 export const deviceStepRunners = ({
@@ -33,6 +34,7 @@ export const deviceStepRunners = ({
 		regexGroupMatcher(
 			/^I generate a certificate for the (?:device|cat tracker) "(?<deviceId>[^"]+)"$/,
 		)(async ({ deviceId }) => {
+			await createSimulatorKeyAndCSR({ certsDir, deviceId })
 			await generateDeviceCertificate({
 				deviceId,
 				certsDir,
@@ -112,7 +114,7 @@ export const deviceStepRunners = ({
 							deviceTopics.getTwinPropertiesAccepted(getTwinPropertiesRequestId)
 						) {
 							console.debug('[iot]', `Unexpected topic: ${topic}`)
-							reject()
+							reject(new Error(`Unexpected topic: ${topic}`))
 							clearInterval(i)
 						}
 						resolve(JSON.parse(payload.toString()))

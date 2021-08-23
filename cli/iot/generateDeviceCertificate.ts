@@ -7,7 +7,6 @@ import { deviceFileLocations } from './deviceFileLocations'
 import * as os from 'os'
 import { createCertificate, CertificateCreationResult } from 'pem'
 import { leafCertConfig } from './pemConfig'
-import { run } from '../process/run'
 
 export const defaultDeviceCertificateValidityInDays = 10950
 
@@ -42,27 +41,13 @@ export const generateDeviceCertificate = async ({
 		deviceId,
 	})
 
-	const [intermediatePrivateKey, intermediateCert, rootCert] =
+	const [intermediatePrivateKey, intermediateCert, rootCert, csr] =
 		await Promise.all([
 			fs.readFile(caIntermediateFiles.privateKey, 'utf-8'),
 			fs.readFile(caIntermediateFiles.cert, 'utf-8'),
 			fs.readFile(caRootFiles.cert, 'utf-8'),
+			fs.readFile(deviceFiles.csr, 'utf-8'),
 		])
-
-	await run({
-		command: 'openssl',
-		args: [
-			'ecparam',
-			'-out',
-			deviceFiles.privateKey,
-			'-name',
-			'prime256v1',
-			'-genkey',
-		],
-		log: debug,
-	})
-
-	const clientKey = await fs.readFile(deviceFiles.privateKey, 'utf-8')
 
 	const deviceCert = await new Promise<CertificateCreationResult>(
 		(resolve, reject) =>
@@ -74,7 +59,7 @@ export const generateDeviceCertificate = async ({
 					config: leafCertConfig(deviceId),
 					serviceKey: intermediatePrivateKey,
 					serviceCertificate: intermediateCert,
-					clientKey,
+					csr,
 				},
 				(err, cert) => {
 					if (err !== null && err !== undefined) return reject(err)
