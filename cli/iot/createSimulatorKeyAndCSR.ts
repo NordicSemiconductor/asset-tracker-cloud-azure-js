@@ -38,6 +38,7 @@ export const createSimulatorKeyAndCSR = async ({
 		log: debug,
 	})
 
+	debug?.(`${deviceFiles.privateKey} written`)
 	const clientKey = await fs.readFile(deviceFiles.privateKey, 'utf-8')
 
 	const { csr } = await new Promise<{ csr: string; clientKey: string }>(

@@ -20,6 +20,7 @@ import { functionsSettingsCommand } from './commands/functions-settings'
 import { error, help } from './logging'
 import { infoCommand } from './commands/info'
 import { createAndProvisionDeviceCertCommand } from './commands/create-and-provision-device-cert'
+import { provisionSimulatorDevice } from './commands/provision-simulator-device'
 
 const version = JSON.parse(
 	fs.readFileSync(path.join(process.cwd(), 'package.json'), 'utf-8'),
@@ -106,6 +107,12 @@ const main = async () => {
 			appName: appName(),
 		}),
 		flashFirmwareCommand(),
+		provisionSimulatorDevice({
+			iotDpsClient: getIotDpsClient,
+			certsDir,
+			dpsName,
+			resourceGroup,
+		}),
 	]
 
 	let ran = false

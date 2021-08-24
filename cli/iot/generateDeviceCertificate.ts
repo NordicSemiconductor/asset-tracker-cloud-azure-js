@@ -78,11 +78,6 @@ export const generateDeviceCertificate = async ({
 		fs.writeFile(deviceFiles.certWithChain, certWithChain, 'utf-8').then(() => {
 			debug?.(`${deviceFiles.certWithChain} written`)
 		}),
-		fs
-			.writeFile(deviceFiles.privateKey, deviceCert.clientKey, 'utf-8')
-			.then(() => {
-				debug?.(`${deviceFiles.privateKey} written`)
-			}),
 		fs.writeFile(deviceFiles.cert, deviceCert.certificate, 'utf-8').then(() => {
 			debug?.(`${deviceFiles.cert} written`)
 		}),
@@ -97,7 +92,7 @@ export const generateDeviceCertificate = async ({
 				JSON.stringify(
 					{
 						resourceGroup,
-						privateKey: deviceCert.clientKey,
+						privateKey: await fs.readFile(deviceFiles.privateKey, 'utf-8'),
 						clientCert: certWithChain,
 						clientId: deviceId,
 					},

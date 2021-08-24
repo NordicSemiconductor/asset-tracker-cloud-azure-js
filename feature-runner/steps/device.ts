@@ -6,8 +6,6 @@ import {
 } from '@nordicsemiconductor/e2e-bdd-test-runner'
 import { generateDeviceCertificate } from '../../cli/iot/generateDeviceCertificate'
 import { connectDevice } from '../../cli/iot/connectDevice'
-import { IotDpsClient } from '@azure/arm-deviceprovisioningservices'
-import { AzureCliCredentials } from '@azure/ms-rest-nodeauth'
 import { MqttClient } from 'mqtt'
 import { deviceTopics } from '../../cli/iot/deviceTopics'
 import { v4 } from 'uuid'
@@ -50,18 +48,7 @@ export const deviceStepRunners = ({
 			const connection = await connectDevice({
 				deviceId,
 				certsDir,
-				dpsIdScope: async () => {
-					const creds = await AzureCliCredentials.create()
-					const dpsClient = new IotDpsClient(
-						creds as any,
-						creds.tokenInfo.subscription,
-					)
-					const dps = await dpsClient.iotDpsResource.get(
-						`${resourceGroup}ProvisioningService`,
-						resourceGroup,
-					)
-					return dps.properties.idScope as string
-				},
+				log: (...args) => console.debug('[mqtt]', ...args),
 			})
 			connections[deviceId] = connection
 			return deviceId

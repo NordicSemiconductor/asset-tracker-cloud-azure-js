@@ -6,10 +6,11 @@ export const run = async (args: {
 	args?: string[]
 	input?: string
 	log?: (...message: any[]) => void
+	env?: NodeJS.ProcessEnv | undefined
 }): Promise<string> =>
 	new Promise((resolve, reject) => {
 		args?.log?.(`${args.command} ${args.args?.join(' ')}`)
-		const p = spawn(args.command, args.args)
+		const p = spawn(args.command, args.args, { env: args.env })
 		const result = [] as string[]
 		const errors = [] as string[]
 		if (args.input !== undefined) {
