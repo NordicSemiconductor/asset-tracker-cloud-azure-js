@@ -5,6 +5,8 @@ import { v4 } from 'uuid'
 import { generateCARoot, defaultCAValidityInDays } from '../iot/generateCARoot'
 import { log, debug, success, setting, newline, next } from '../logging'
 import { certificateName as cn } from '../iot/certificateName'
+import { fingerprint } from '../iot/fingerprint'
+import { CARootFileLocations } from '../iot/caFileLocations'
 
 export const createCARootCommand = ({
 	certsDir: certsDirPromise,
@@ -37,6 +39,8 @@ export const createCARootCommand = ({
 			daysValid: expires !== undefined ? parseInt(expires, 10) : undefined,
 		})
 		success(`CA root certificate generated.`)
+		const caFiles = CARootFileLocations(certsDir)
+		setting('Fingerprint', await fingerprint(caFiles.cert))
 
 		// Register root CA certificate on DPS
 

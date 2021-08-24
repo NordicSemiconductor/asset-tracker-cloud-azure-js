@@ -7,6 +7,8 @@ import { ProvisioningServiceClient } from 'azure-iot-provisioning-service'
 import { add as addToIntermediateRegistry } from '../iot/intermediateRegistry'
 import { v4 } from 'uuid'
 import { log, debug, setting, next, newline } from '../logging'
+import { CAIntermediateFileLocations } from '../iot/caFileLocations'
+import { fingerprint } from '../iot/fingerprint'
 
 export const createCAIntermediateCommand = ({
 	certsDir: certsDirPromise,
@@ -35,6 +37,8 @@ export const createCAIntermediateCommand = ({
 			daysValid: expires !== undefined ? parseInt(expires, 10) : undefined,
 		})
 		debug(`CA intermediate certificate generated.`)
+		const caFiles = CAIntermediateFileLocations({ certsDir, id })
+		setting('Fingerprint', await fingerprint(caFiles.cert))
 
 		await addToIntermediateRegistry({ certsDir, id })
 

@@ -19,6 +19,11 @@ import { ioTHubDPSInfo } from '../cli/iot/ioTHubDPSInfo'
 import { WebSiteManagementClient } from '@azure/arm-appservice'
 import { settings, error, heading, debug } from '../cli/logging'
 import { AzureCliCredentials } from '@azure/ms-rest-nodeauth'
+import {
+	CAIntermediateFileLocations,
+	CARootFileLocations,
+} from '../cli/iot/caFileLocations'
+import { fingerprint } from '../cli/iot/fingerprint'
 
 let ran = false
 
@@ -89,6 +94,11 @@ program
 				error(`Intermediate certificate not found!`)
 				process.exit(1)
 			}
+			const intermediateCaFiles = CAIntermediateFileLocations({
+				certsDir,
+				id: intermediateCertId,
+			})
+			const rootCaFiles = CARootFileLocations(certsDir)
 
 			settings({
 				Subscription: credentials.tokenInfo.subscription,
@@ -103,7 +113,11 @@ program
 					5,
 				)}***${clientSecret.substr(-5)}`,
 				'Certificate dir': certsDir,
-				'Intermediate certificate': intermediateCertId,
+				'Root CA fingerprint': await fingerprint(rootCaFiles.cert),
+				'Intermediate CA ID': intermediateCertId,
+				'Intermediate CA fingerprint': await fingerprint(
+					intermediateCaFiles.cert,
+				),
 			})
 
 			const world: World = {
