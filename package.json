@@ -36,7 +36,7 @@
     "@azure/storage-blob": "12.7.0",
     "@nordicsemiconductor/cell-geolocation-helpers": "3.0.13",
     "@nordicsemiconductor/object-to-env": "2.0.1",
-    "@nordicsemiconductor/random-words": "5.0.0",
+    "@nordicsemiconductor/random-words": "5.1.0",
     "@octokit/rest": "18.9.1",
     "azure-iot-provisioning-service": "1.8.10",
     "azure-iothub": "1.14.3",
