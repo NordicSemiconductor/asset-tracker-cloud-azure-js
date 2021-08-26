@@ -63,7 +63,7 @@ jobs:
       - uses: actions/setup-node@v2
         if: env.AZURE_CREDENTIALS != ''
         with:
-          node-version: "15.x"
+          node-version: "16.x"
       - name: Keep npm cache around to speed up installs
         if: env.AZURE_CREDENTIALS != ''
         uses: actions/cache@v2

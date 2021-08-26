@@ -7,7 +7,7 @@ RUN \
     apt-get -y upgrade && \
     # Install Node.js 10
     apt -y install curl dirmngr apt-transport-https lsb-release ca-certificates && \
-    /bin/bash -c 'curl -sL https://deb.nodesource.com/setup_14.x | bash -' && \
+    /bin/bash -c 'curl -sL https://deb.nodesource.com/setup_16.x | bash -' && \
     apt-get install -y nodejs && \
     node -v && \
     # Azure CLI
