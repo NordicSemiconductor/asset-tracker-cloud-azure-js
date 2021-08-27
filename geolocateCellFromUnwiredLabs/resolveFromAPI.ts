@@ -96,6 +96,6 @@ export const resolveFromAPI =
 			}
 			return left(new Error(`Failed to resolve.`))
 		} catch (err) {
-			return left(err)
+			return left(err as Error)
 		}
 	}

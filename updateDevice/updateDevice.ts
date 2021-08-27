@@ -73,7 +73,7 @@ const updateDevice: AzureFunction = async (
 		}
 	} catch (error) {
 		context.log.error({ error })
-		context.res = result(context)({ error: error.message }, 500)
+		context.res = result(context)({ error: (error as Error).message }, 500)
 	}
 }
 

@@ -33,7 +33,7 @@ const queryHistoricalDeviceData: AzureFunction = async (
 		context.res = result(context)(res)
 	} catch (error) {
 		context.log.error({ error })
-		context.res = result(context)({ error: error.message }, 500)
+		context.res = result(context)({ error: (error as Error).message }, 500)
 	}
 }
 

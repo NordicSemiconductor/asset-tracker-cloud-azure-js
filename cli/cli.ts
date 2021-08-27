@@ -125,7 +125,7 @@ const main = async () => {
 					await action(...args)
 				} catch (e) {
 					error(`${command} failed!`)
-					error(e)
+					error((e as Error).message)
 					process.exit(1)
 				}
 			})

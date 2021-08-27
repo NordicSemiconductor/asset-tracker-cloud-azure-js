@@ -171,9 +171,9 @@ program
 					process.exit(1)
 				}
 				process.exit()
-			} catch (error) {
+			} catch (e) {
 				error('Running the features failed!')
-				error(error.message)
+				error((e as Error).message)
 				process.exit(1)
 			}
 		},
