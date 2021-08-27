@@ -34,9 +34,9 @@
     "@azure/ms-rest-js": "2.6.0",
     "@azure/ms-rest-nodeauth": "3.0.10",
     "@azure/storage-blob": "12.7.0",
-    "@nordicsemiconductor/cell-geolocation-helpers": "3.0.13",
-    "@nordicsemiconductor/object-to-env": "2.0.1",
-    "@nordicsemiconductor/random-words": "5.0.0",
+    "@nordicsemiconductor/cell-geolocation-helpers": "3.1.0",
+    "@nordicsemiconductor/object-to-env": "2.1.0",
+    "@nordicsemiconductor/random-words": "5.1.0",
     "@octokit/rest": "18.9.1",
     "azure-iot-provisioning-service": "1.8.10",
     "azure-iothub": "1.14.3",
@@ -48,15 +48,15 @@
   "devDependencies": {
     "@commitlint/cli": "13.1.0",
     "@commitlint/config-angular": "13.1.0",
-    "@nordicsemiconductor/asset-tracker-cloud-code-style": "9.0.4",
-    "@nordicsemiconductor/e2e-bdd-test-runner": "14.3.21",
+    "@nordicsemiconductor/asset-tracker-cloud-code-style": "9.1.0",
+    "@nordicsemiconductor/e2e-bdd-test-runner": "14.3.22",
     "@nordicsemiconductor/eslint-config-asset-tracker-cloud-typescript": "8.1.0",
-    "@nordicsemiconductor/firmware-ci-device-helpers": "10.2.1",
+    "@nordicsemiconductor/firmware-ci-device-helpers": "10.3.0",
     "@types/backoff": "2.5.2",
     "@types/chai-subset": "1.3.3",
     "@types/jest": "27.0.1",
     "@types/jsonwebtoken": "8.5.5",
-    "@types/node": "16.6.2",
+    "@types/node": "16.7.2",
     "@types/pem": "1.9.6",
     "@types/semver": "7.3.8",
     "@types/uuid": "8.3.1",
@@ -74,7 +74,7 @@
     "prettier": "2.3.2",
     "semver": "7.3.5",
     "ts-jest": "27.0.5",
-    "typescript": "4.3.5"
+    "typescript": "4.4.2"
   },
   "lint-staged": {
     "*.{md,json,yaml,yml}": [
