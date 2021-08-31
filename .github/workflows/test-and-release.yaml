@@ -102,7 +102,7 @@ jobs:
           path: ./certificates
           key: certificates
       - name: Clear certificates
-        if: github.event.inputs.clearCertificates != 'no'
+        if: github.event.inputs.clearCertificates == 'yes'
         run: |
           rm -rf ./certificates
         continue-on-error: true
