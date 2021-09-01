@@ -100,7 +100,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ./certificates
-          key: certificates
+          key: certificates-2021-09-01
       - name: Clear certificates
         if: github.event.inputs.clearCertificates == 'yes'
         run: |
