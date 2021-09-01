@@ -30,7 +30,7 @@ export const getClientAccessToken = async ({
 		},
 	)
 	await handleErrorResponse(res)
-	const data = await res.json()
+	const data: any = await res.json()
 	return data.access_token
 }
 
@@ -66,6 +66,6 @@ export const getUserAccessToken = async ({
 		},
 	)
 	await handleErrorResponse(res)
-	const data = await res.json()
+	const data: any = await res.json()
 	return data.access_token
 }

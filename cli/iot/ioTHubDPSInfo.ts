@@ -50,7 +50,10 @@ export const ioTHubDPSInfo =
 				},
 			),
 		])
-			.then(async (res) => Promise.all(res.map(async (r) => r.json())))
+			.then(
+				async (res) =>
+					Promise.all(res.map(async (r) => r.json())) as Promise<any[]>,
+			)
 			.then(
 				([
 					{ value },

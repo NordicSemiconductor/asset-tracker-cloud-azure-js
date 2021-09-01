@@ -2,7 +2,7 @@ import { Response } from 'node-fetch'
 
 export const handleErrorResponse = async (res: Response): Promise<void> => {
 	if (res.status >= 400) {
-		const error = await res.json()
+		const error: any = await res.json()
 		console.log(error)
 		if (error.error !== undefined) {
 			if (error.error.code !== undefined && error.error.message !== undefined)

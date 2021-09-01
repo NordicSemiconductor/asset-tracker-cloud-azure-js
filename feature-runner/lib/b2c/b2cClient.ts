@@ -111,7 +111,7 @@ export const b2cClient = ({
 			body: JSON.stringify(args),
 		})
 		await handleErrorResponse(res)
-		return await res.json()
+		return (await res.json()) as any
 	}
 	return {
 		listUsers: async () => {
@@ -122,7 +122,7 @@ export const b2cClient = ({
 				},
 			)
 			await handleErrorResponse(res)
-			return (await res.json()).value
+			return ((await res.json()) as any).value
 		},
 		createUser,
 		createUserForEmailAndPassword: async ({
