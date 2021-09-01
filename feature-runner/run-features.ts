@@ -6,24 +6,24 @@ import {
 	storageStepRunners,
 } from '@nordicsemiconductor/e2e-bdd-test-runner'
 import { program } from 'commander'
-import * as chalk from 'chalk'
+import chalk from 'chalk'
 import * as path from 'path'
-import { randomEmail } from './lib/randomEmail'
-import { randomPassword } from './lib/randomPassword'
-import { b2cSteps } from './steps/b2c'
-import { fromEnv } from '../lib/fromEnv'
-import { deviceStepRunners } from './steps/device'
+import { randomEmail } from './lib/randomEmail.js'
+import { randomPassword } from './lib/randomPassword.js'
+import { b2cSteps } from './steps/b2c.js'
+import { fromEnv } from '../lib/fromEnv.js'
+import { deviceStepRunners } from './steps/device.js'
 import { v4 } from 'uuid'
-import { list } from '../cli/iot/intermediateRegistry'
-import { ioTHubDPSInfo } from '../cli/iot/ioTHubDPSInfo'
+import { list } from '../cli/iot/intermediateRegistry.js'
+import { ioTHubDPSInfo } from '../cli/iot/ioTHubDPSInfo.js'
 import { WebSiteManagementClient } from '@azure/arm-appservice'
-import { settings, error, heading, debug } from '../cli/logging'
+import { settings, error, heading, debug } from '../cli/logging.js'
 import { AzureCliCredentials } from '@azure/ms-rest-nodeauth'
 import {
 	CAIntermediateFileLocations,
 	CARootFileLocations,
-} from '../cli/iot/caFileLocations'
-import { fingerprint } from '../cli/iot/fingerprint'
+} from '../cli/iot/caFileLocations.js'
+import { fingerprint } from '../cli/iot/fingerprint.js'
 
 let ran = false
 

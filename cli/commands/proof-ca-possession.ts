@@ -1,8 +1,8 @@
-import { CommandDefinition } from './CommandDefinition'
+import { CommandDefinition } from './CommandDefinition.js'
 import { IotDpsClient } from '@azure/arm-deviceprovisioningservices'
 import { promises as fs } from 'fs'
-import { CARootFileLocations } from '../iot/caFileLocations'
-import { newline, next, setting, success } from '../logging'
+import { CARootFileLocations } from '../iot/caFileLocations.js'
+import { newline, next, setting, success } from '../logging.js'
 
 export const proofCARootPossessionCommand = ({
 	certsDir,

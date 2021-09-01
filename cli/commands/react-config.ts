@@ -1,6 +1,6 @@
-import { CommandDefinition } from './CommandDefinition'
+import { CommandDefinition } from './CommandDefinition.js'
 import { objectToEnv } from '@nordicsemiconductor/object-to-env'
-import { fromEnv } from '../../lib/fromEnv'
+import { fromEnv } from '../../lib/fromEnv.js'
 import { WebSiteManagementClient } from '@azure/arm-appservice'
 
 export const reactConfigCommand = ({

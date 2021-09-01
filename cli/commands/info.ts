@@ -1,6 +1,6 @@
-import { CommandDefinition } from './CommandDefinition'
-import { globalIotHubDPSHostname, ioTHubDPSInfo } from '../iot/ioTHubDPSInfo'
-import { setting } from '../logging'
+import { CommandDefinition } from './CommandDefinition.js'
+import { globalIotHubDPSHostname, ioTHubDPSInfo } from '../iot/ioTHubDPSInfo.js'
+import { setting } from '../logging.js'
 import { IotDpsClient } from '@azure/arm-deviceprovisioningservices'
 import { AzureCliCredentials } from '@azure/ms-rest-nodeauth'
 

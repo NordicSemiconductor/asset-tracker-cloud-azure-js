@@ -1,16 +1,16 @@
-import { CommandDefinition } from './CommandDefinition'
+import { CommandDefinition } from './CommandDefinition.js'
 import { randomWords } from '@nordicsemiconductor/random-words'
 import {
 	generateDeviceCertificate,
 	defaultDeviceCertificateValidityInDays,
-} from '../iot/generateDeviceCertificate'
-import { log, debug, success, newline, next } from '../logging'
-import { list as listIntermediateCerts } from '../iot/intermediateRegistry'
-import { deviceFileLocations } from '../iot/deviceFileLocations'
-import { setting, heading } from '../logging'
+} from '../iot/generateDeviceCertificate.js'
+import { log, debug, success, newline, next } from '../logging.js'
+import { list as listIntermediateCerts } from '../iot/intermediateRegistry.js'
+import { deviceFileLocations } from '../iot/deviceFileLocations.js'
+import { setting, heading } from '../logging.js'
 import { IotDpsClient } from '@azure/arm-deviceprovisioningservices'
-import { globalIotHubDPSHostname } from '../iot/ioTHubDPSInfo'
-import { createSimulatorKeyAndCSR } from '../iot/createSimulatorKeyAndCSR'
+import { globalIotHubDPSHostname } from '../iot/ioTHubDPSInfo.js'
+import { createSimulatorKeyAndCSR } from '../iot/createSimulatorKeyAndCSR.js'
 
 export const createSimulatorCertCommand = ({
 	certsDir: certsDirPromise,

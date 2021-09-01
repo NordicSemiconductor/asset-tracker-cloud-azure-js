@@ -1,14 +1,14 @@
 import { AzureFunction, Context } from '@azure/functions'
-import { log } from '../lib/log'
+import { log } from '../lib/log.js'
 import { CosmosClient } from '@azure/cosmos'
-import { parseConnectionString } from '../lib/parseConnectionString'
-import { fromEnv } from '../lib/fromEnv'
+import { parseConnectionString } from '../lib/parseConnectionString.js'
+import { fromEnv } from '../lib/fromEnv.js'
 import {
 	BatchDeviceUpdate,
 	DeviceUpdate,
 	TwinChangeEvent,
-} from '../lib/iotMessages'
-import { batchToDoc } from '../lib/batchToDoc'
+} from '../lib/iotMessages.js'
+import { batchToDoc } from '../lib/batchToDoc.js'
 import {
 	cellId,
 	NetworkMode,

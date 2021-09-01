@@ -1,12 +1,12 @@
 import { AzureFunction, Context, HttpRequest } from '@azure/functions'
-import { result } from '../lib/http'
-import { log } from '../lib/log'
+import { result } from '../lib/http.js'
+import { log } from '../lib/log.js'
 import { v4 } from 'uuid'
 import {
 	BlobServiceClient,
 	StorageSharedKeyCredential,
 } from '@azure/storage-blob'
-import { fromEnv } from '../lib/fromEnv'
+import { fromEnv } from '../lib/fromEnv.js'
 
 const { fotaStorageAccountName, fotaStorageAccessKey } = fromEnv({
 	fotaStorageAccountName: 'FOTA_STORAGE_ACCOUNT_NAME',

@@ -1,7 +1,7 @@
 import { promises as fs } from 'fs'
-import { CARootFileLocations } from './caFileLocations'
+import { CARootFileLocations } from './caFileLocations.js'
 import { createCertificate, CertificateCreationResult } from 'pem'
-import { leafCertConfig } from './pemConfig'
+import { leafCertConfig } from './pemConfig.js'
 
 /**
  * Verifies the CA posessions

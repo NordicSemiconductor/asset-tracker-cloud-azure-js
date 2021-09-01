@@ -20,5 +20,5 @@
       "direction": "out"
     }
   ],
-  "scriptFile": "../dist/storeDeviceCellGeolocation/storeDeviceCellGeolocation.js"
+  "scriptFile": "../dist/storeDeviceCellGeolocation/storeDeviceCellGeolocation.mjs"
 }

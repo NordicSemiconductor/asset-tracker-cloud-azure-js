@@ -1,5 +1,5 @@
 import fetch from 'node-fetch'
-import { handleErrorResponse } from './handleResponse'
+import { handleErrorResponse } from './handleResponse.js'
 
 export type User = {
 	id: string
