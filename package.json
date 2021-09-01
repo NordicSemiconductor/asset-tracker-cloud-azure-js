@@ -42,7 +42,7 @@
     "azure-iothub": "1.14.3",
     "backoff": "2.5.0",
     "mqtt": "4.2.8",
-    "node-fetch": "3.0.0",
+    "node-fetch": "2.6.1",
     "uuid": "8.3.2"
   },
   "devDependencies": {
