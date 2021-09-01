@@ -1,14 +1,14 @@
 import { AzureFunction, Context, HttpRequest } from '@azure/functions'
-import { result } from '../lib/http'
-import { log } from '../lib/log'
-import { fromEnv } from '../lib/fromEnv'
-import { parseConnectionString } from '../lib/parseConnectionString'
+import { result } from '../lib/http.js'
+import { log } from '../lib/log.js'
+import { fromEnv } from '../lib/fromEnv.js'
+import { parseConnectionString } from '../lib/parseConnectionString.js'
 import { CosmosClient } from '@azure/cosmos'
 import {
 	cellId,
 	NetworkMode,
 } from '@nordicsemiconductor/cell-geolocation-helpers'
-import { resolveFromAPI } from './resolveFromAPI'
+import { resolveFromAPI } from './resolveFromAPI.js'
 import { isLeft } from 'fp-ts/lib/Either'
 
 const { connectionString } = fromEnv({

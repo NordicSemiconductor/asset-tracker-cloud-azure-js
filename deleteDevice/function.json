@@ -14,5 +14,5 @@
       "name": "res"
     }
   ],
-  "scriptFile": "../dist/deleteDevice/deleteDevice.js"
+  "scriptFile": "../dist/deleteDevice/deleteDevice.mjs"
 }

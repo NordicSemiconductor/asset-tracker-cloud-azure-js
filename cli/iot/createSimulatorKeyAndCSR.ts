@@ -1,6 +1,6 @@
 import { promises as fs } from 'fs'
-import { deviceFileLocations } from './deviceFileLocations'
-import { run } from '../process/run'
+import { deviceFileLocations } from './deviceFileLocations.js'
+import { run } from '../process/run.js'
 import { createCSR } from 'pem'
 
 export const defaultDeviceCertificateValidityInDays = 10950

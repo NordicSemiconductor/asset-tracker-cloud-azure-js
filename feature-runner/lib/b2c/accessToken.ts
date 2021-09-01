@@ -3,7 +3,7 @@
 
 import fetch from 'node-fetch'
 import { URLSearchParams } from 'url'
-import { handleErrorResponse } from './handleResponse'
+import { handleErrorResponse } from './handleResponse.js'
 
 /**
  * Generates a client level access token which can be used to interact with the Graph API

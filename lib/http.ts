@@ -1,5 +1,5 @@
 import { Context } from '@azure/functions'
-import { log } from './log'
+import { log } from './log.js'
 
 export const result =
 	(context: Context) =>

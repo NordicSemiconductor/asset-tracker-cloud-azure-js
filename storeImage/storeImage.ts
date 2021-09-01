@@ -1,12 +1,12 @@
 import { AzureFunction, Context, HttpRequest } from '@azure/functions'
-import { result } from '../lib/http'
+import { result } from '../lib/http.js'
 import { v4 } from 'uuid'
 import {
 	BlobServiceClient,
 	StorageSharedKeyCredential,
 } from '@azure/storage-blob'
-import { log } from '../lib/log'
-import { fromEnv } from '../lib/fromEnv'
+import { log } from '../lib/log.js'
+import { fromEnv } from '../lib/fromEnv.js'
 
 const { avatarStorageAccountName, avatarStorageAccessKey } = fromEnv({
 	avatarStorageAccountName: 'AVATAR_STORAGE_ACCOUNT_NAME',

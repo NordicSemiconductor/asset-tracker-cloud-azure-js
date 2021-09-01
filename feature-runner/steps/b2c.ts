@@ -2,11 +2,11 @@ import {
 	StepRunner,
 	regexGroupMatcher,
 } from '@nordicsemiconductor/e2e-bdd-test-runner'
-import { b2cClient } from '../lib/b2c/b2cClient'
+import { b2cClient } from '../lib/b2c/b2cClient.js'
 import {
 	getClientAccessToken,
 	getUserAccessToken,
-} from '../lib/b2c/accessToken'
+} from '../lib/b2c/accessToken.js'
 
 export const b2cSteps = async ({
 	b2cTenant,

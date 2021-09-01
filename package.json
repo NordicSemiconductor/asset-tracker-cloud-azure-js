@@ -2,9 +2,10 @@
   "name": "@nordicsemiconductor/asset-tracker-cloud-azure",
   "version": "0.0.0-development",
   "description": "A reference implementation of a serverless backend for an IoT product developed using in TypeScript.",
+  "type": "module",
   "scripts": {
     "test": "jest",
-    "test:e2e": "node --unhandled-rejections=strict dist/feature-runner/run-features.js ./features --print-results --progress",
+    "test:e2e": "node --experimental-modules --unhandled-rejections=strict dist/feature-runner/run-features.js ./features --print-results --progress",
     "postinstall": "husky install",
     "prepublishOnly": "pinst --disable",
     "postpublish": "pinst --enable"
@@ -42,7 +43,6 @@
     "azure-iothub": "1.14.3",
     "backoff": "2.5.0",
     "mqtt": "4.2.8",
-    "node-fetch": "2.6.1",
     "uuid": "8.3.2"
   },
   "devDependencies": {
@@ -69,6 +69,7 @@
     "husky": "7.0.2",
     "jest": "27.1.0",
     "lint-staged": "11.1.2",
+    "node-fetch": "^3.0.0",
     "pem": "1.14.4",
     "pinst": "2.1.6",
     "prettier": "2.3.2",
@@ -113,5 +114,6 @@
       "repository": "https://github.com/NordicSemiconductor/asset-tracker-cloud-app-js.git",
       "branch": "saga"
     }
-  }
+  },
+  "prettier": "@nordicsemiconductor/asset-tracker-cloud-code-style/.prettierrc"
 }

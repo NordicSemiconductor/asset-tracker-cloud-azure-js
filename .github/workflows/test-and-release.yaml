@@ -94,7 +94,6 @@ jobs:
           max_attempts: 3
           command:
             func azure functionapp publish ${APP_NAME:-nrfassettrackerci}api
-            --typescript
       - name: Cache certificates
         if: env.AZURE_CREDENTIALS != ''
         uses: actions/cache@v2

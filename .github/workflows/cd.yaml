@@ -91,9 +91,7 @@ jobs:
               unwiredlabsApiKey=${UNWIRED_LABS_API_KEY}
       - name: Publish Function App
         if: env.AZURE_CREDENTIALS != ''
-        run:
-          func azure functionapp publish ${APP_NAME:-nrfassettracker}api
-          --typescript
+        run: func azure functionapp publish ${APP_NAME:-nrfassettracker}api
       - name: Enable static site hosting for the app
         if: env.AZURE_CREDENTIALS != ''
         run:

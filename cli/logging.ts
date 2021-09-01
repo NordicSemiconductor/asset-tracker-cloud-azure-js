@@ -1,4 +1,4 @@
-import * as chalk from 'chalk'
+import chalk from 'chalk'
 
 export const log = (...message: any[]): void => {
 	console.error(...message.map((m) => chalk.magenta(m)))

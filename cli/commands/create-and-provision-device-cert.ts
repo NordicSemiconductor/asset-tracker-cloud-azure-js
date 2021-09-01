@@ -1,13 +1,13 @@
-import { CommandDefinition } from './CommandDefinition'
+import { CommandDefinition } from './CommandDefinition.js'
 import {
 	generateDeviceCertificate,
 	defaultDeviceCertificateValidityInDays,
-} from '../iot/generateDeviceCertificate'
-import { log, success, progress } from '../logging'
-import { list as listIntermediateCerts } from '../iot/intermediateRegistry'
-import { setting, heading } from '../logging'
+} from '../iot/generateDeviceCertificate.js'
+import { log, success, progress } from '../logging.js'
+import { list as listIntermediateCerts } from '../iot/intermediateRegistry.js'
+import { setting, heading } from '../logging.js'
 import { IotDpsClient } from '@azure/arm-deviceprovisioningservices'
-import { globalIotHubDPSHostname } from '../iot/ioTHubDPSInfo'
+import { globalIotHubDPSHostname } from '../iot/ioTHubDPSInfo.js'
 import {
 	atHostHexfile,
 	connect,
@@ -17,8 +17,8 @@ import {
 import { promises as fs } from 'fs'
 import * as os from 'os'
 import * as path from 'path'
-import { run } from '../process/run'
-import { deviceFileLocations } from '../iot/deviceFileLocations'
+import { run } from '../process/run.js'
+import { deviceFileLocations } from '../iot/deviceFileLocations.js'
 
 export const defaultPort = '/dev/ttyACM0'
 export const defaultSecTag = 42

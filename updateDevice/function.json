@@ -14,5 +14,5 @@
       "name": "res"
     }
   ],
-  "scriptFile": "../dist/updateDevice/updateDevice.js"
+  "scriptFile": "../dist/updateDevice/updateDevice.mjs"
 }
