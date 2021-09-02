@@ -21,5 +21,5 @@
       "direction": "in"
     }
   ],
-  "scriptFile": "../dist/getSignalRConnectionInfo/getSignalRConnectionInfo.mjs"
+  "scriptFile": "../dist/getSignalRConnectionInfo/getSignalRConnectionInfo.js"
 }

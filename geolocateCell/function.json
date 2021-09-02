@@ -14,5 +14,5 @@
       "name": "res"
     }
   ],
-  "scriptFile": "../dist/geolocateCell/geolocateCell.mjs"
+  "scriptFile": "../dist/geolocateCell/geolocateCell.js"
 }
