@@ -1,7 +1,7 @@
 import { promises as fs } from 'fs'
-import { CARootFileLocations } from './caFileLocations'
+import { CARootFileLocations } from './caFileLocations.js'
 import { createCertificate, CertificateCreationResult } from 'pem'
-import { caCertConfig } from './pemConfig'
+import { caCertConfig } from './pemConfig.js'
 
 export const defaultCAValidityInDays = 365
 

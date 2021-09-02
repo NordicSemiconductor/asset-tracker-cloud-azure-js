@@ -4,18 +4,17 @@ import {
 	InterpolatedStep,
 	regexMatcher,
 } from '@nordicsemiconductor/e2e-bdd-test-runner'
-import { generateDeviceCertificate } from '../../cli/iot/generateDeviceCertificate'
-import { connectDevice } from '../../cli/iot/connectDevice'
+import { generateDeviceCertificate } from '../../cli/iot/generateDeviceCertificate.js'
+import { connectDevice } from '../../cli/iot/connectDevice.js'
 import { MqttClient } from 'mqtt'
-import { deviceTopics } from '../../cli/iot/deviceTopics'
+import { deviceTopics } from '../../cli/iot/deviceTopics.js'
 import { v4 } from 'uuid'
 import * as chai from 'chai'
 import { expect } from 'chai'
-import * as chaiSubset from 'chai-subset'
+import chaiSubset from 'chai-subset'
 chai.use(chaiSubset)
-import * as fetchPonyfill from 'fetch-ponyfill'
-import { createSimulatorKeyAndCSR } from '../../cli/iot/createSimulatorKeyAndCSR'
-const { fetch } = fetchPonyfill()
+import fetch from 'node-fetch'
+import { createSimulatorKeyAndCSR } from '../../cli/iot/createSimulatorKeyAndCSR.js'
 
 export const deviceStepRunners = ({
 	certsDir,

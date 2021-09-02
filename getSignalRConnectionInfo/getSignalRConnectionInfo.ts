@@ -1,5 +1,5 @@
 import { AzureFunction, Context, HttpRequest } from '@azure/functions'
-import { result } from '../lib/http'
+import { result } from '../lib/http.js'
 
 const getSignalRConnectionInfo: AzureFunction = async (
 	context: Context,

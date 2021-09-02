@@ -1,7 +1,7 @@
 import { promises as fs } from 'fs'
 import { connect, MqttClient } from 'mqtt'
-import { deviceFileLocations } from './deviceFileLocations'
-import { run } from '../process/run'
+import { deviceFileLocations } from './deviceFileLocations.js'
+import { run } from '../process/run.js'
 
 /**
  * Connect the device to the Azure IoT Hub.

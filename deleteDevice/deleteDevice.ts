@@ -1,9 +1,10 @@
 import { AzureFunction, Context, HttpRequest } from '@azure/functions'
-import { Registry } from 'azure-iothub'
-import { result } from '../lib/http'
-import { ErrorInfo, ErrorType, toStatusCode } from '../lib/ErrorInfo'
-import { log } from '../lib/log'
-import { fromEnv } from '../lib/fromEnv'
+import azureIotHub from 'azure-iothub'
+const { Registry } = azureIotHub
+import { result } from '../lib/http.js'
+import { ErrorInfo, ErrorType, toStatusCode } from '../lib/ErrorInfo.js'
+import { log } from '../lib/log.js'
+import { fromEnv } from '../lib/fromEnv.js'
 
 const { connectionString } = fromEnv({
 	connectionString: 'IOT_HUB_CONNECTION_STRING',

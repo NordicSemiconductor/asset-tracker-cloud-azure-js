@@ -1,5 +1,3 @@
-#!/usr/bin/env node
-
 const die = (err, origin) => {
 	console.error(`An unhandled exception occured!`)
 	console.error(`Exception origin: ${JSON.stringify(origin)}`)
@@ -11,5 +9,4 @@ const die = (err, origin) => {
 process.on('uncaughtException', die)
 process.on('unhandledRejection', die)
 
-// eslint-disable-next-line
-require('../dist/cli/cli')
+import('../dist/cli/cli.js')

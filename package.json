@@ -2,6 +2,7 @@
   "name": "@nordicsemiconductor/asset-tracker-cloud-azure",
   "version": "0.0.0-development",
   "description": "A reference implementation of a serverless backend for an IoT product developed using in TypeScript.",
+  "type": "module",
   "scripts": {
     "test": "jest",
     "test:e2e": "node --unhandled-rejections=strict dist/feature-runner/run-features.js ./features --print-results --progress",
@@ -28,7 +29,7 @@
   "dependencies": {
     "@azure/arm-appservice": "9.0.0",
     "@azure/arm-deviceprovisioningservices": "2.2.1",
-    "@azure/cosmos": "3.14.0",
+    "@azure/cosmos": "3.14.1",
     "@azure/functions": "1.2.3",
     "@azure/ms-rest-azure-js": "2.1.0",
     "@azure/ms-rest-js": "2.6.0",
@@ -42,7 +43,6 @@
     "azure-iothub": "1.14.3",
     "backoff": "2.5.0",
     "mqtt": "4.2.8",
-    "node-fetch": "2.6.1",
     "uuid": "8.3.2"
   },
   "devDependencies": {
@@ -54,6 +54,7 @@
     "@nordicsemiconductor/firmware-ci-device-helpers": "11.0.0",
     "@types/backoff": "2.5.2",
     "@types/chai-subset": "1.3.3",
+    "@types/glob": "7.1.4",
     "@types/jest": "27.0.1",
     "@types/jsonwebtoken": "8.5.5",
     "@types/node": "16.7.10",
@@ -66,9 +67,11 @@
     "chalk": "4.1.2",
     "commander": "8.1.0",
     "eslint": "7.32.0",
+    "glob": "7.1.7",
     "husky": "7.0.2",
     "jest": "27.1.0",
     "lint-staged": "11.1.2",
+    "node-fetch": "3.0.0",
     "pem": "1.14.4",
     "pinst": "2.1.6",
     "prettier": "2.3.2",
@@ -113,5 +116,6 @@
       "repository": "https://github.com/NordicSemiconductor/asset-tracker-cloud-app-js.git",
       "branch": "saga"
     }
-  }
+  },
+  "prettier": "@nordicsemiconductor/asset-tracker-cloud-code-style/.prettierrc"
 }

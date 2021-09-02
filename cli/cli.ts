@@ -1,26 +1,26 @@
 import { program } from 'commander'
 import * as path from 'path'
 import * as fs from 'fs'
-import { createCARootCommand } from './commands/create-ca-root'
+import { createCARootCommand } from './commands/create-ca-root.js'
 import { IotDpsClient } from '@azure/arm-deviceprovisioningservices'
 import { AzureCliCredentials } from '@azure/ms-rest-nodeauth'
 import { WebSiteManagementClient } from '@azure/arm-appservice'
-import { createSimulatorCertCommand } from './commands/create-simulator-cert'
-import { proofCARootPossessionCommand } from './commands/proof-ca-possession'
-import { createCAIntermediateCommand } from './commands/create-ca-intermediate'
+import { createSimulatorCertCommand } from './commands/create-simulator-cert.js'
+import { proofCARootPossessionCommand } from './commands/proof-ca-possession.js'
+import { createCAIntermediateCommand } from './commands/create-ca-intermediate.js'
 import {
 	iotDeviceProvisioningServiceName,
 	resourceGroupName,
 	appName,
-} from '../arm/resources'
-import { reactConfigCommand } from './commands/react-config'
-import { flashFirmwareCommand } from './commands/flash-firmware'
-import { ioTHubDPSInfo } from './iot/ioTHubDPSInfo'
-import { functionsSettingsCommand } from './commands/functions-settings'
-import { error, help } from './logging'
-import { infoCommand } from './commands/info'
-import { createAndProvisionDeviceCertCommand } from './commands/create-and-provision-device-cert'
-import { provisionSimulatorDevice } from './commands/provision-simulator-device'
+} from '../arm/resources.js'
+import { reactConfigCommand } from './commands/react-config.js'
+import { flashFirmwareCommand } from './commands/flash-firmware.js'
+import { ioTHubDPSInfo } from './iot/ioTHubDPSInfo.js'
+import { functionsSettingsCommand } from './commands/functions-settings.js'
+import { error, help } from './logging.js'
+import { infoCommand } from './commands/info.js'
+import { createAndProvisionDeviceCertCommand } from './commands/create-and-provision-device-cert.js'
+import { provisionSimulatorDevice } from './commands/provision-simulator-device.js'
 
 const version = JSON.parse(
 	fs.readFileSync(path.join(process.cwd(), 'package.json'), 'utf-8'),

@@ -1,15 +1,15 @@
 import { AzureFunction, Context, HttpRequest } from '@azure/functions'
-import { result } from '../lib/http'
-import { log } from '../lib/log'
-import { fromEnv } from '../lib/fromEnv'
-import { parseConnectionString } from '../lib/parseConnectionString'
+import { result } from '../lib/http.js'
+import { log } from '../lib/log.js'
+import { fromEnv } from '../lib/fromEnv.js'
+import { parseConnectionString } from '../lib/parseConnectionString.js'
 import { CosmosClient } from '@azure/cosmos'
 import {
 	cellId,
 	cellFromGeolocations,
 	NetworkMode,
 } from '@nordicsemiconductor/cell-geolocation-helpers'
-import { isSome } from 'fp-ts/lib/Option'
+import { isSome } from 'fp-ts/lib/Option.js'
 
 const { connectionString } = fromEnv({
 	connectionString: 'HISTORICAL_DATA_COSMOSDB_CONNECTION_STRING',

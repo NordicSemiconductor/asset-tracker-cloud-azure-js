@@ -2,9 +2,9 @@ import { promises as fs } from 'fs'
 import { connect } from 'mqtt'
 import { parse, URLSearchParams } from 'url'
 import { DeviceRegistrationState } from 'azure-iot-provisioning-service/dist/interfaces'
-import { dpsTopics } from './dpsTopics'
-import { deviceFileLocations } from './deviceFileLocations'
-import { globalIotHubDPSHostname } from './ioTHubDPSInfo'
+import { dpsTopics } from './dpsTopics.js'
+import { deviceFileLocations } from './deviceFileLocations.js'
+import { globalIotHubDPSHostname } from './ioTHubDPSInfo.js'
 
 /**
  * Connect the device to the Azure IoT Hub.

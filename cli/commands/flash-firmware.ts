@@ -1,4 +1,4 @@
-import { CommandDefinition } from './CommandDefinition'
+import { CommandDefinition } from './CommandDefinition.js'
 import * as path from 'path'
 import * as fs from 'fs'
 import * as os from 'os'
@@ -6,7 +6,7 @@ import { flash } from '@nordicsemiconductor/firmware-ci-device-helpers'
 import { Octokit } from '@octokit/rest'
 import * as https from 'https'
 import { v4 } from 'uuid'
-import { progress, success } from '../logging'
+import { progress, success } from '../logging.js'
 
 const getLatestFirmware = async ({
 	nbiot,

@@ -2,11 +2,11 @@ import { promises as fs } from 'fs'
 import {
 	CARootFileLocations,
 	CAIntermediateFileLocations,
-} from './caFileLocations'
-import { deviceFileLocations } from './deviceFileLocations'
+} from './caFileLocations.js'
+import { deviceFileLocations } from './deviceFileLocations.js'
 import * as os from 'os'
 import { createCertificate, CertificateCreationResult } from 'pem'
-import { leafCertConfig } from './pemConfig'
+import { leafCertConfig } from './pemConfig.js'
 
 export const defaultDeviceCertificateValidityInDays = 10950
 

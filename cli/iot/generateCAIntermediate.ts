@@ -2,10 +2,10 @@ import { promises as fs } from 'fs'
 import {
 	CARootFileLocations,
 	CAIntermediateFileLocations,
-} from './caFileLocations'
+} from './caFileLocations.js'
 import { createCertificate, CertificateCreationResult } from 'pem'
-import { caCertConfig } from './pemConfig'
-import { certificateName } from './certificateName'
+import { caCertConfig } from './pemConfig.js'
+import { certificateName } from './certificateName.js'
 
 export const defaultIntermediateCAValidityInDays = 365
 
