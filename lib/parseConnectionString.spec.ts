@@ -1,4 +1,4 @@
-import { parseConnectionString } from './parseConnectionString.js'
+import { parseConnectionString } from './parseConnectionString'
 
 describe('parseConnectionString', () => {
 	it('should parse a connection string', () => {

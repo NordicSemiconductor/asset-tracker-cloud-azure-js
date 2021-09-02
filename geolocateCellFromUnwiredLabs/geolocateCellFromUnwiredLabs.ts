@@ -9,7 +9,7 @@ import {
 	NetworkMode,
 } from '@nordicsemiconductor/cell-geolocation-helpers'
 import { resolveFromAPI } from './resolveFromAPI.js'
-import { isLeft } from 'fp-ts/lib/Either'
+import { isLeft } from 'fp-ts/lib/Either.js'
 
 const { connectionString } = fromEnv({
 	connectionString: 'HISTORICAL_DATA_COSMOSDB_CONNECTION_STRING',

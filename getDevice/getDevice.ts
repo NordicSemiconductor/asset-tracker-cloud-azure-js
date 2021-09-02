@@ -1,5 +1,6 @@
 import { AzureFunction, Context, HttpRequest } from '@azure/functions'
-import { Registry } from 'azure-iothub'
+import azureIotHub from 'azure-iothub'
+const { Registry } = azureIotHub
 import { result } from '../lib/http.js'
 import { ErrorInfo, ErrorType, toStatusCode } from '../lib/ErrorInfo.js'
 import { log } from '../lib/log.js'
