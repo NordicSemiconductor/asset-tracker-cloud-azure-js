@@ -87,7 +87,7 @@ const packageFunctionApp = async (outZipFileName: string) => {
 	await Promise.all(
 		functions.map(async (f) => {
 			const fJSON = path.join(process.cwd(), f, 'function.json')
-			const { scriptFile, functionJSON } = JSON.parse(
+			const { scriptFile, ...functionJSON } = JSON.parse(
 				await fs.readFile(fJSON, 'utf-8'),
 			)
 			await copyFile(
