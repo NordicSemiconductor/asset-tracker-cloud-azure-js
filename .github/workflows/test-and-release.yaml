@@ -93,7 +93,7 @@ jobs:
           retry_wait_seconds: 300
           max_attempts: 3
           command: |
-            node dist/scripts/package-function-app.js functionapp.zip
+            node dist/pack/package-function-app.js functionapp.zip
             az functionapp deployment source config-zip -g ${RESOURCE_GROUP:-nrfassettrackerci} -n ${APP_NAME:-nrfassettrackerci}api --src functionapp.zip
       - uses: actions/upload-artifact@v2
         if: always()
