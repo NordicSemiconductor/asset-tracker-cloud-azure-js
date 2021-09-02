@@ -14,5 +14,5 @@
       "name": "res"
     }
   ],
-  "scriptFile": "../dist/listDevices/listDevices.mjs"
+  "scriptFile": "../dist/listDevices/listDevices.js"
 }

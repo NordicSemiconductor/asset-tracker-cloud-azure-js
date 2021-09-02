@@ -14,5 +14,5 @@
       "name": "res"
     }
   ],
-  "scriptFile": "../dist/storeImage/storeImage.mjs"
+  "scriptFile": "../dist/storeImage/storeImage.js"
 }
