@@ -9,7 +9,7 @@ import {
 	cellFromGeolocations,
 	NetworkMode,
 } from '@nordicsemiconductor/cell-geolocation-helpers'
-import { isSome } from 'fp-ts/lib/Option'
+import { isSome } from 'fp-ts/lib/Option.js'
 
 const { connectionString } = fromEnv({
 	connectionString: 'HISTORICAL_DATA_COSMOSDB_CONNECTION_STRING',

@@ -1,4 +1,4 @@
-import { batchToDoc } from './batchToDoc.js'
+import { batchToDoc } from './batchToDoc'
 
 describe('batchToDoc', () => {
 	it('should convert a batch document to multiple updates', () => {

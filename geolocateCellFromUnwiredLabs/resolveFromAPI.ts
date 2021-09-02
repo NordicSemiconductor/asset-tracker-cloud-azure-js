@@ -1,6 +1,6 @@
 import { parse } from 'url'
 import { request as nodeRequest } from 'https'
-import { left, right, Either } from 'fp-ts/lib/Either'
+import { left, right, Either } from 'fp-ts/lib/Either.js'
 
 export const resolveFromAPI =
 	({ apiKey, endpoint }: { apiKey: string; endpoint: string }) =>
