@@ -15,4 +15,4 @@ Feature: List trackers
 
         When I GET /devices
         Then the response status code should be 200
-        And "$[deviceId='{catId}'].deviceId" of the response body should equal "{catId}"
+        And "$[deviceId='{trackerId}'].deviceId" of the response body should equal "{trackerId}"

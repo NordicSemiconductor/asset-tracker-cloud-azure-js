@@ -15,7 +15,7 @@ Feature: Cell Geolocation API
         Given I store "$floor($random() * 100000000)" into "cellId"
         And I store "$random() * 90" into "lat"
         And I store "$random() * 180" into "lng"
-        Then the tracker "{catId}" updates its reported state with
+        Then the tracker "{trackerId}" updates its reported state with
             """
             {
             "roam": {
@@ -33,7 +33,7 @@ Feature: Cell Geolocation API
 
     Scenario: Device acquires a GPS fix
 
-        Given the tracker "{catId}" updates its reported state with
+        Given the tracker "{trackerId}" updates its reported state with
             """
             {
             "gps": {

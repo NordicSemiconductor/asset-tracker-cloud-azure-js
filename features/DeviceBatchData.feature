@@ -10,7 +10,7 @@ Feature: Device: Batch Data
 
   Scenario: Devices can publish batch data
 
-    Given the tracker "{catId}" publishes this message to the topic devices/{catId}/messages/events/batch
+    Given the tracker "{trackerId}" publishes this message to the topic devices/{trackerId}/messages/events/batch
       """
       {
         "gps": [
@@ -48,7 +48,7 @@ Feature: Device: Batch Data
     When I POST to /history with this JSON
       """
       {
-        "query": "SELECT c.deviceUpdate.gps.v.lng AS lng FROM c WHERE c.deviceId = \"{catId}\" AND c.deviceUpdate.gps.v != null ORDER BY c.timestamp DESC"
+        "query": "SELECT c.deviceUpdate.gps.v.lng AS lng FROM c WHERE c.deviceId = \"{trackerId}\" AND c.deviceUpdate.gps.v != null ORDER BY c.timestamp DESC"
       }
       """
     Then the response status code should be 200

@@ -13,5 +13,5 @@ Feature: Delete trackers
 
   Scenario: Delete the cat
 
-    When I DELETE /device/{catId}
+    When I DELETE /device/{trackerId}
     Then the response status code should be 202

@@ -10,7 +10,7 @@ Feature: Device: Messages
   Scenario: Devices publishes that a button was pressed
 
     Given I store "$millis()" into "ts"
-    Then the tracker "{catId}" publishes this message to the topic devices/{catId}/messages/events/
+    Then the tracker "{trackerId}" publishes this message to the topic devices/{trackerId}/messages/events/
       """
       {
       "btn": {
@@ -20,7 +20,7 @@ Feature: Device: Messages
       }
       """
     Given I store "$millis()" into "ts"
-    Then the tracker "{catId}" publishes this message to the topic devices/{catId}/messages/events/
+    Then the tracker "{trackerId}" publishes this message to the topic devices/{trackerId}/messages/events/
       """
       {
       "btn": {
@@ -38,7 +38,7 @@ Feature: Device: Messages
     When I POST to /history with this JSON
       """
       {
-        "query": "SELECT c.deviceUpdate.btn.v AS v FROM c WHERE c.deviceId = \"{catId}\" AND c.deviceUpdate.btn.v != null ORDER BY c.timestamp DESC"
+        "query": "SELECT c.deviceUpdate.btn.v AS v FROM c WHERE c.deviceId = \"{trackerId}\" AND c.deviceUpdate.btn.v != null ORDER BY c.timestamp DESC"
       }
       """
     Then the response status code should be 200

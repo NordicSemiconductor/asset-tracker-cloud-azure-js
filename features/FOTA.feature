@@ -30,7 +30,7 @@ Feature: Device Firmware Upgrade over the air
 
     Given the Content-Type header is "application/json; charset=utf-8"
     And I have a random UUID in "fotaJobId"
-    When I PATCH /device/{catId} with this JSON
+    When I PATCH /device/{trackerId} with this JSON
       """
       {
         "firmware": {
@@ -48,7 +48,7 @@ Feature: Device Firmware Upgrade over the air
 
     Given I store "$match(fwPackageURI,/^https?:\/\/([^\/]+)/).groups[0]" into "fwLocationHost"
     And I store "$substring($match(fwPackageURI,/^https?:\/\/[^\/]+(\/.+)/).groups[0], 1)" into "fwLocationPath"
-    When the desired state of the tracker "{catId}" matches
+    When the desired state of the tracker "{trackerId}" matches
       """
       {
         "firmware": {
@@ -63,7 +63,7 @@ Feature: Device Firmware Upgrade over the air
         }
       }
       """
-    Then the tracker "{catId}" updates its reported state with
+    Then the tracker "{trackerId}" updates its reported state with
       """
       {
         "firmware": {
@@ -76,7 +76,7 @@ Feature: Device Firmware Upgrade over the air
 
   Scenario: Read the job execution status
 
-    When I GET /device/{catId}
+    When I GET /device/{trackerId}
     Then the response status code should be 200
     Then "properties.desired" of the response body should match this JSON
       """

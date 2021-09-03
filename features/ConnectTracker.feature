@@ -3,6 +3,6 @@ Feature: Connect a tracker
   I can connect a tracker
 
   Scenario: Generate a certificate
-    Given I have a random UUID in "catId"
-    When I generate a certificate for the device "{catId}"
-    Then I connect the device "{catId}"
+    Given I have a random UUID in "trackerId"
+    When I generate a certificate for the device "{trackerId}"
+    Then I connect the device "{trackerId}"
