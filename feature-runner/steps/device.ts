@@ -47,7 +47,6 @@ export const deviceStepRunners = ({
 			const connection = await connectDevice({
 				deviceId,
 				certsDir,
-				log: (...args) => console.debug('[mqtt]', ...args),
 			})
 			connections[deviceId] = connection
 			return deviceId
