@@ -89,9 +89,11 @@ jobs:
               appRegistrationClientId=$APP_REG_CLIENT_ID \
               b2cTenant=${B2C_TENANT} \
               unwiredlabsApiKey=${UNWIRED_LABS_API_KEY}
-      - name: Publish Function App
+      - name: Deploy Function App
         if: env.AZURE_CREDENTIALS != ''
-        run: func azure functionapp publish ${APP_NAME:-nrfassettracker}api
+        run: |
+          node dist/pack/package-function-app.js functionapp.zip
+          az functionapp deployment source config-zip -g ${RESOURCE_GROUP:-nrfassettracker} -n ${APP_NAME:-nrfassettracker}api --src functionapp.zip
       - name: Enable static site hosting for the app
         if: env.AZURE_CREDENTIALS != ''
         run:
@@ -120,7 +122,7 @@ jobs:
           git checkout $REACT_APP_VERSION
           npm ci --no-audit
           npm run build
-      - name: Publish app
+      - name: Deploy Web App
         if: env.AZURE_CREDENTIALS != ''
         run: |
           export APP_STORAGE_CONNECTION_STRING=`az storage account show-connection-string --name ${APP_NAME:-nrfassettracker}app --query 'connectionString'` 
