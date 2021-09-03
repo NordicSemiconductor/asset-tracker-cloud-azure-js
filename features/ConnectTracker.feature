@@ -1,6 +1,6 @@
-Feature: Connect a Cat Tracker
+Feature: Connect a tracker
   As a user
-  I can connect a cat tracker
+  I can connect a tracker
 
   Scenario: Generate a certificate
     Given I have a random UUID in "catId"

@@ -3,11 +3,11 @@ Feature: Device: Update Shadow
 
   Background:
 
-    Given I am run after the "Connect a Cat Tracker" feature
+    Given I am run after the "Connect a tracker" feature
 
   Scenario: Publish device information to reported state
 
-    Given the cat tracker "{catId}" updates its reported state with
+    Given the tracker "{catId}" updates its reported state with
       """
       {
         "dev": {

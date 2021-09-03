@@ -6,7 +6,7 @@ Feature: Device Firmware Upgrade over the air
   Background:
 
     Given I am run after the "Login" feature
-    And I am run after the "Connect a Cat Tracker" feature
+    And I am run after the "Connect a tracker" feature
     And the endpoint is "{apiEndpoint}"
     And the Authorization header is "Bearer {accessToken}"
 
@@ -48,7 +48,7 @@ Feature: Device Firmware Upgrade over the air
 
     Given I store "$match(fwPackageURI,/^https?:\/\/([^\/]+)/).groups[0]" into "fwLocationHost"
     And I store "$substring($match(fwPackageURI,/^https?:\/\/[^\/]+(\/.+)/).groups[0], 1)" into "fwLocationPath"
-    When the desired state of the cat tracker "{catId}" matches
+    When the desired state of the tracker "{catId}" matches
       """
       {
         "firmware": {
@@ -63,7 +63,7 @@ Feature: Device Firmware Upgrade over the air
         }
       }
       """
-    Then the cat tracker "{catId}" updates its reported state with
+    Then the tracker "{catId}" updates its reported state with
       """
       {
         "firmware": {

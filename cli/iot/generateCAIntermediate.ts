@@ -36,7 +36,9 @@ export const generateCAIntermediate = async (args: {
 		fs.readFile(caRootFiles.cert, 'utf-8'),
 	])
 
-	const intermediateName = certificateName(`Cat Tracker Intermediate CA ${id}`)
+	const intermediateName = certificateName(
+		`Asset Tracker Intermediate CA ${id}`,
+	)
 
 	const intermediateCert = await new Promise<CertificateCreationResult>(
 		(resolve, reject) =>

@@ -57,7 +57,7 @@ const main = async () => {
 				new WebSiteManagementClient(creds, creds.tokenInfo.subscription),
 		)
 
-	program.description('Cat Tracker Command Line Interface')
+	program.description('Asset Tracker Command Line Interface')
 
 	const commands = [
 		infoCommand({

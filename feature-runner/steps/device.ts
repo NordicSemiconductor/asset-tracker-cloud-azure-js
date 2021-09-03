@@ -29,7 +29,7 @@ export const deviceStepRunners = ({
 	let fwResult = ''
 	return [
 		regexGroupMatcher(
-			/^I generate a certificate for the (?:device|cat tracker) "(?<deviceId>[^"]+)"$/,
+			/^I generate a certificate for the (?:device|tracker) "(?<deviceId>[^"]+)"$/,
 		)(async ({ deviceId }) => {
 			await createSimulatorKeyAndCSR({ certsDir, deviceId })
 			await generateDeviceCertificate({
@@ -42,7 +42,7 @@ export const deviceStepRunners = ({
 			return deviceId
 		}),
 		regexGroupMatcher(
-			/^I connect the (?:device|cat tracker) "(?<deviceId>[^"]+)"$/,
+			/^I connect the (?:device|tracker) "(?<deviceId>[^"]+)"$/,
 		)(async ({ deviceId }) => {
 			const connection = await connectDevice({
 				deviceId,
@@ -52,7 +52,7 @@ export const deviceStepRunners = ({
 			return deviceId
 		}),
 		regexGroupMatcher(
-			/^the (?:device|cat tracker) "(?<deviceId>[^"]+)" updates its reported state with$/,
+			/^the (?:device|tracker) "(?<deviceId>[^"]+)" updates its reported state with$/,
 		)(async ({ deviceId }, step) => {
 			if (step.interpolatedArgument === undefined) {
 				throw new Error('Must provide argument!')
@@ -65,7 +65,7 @@ export const deviceStepRunners = ({
 			)
 		}),
 		regexGroupMatcher(
-			/^the (?:device|cat tracker) "(?<deviceId>[^"]+)" publishes this message to the topic (?<topic>.+)$/,
+			/^the (?:device|tracker) "(?<deviceId>[^"]+)" publishes this message to the topic (?<topic>.+)$/,
 		)(async ({ deviceId, topic }, step) => {
 			if (step.interpolatedArgument === undefined) {
 				throw new Error('Must provide argument!')
@@ -75,7 +75,7 @@ export const deviceStepRunners = ({
 			connection.publish(topic, JSON.stringify(message))
 		}),
 		regexGroupMatcher(
-			/^the (?<desiredOrReported>desired|reported) state of the (?:device|cat tracker) "(?<deviceId>[^"]+)" (?:should )?(?<equalOrMatch>equals?|match(?:es)?)$/,
+			/^the (?<desiredOrReported>desired|reported) state of the (?:device|tracker) "(?<deviceId>[^"]+)" (?:should )?(?<equalOrMatch>equals?|match(?:es)?)$/,
 		)(async ({ desiredOrReported, deviceId, equalOrMatch }, step) => {
 			if (step.interpolatedArgument === undefined) {
 				throw new Error('Must provide argument!')

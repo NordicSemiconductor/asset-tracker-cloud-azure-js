@@ -10,7 +10,7 @@ Feature: Device: Messages
   Scenario: Devices publishes that a button was pressed
 
     Given I store "$millis()" into "ts"
-    Then the cat tracker "{catId}" publishes this message to the topic devices/{catId}/messages/events/
+    Then the tracker "{catId}" publishes this message to the topic devices/{catId}/messages/events/
       """
       {
       "btn": {
@@ -20,7 +20,7 @@ Feature: Device: Messages
       }
       """
     Given I store "$millis()" into "ts"
-    Then the cat tracker "{catId}" publishes this message to the topic devices/{catId}/messages/events/
+    Then the tracker "{catId}" publishes this message to the topic devices/{catId}/messages/events/
       """
       {
       "btn": {
