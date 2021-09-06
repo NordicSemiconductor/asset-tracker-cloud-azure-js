@@ -67,6 +67,24 @@ jobs:
       - run: npx tsc
       - name: Run Unit Tests
         run: npm test
+      - name: Generate run ID
+        run: |
+          RUN_ID=`uuidgen | cut -d- -f1`
+          echo "RUN_ID=${RUN_ID}" >> $GITHUB_ENV
+      - name: Generate name for Mock HTTP API resource group
+        run: |
+          MOCK_HTTP_API_RESOURCE_GROUP=`echo mock-http-api-${RUN_ID} | tr -dc '[:alnum:]'`
+          echo "MOCK_HTTP_API_RESOURCE_GROUP=${MOCK_HTTP_API_RESOURCE_GROUP}" >> $GITHUB_ENV
+      - name: Deploy Mock HTTP API
+        run: |
+          az group create --name ${MOCK_HTTP_API_RESOURCE_GROUP} --location ${LOCATION:-northeurope}
+          az deployment group create \
+            --resource-group ${MOCK_HTTP_API_RESOURCE_GROUP} \
+            --mode Complete \
+            --name test-${{ github.sha }} \
+            --template-file mock-http-api.json
+          node scripts/pack-mock-http-api-app.js
+          az functionapp deployment source config-zip -g ${MOCK_HTTP_API_RESOURCE_GROUP} -n ${MOCK_HTTP_API_RESOURCE_GROUP}functions --src dist/mock-http-api.zip
       - name: Deploy solution
         if: env.AZURE_CREDENTIALS != ''
         uses: nick-invision/retry@v2
@@ -93,13 +111,13 @@ jobs:
           retry_wait_seconds: 300
           max_attempts: 3
           command: |
-            node dist/pack/package-function-app.js functionapp.zip
-            az functionapp deployment source config-zip -g ${RESOURCE_GROUP:-nrfassettrackerci} -n ${APP_NAME:-nrfassettrackerci}api --src functionapp.zip
+            node scripts/pack-app.js
+            az functionapp deployment source config-zip -g ${RESOURCE_GROUP:-nrfassettrackerci} -n ${APP_NAME:-nrfassettrackerci}api --src dist/functionapp.zip
       - uses: actions/upload-artifact@v2
         if: always()
         with:
           name: functionapp-${{ github.sha }}
-          path: functionapp.zip
+          path: dist/functionapp.zip
       - name: Cache certificates
         if: env.AZURE_CREDENTIALS != ''
         uses: actions/cache@v2
@@ -135,6 +153,10 @@ jobs:
       - name: Delete device certificates
         if: env.AZURE_CREDENTIALS != ''
         run: rm ./certificates/*/device-*
+      - name: Delete Mock HTTP API
+        continue-on-error: true
+        run: |
+          az group delete -y --no-wait --name ${MOCK_HTTP_API_RESOURCE_GROUP} --location ${LOCATION:-northeurope}
       - name: Semantic release
         if: success()
         continue-on-error: true

@@ -16,21 +16,48 @@ import path from 'path'
 import os from 'os'
 import { progress, debug } from '../cli/logging.js'
 import { run } from '../cli/process/run.js'
-import globAsync from 'glob'
-import { promisify } from 'util'
 import { copy, copyFile } from './lib/copy.js'
-const glob = promisify(globAsync)
+import dependencyTree, { TreeInnerNode } from 'dependency-tree'
+import { flattenDependencies } from './flattenDependencies.js'
 
-const packageFunctionApp = async (outZipFileName: string) => {
-	// Don't overwrite an existing file
-	const outFile = path.resolve(process.cwd(), outZipFileName)
-	try {
-		await fs.stat(outFile)
-		console.error(`Target file ${outFile} exists.`)
-		process.exit(1)
-	} catch {
-		// Pass
+const installDependenciesFromPackageJSON = async ({
+	targetDir,
+}: {
+	targetDir: string
+}): Promise<void> => {
+	// Install production dependencies
+	await run({
+		command: 'npm',
+		args: ['ci', '--ignore-scripts', '--only=prod', '--no-audit'],
+		cwd: targetDir,
+		log: (info) => progress('Installing dependencies', info),
+		debug: (info) => debug('[npm]', info),
+	})
+}
+
+export const installPackagesFromList =
+	(packageList: string[]) =>
+	async ({ targetDir }: { targetDir: string }): Promise<void> => {
+		// Install production dependencies
+		await run({
+			command: 'npm',
+			args: ['i', '--ignore-scripts', '--no-audit', ...packageList],
+			cwd: targetDir,
+			log: (info) => progress('Installing dependencies', info),
+			debug: (info) => debug('[npm]', info),
+		})
 	}
+
+export const packageFunctionApp = async ({
+	outFileId,
+	functions,
+	installDependencies,
+}: {
+	outFileId: string
+	functions?: string[]
+	installDependencies?: (_: { targetDir: string }) => Promise<void>
+}): Promise<string> => {
+	const outFile = path.resolve(process.cwd(), 'dist', `${outFileId}.zip`)
 
 	progress('Packaging app', outFile)
 	const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), path.sep))
@@ -38,47 +65,56 @@ const packageFunctionApp = async (outZipFileName: string) => {
 
 	// Copy the neccessary files for Azure functions
 	await c('host.json')
+
 	// ... and for installing dependencies
 	await c('package.json')
 	await c('package-lock.json')
 
-	// Install production dependencies
-	await run({
-		command: 'npm',
-		args: ['ci', '--ignore-scripts', '--only=prod', '--no-audit'],
-		cwd: tempDir,
-		log: (info) => progress('Installing dependencies', info),
-		debug: (info) => debug('[npm]', info),
+	// Install the dependencies
+	await (installDependencies ?? installDependenciesFromPackageJSON)({
+		targetDir: tempDir,
 	})
 
 	// Find all folder names of functions (they have a function.json in it)
-	const rootEntries = await fs.readdir(process.cwd())
-	const functions = rootEntries
-		.filter((f) => !f.startsWith('.'))
-		.filter((f) => statSync(path.join(process.cwd(), f)).isDirectory())
-		.filter((f) => {
-			try {
-				return statSync(path.join(process.cwd(), f, 'function.json')).isFile()
-			} catch {
-				return false
-			}
-		})
+	if (functions === undefined) {
+		const rootEntries = await fs.readdir(process.cwd())
+		functions = rootEntries
+			.filter((f) => !f.startsWith('.'))
+			.filter((f) => statSync(path.join(process.cwd(), f)).isDirectory())
+			.filter((f) => {
+				try {
+					return statSync(path.join(process.cwd(), f, 'function.json')).isFile()
+				} catch {
+					return false
+				}
+			})
+	}
+
+	// Build list of dist files based on scriptFiles of functions and their dependencies
+	progress('Packaging app', 'Copying function files')
+	const functionFiles = (
+		await Promise.all(
+			functions.map(async (f) =>
+				fs
+					.readFile(path.join(process.cwd(), f, 'function.json'), 'utf-8')
+					.then(JSON.parse)
+					.then(({ scriptFile }) =>
+						flattenDependencies(
+							dependencyTree({
+								directory: path.join(process.cwd(), 'dist'),
+								filename: path.join(process.cwd(), f, scriptFile),
+								filter: (path) => !path.includes('node_modules'),
+							}) as TreeInnerNode,
+						),
+					),
+			),
+		)
+	).flat()
 
 	// Find all compiled JS files, but exclude some development files
-	const excludeDistFolders = ['arm', 'cli', 'pack', 'feature-runner']
-	progress('Packaging app', 'Copying function files')
-	const distJSFiles = await glob(`**/*.js`, {
-		cwd: path.join(process.cwd(), 'dist'),
-	})
-	const functionAppFiles = distJSFiles.filter(
-		(f) => !excludeDistFolders.includes(f.split(path.sep)[0]),
-	)
 	await Promise.all(
-		functionAppFiles.map(async (f) =>
-			copyFile(
-				path.join(process.cwd(), 'dist', f),
-				path.join(tempDir, 'dist', f),
-			),
+		functionFiles.map(async (f) =>
+			copyFile(f, path.join(tempDir, f.replace(process.cwd(), ''))),
 		),
 	)
 
@@ -109,7 +145,7 @@ const packageFunctionApp = async (outZipFileName: string) => {
 	// ZIP everything
 	await run({
 		command: 'zip',
-		args: ['-r', path.resolve(process.cwd(), outZipFileName), './'],
+		args: ['-r', outFile, './'],
 		cwd: tempDir,
 		log: (info) => progress('[ZIP]', info),
 	})
@@ -120,6 +156,6 @@ const packageFunctionApp = async (outZipFileName: string) => {
 		args: ['-rf', tempDir],
 		log: (info) => progress('Cleanup', info),
 	})
-}
 
-void packageFunctionApp(process.argv[process.argv.length - 1])
+	return outFile
+}
