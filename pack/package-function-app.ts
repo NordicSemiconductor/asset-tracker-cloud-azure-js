@@ -51,29 +51,17 @@ export const installPackagesFromList =
 export const packageFunctionApp = async ({
 	outFileId,
 	functions,
+	ignoreFunctions,
 	installDependencies,
 }: {
 	outFileId: string
 	functions?: string[]
+	ignoreFunctions?: string
 	installDependencies?: (_: { targetDir: string }) => Promise<void>
 }): Promise<string> => {
 	const outFile = path.resolve(process.cwd(), 'dist', `${outFileId}.zip`)
 
-	progress('Packaging app', outFile)
-	const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), path.sep))
-	const c = copy(process.cwd(), tempDir)
-
-	// Copy the neccessary files for Azure functions
-	await c('host.json')
-
-	// ... and for installing dependencies
-	await c('package.json')
-	await c('package-lock.json')
-
-	// Install the dependencies
-	await (installDependencies ?? installDependenciesFromPackageJSON)({
-		targetDir: tempDir,
-	})
+	progress('Packaging to', outFile)
 
 	// Find all folder names of functions (they have a function.json in it)
 	if (functions === undefined) {
@@ -88,7 +76,24 @@ export const packageFunctionApp = async ({
 					return false
 				}
 			})
+			.filter((f) => !(ignoreFunctions ?? ([] as string[])).includes(f))
 	}
+	functions.forEach((f) => progress('Packaging function', f))
+
+	const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), path.sep))
+	const c = copy(process.cwd(), tempDir)
+
+	// Copy the neccessary files for Azure functions
+	await c('host.json')
+
+	// ... and for installing dependencies
+	await c('package.json')
+	await c('package-lock.json')
+
+	// Install the dependencies
+	await (installDependencies ?? installDependenciesFromPackageJSON)({
+		targetDir: tempDir,
+	})
 
 	// Build list of dist files based on scriptFiles of functions and their dependencies
 	progress('Packaging app', 'Copying function files')

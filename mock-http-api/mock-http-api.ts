@@ -7,6 +7,7 @@ import { v4 } from 'uuid'
 import { URL } from 'url'
 import { encodeQuery } from './encodeQuery.js'
 import { setLogLevel } from '@azure/logger'
+import { splitMockResponse } from './splitMockResponse.js'
 
 setLogLevel('verbose')
 
@@ -15,11 +16,15 @@ const { storageAccessKey, storageAccountName } = fromEnv({
 	storageAccessKey: 'STORAGE_ACCESS_KEY',
 })(process.env)
 
-const requestsClient = new TableClient(
-	`https://${storageAccountName}.table.core.windows.net`,
-	'Requests',
-	new AzureNamedKeyCredential(storageAccountName, storageAccessKey),
-)
+const createTableClient = (table: string) =>
+	new TableClient(
+		`https://${storageAccountName}.table.core.windows.net`,
+		table,
+		new AzureNamedKeyCredential(storageAccountName, storageAccessKey),
+	)
+
+const requestsClient = createTableClient('Requests')
+const responsesClient = createTableClient('Responses')
 
 const mockHTTPAPI: AzureFunction = async (
 	context: Context,
@@ -28,23 +33,64 @@ const mockHTTPAPI: AzureFunction = async (
 	log(context)({ req })
 
 	try {
-		const url = `${req.method} ${new URL(req.url).pathname}${encodeQuery(
+		const path = new URL(req.url).pathname.replace(/^\/api\//, '')
+		const methodPathQuery = `${req.method} ${path}${encodeQuery(
 			req.query as Record<string, string>,
 		)}`
 		const requestId = v4()
-		const testEntity = {
+		const request = {
 			partitionKey: requestId,
-			rowKey: encodeURIComponent(url),
+			rowKey: encodeURIComponent(methodPathQuery),
 			method: req.method,
-			path: new URL(req.url).pathname,
+			path: path,
 			query: JSON.stringify(req.query),
-			url,
+			methodPathQuery: methodPathQuery,
 			headers: JSON.stringify(req.headers),
-			body: req.rawBody,
+			body: JSON.stringify(req.body),
 		}
-		await requestsClient.createEntity(testEntity)
+		log(context)({ request })
+		await requestsClient.createEntity(request)
 
-		context.res = result(context)({ requestId })
+		// Check if response exists
+		log(context)(`Checking if response exists for ${methodPathQuery}...`)
+
+		const res = responsesClient.listEntities<{
+			partitionKey: string
+			rowKey: string
+			methodPathQuery: string
+			statusCode: number
+			body?: string
+			ttl: number
+		}>({
+			queryOptions: {
+				filter: `methodPathQuery eq '${methodPathQuery}' and ttl ge ${Math.floor(
+					Date.now() / 1000,
+				)}`,
+			},
+		})
+
+		for await (const response of res) {
+			log(context)({ response })
+			await responsesClient.deleteEntity(response.partitionKey, response.rowKey)
+			const { body, headers } = splitMockResponse(response.body ?? '')
+			const isBinary = /^[0-9a-f]+$/.test(body)
+			context.res = result(context)(
+				isBinary
+					? /* body is HEX encoded */ Buffer.from(body, 'hex').toString(
+							'base64',
+					  )
+					: body,
+				response.statusCode ?? 200,
+				isBinary
+					? {
+							...headers,
+							'Content-Type': 'application/octet-stream',
+					  }
+					: headers,
+			)
+			return
+		}
+		context.res = result(context)('', 404)
 	} catch (err) {
 		context.res = result(context)((err as Error).message, 500)
 		log(context)({ error: (err as Error).message })

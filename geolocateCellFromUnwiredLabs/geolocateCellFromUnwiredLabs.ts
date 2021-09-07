@@ -1,6 +1,6 @@
 import { AzureFunction, Context, HttpRequest } from '@azure/functions'
 import { result } from '../lib/http.js'
-import { log } from '../lib/log.js'
+import { log, logError } from '../lib/log.js'
 import { fromEnv } from '../lib/fromEnv.js'
 import { parseConnectionString } from '../lib/parseConnectionString.js'
 import { CosmosClient } from '@azure/cosmos'
@@ -66,13 +66,15 @@ const geolocateCellFromUnwiredLabs: AzureFunction = async (
 		cell: c,
 		area,
 		mccmnc,
+		nw,
 	} = req.query as {
 		cell: string
 		area: string
 		mccmnc: string
+		nw: NetworkMode
 	}
 	const cell = {
-		nw: NetworkMode.LTEm, // FIXME: remove harcoded LTE-m network mode
+		nw,
 		cell: parseInt(c, 10),
 		area: parseInt(area, 10),
 		mccmnc: parseInt(mccmnc, 10),
@@ -93,8 +95,15 @@ const geolocateCellFromUnwiredLabs: AzureFunction = async (
 				context.res = result(context)({ error: `Unknown cell ${id}` }, 404)
 			}
 		} else {
-			const maybeLocation = await locate(cell)
+			const maybeLocation = await locate(
+				{
+					...cell,
+					nw: cell.nw === NetworkMode.LTEm ? 'lte' : 'nbiot',
+				},
+				log(context),
+			)
 			if (isLeft(maybeLocation)) {
+				logError(context)({ error: maybeLocation.left.message })
 				context.res = result(context)(
 					{ error: `Could not resolve cell ${id}` },
 					404,

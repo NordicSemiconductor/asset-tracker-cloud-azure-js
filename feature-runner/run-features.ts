@@ -24,10 +24,17 @@ import {
 	CARootFileLocations,
 } from '../cli/iot/caFileLocations.js'
 import { fingerprint } from '../cli/iot/fingerprint.js'
+import { run } from '../cli/process/run.js'
+import { httpApiMockStepRunners } from './steps/httpApiMock.js'
+import { TableClient } from '@azure/data-tables'
+import { AzureNamedKeyCredential } from '@azure/core-auth'
 
 let ran = false
 
-type World = { apiEndpoint: string }
+export type World = {
+	apiEndpoint: string
+	'httpApiMock:apiEndpoint': string
+}
 
 program
 	.arguments('<featureDir>')
@@ -57,6 +64,7 @@ program
 				b2cTenantId,
 				resourceGroup,
 				appName,
+				mockHTTPApiResourceGroup,
 			} = fromEnv({
 				b2cTenant: 'B2C_TENANT',
 				clientId: 'APP_REG_CLIENT_ID',
@@ -64,22 +72,62 @@ program
 				b2cTenantId: 'B2C_TENANT_ID',
 				resourceGroup: 'RESOURCE_GROUP',
 				appName: 'APP_NAME',
+				mockHTTPApiResourceGroup: 'MOCK_HTTP_API_RESOURCE_GROUP',
 			})(process.env)
 
 			const credentials = await AzureCliCredentials.create()
 
-			const apiEndpoint = ((
-				await new WebSiteManagementClient(
-					credentials,
-					credentials.tokenInfo.subscription,
-				).webApps.get(resourceGroup, `${appName}api`)
-			).hostNames ?? [])[0]
+			const wsClient = new WebSiteManagementClient(
+				credentials,
+				credentials.tokenInfo.subscription,
+			)
+			const [apiEndpoint, mockHTTPApiEndpoint, mockHTTPApiSettings] =
+				await Promise.all([
+					wsClient.webApps
+						.get(resourceGroup, `${appName}api`)
+						.then(({ defaultHostName }) => defaultHostName),
+					wsClient.webApps
+						.get(
+							mockHTTPApiResourceGroup,
+							`${mockHTTPApiResourceGroup}functions`,
+						)
+						.then(({ defaultHostName }) => defaultHostName),
+					// FIXME: there seems to be no NPM package to manage Azure function apps
+					run({
+						command: 'az',
+						args: [
+							'functionapp',
+							'config',
+							'appsettings',
+							'list',
+							'-g',
+							mockHTTPApiResourceGroup,
+							'-n',
+							`${mockHTTPApiResourceGroup}functions`,
+						],
+					}).then(
+						(res) => JSON.parse(res) as { name: string; value: string }[],
+					),
+				])
+
+			const mockHTTPStorageAccessKey = mockHTTPApiSettings.find(
+				({ name }) => name === 'STORAGE_ACCESS_KEY',
+			)?.value as string
 
 			if (apiEndpoint === undefined) {
 				error(`Could not determine API endpoint!`)
 				process.exit(1)
 			}
+			if (mockHTTPApiEndpoint === undefined) {
+				error(`Could not determine mock HTTP API endpoint!`)
+				process.exit(1)
+			}
+			if (mockHTTPStorageAccessKey === undefined) {
+				error(`Could not determine mock HTTP API storage access key!`)
+				process.exit(1)
+			}
 			const apiEndpointUrl = `https://${apiEndpoint}/`
+			const mockHTTPApiEndpointUrl = `https://${mockHTTPApiEndpoint}/`
 
 			const certsDir = await ioTHubDPSInfo({
 				resourceGroupName: resourceGroup,
@@ -118,10 +166,12 @@ program
 				'Intermediate CA fingerprint': await fingerprint(
 					intermediateCaFiles.cert,
 				),
+				'Mock HTTP API endpoint': mockHTTPApiEndpointUrl,
 			})
 
 			const world: World = {
 				apiEndpoint: `${apiEndpointUrl}api/`,
+				'httpApiMock:apiEndpoint': `${mockHTTPApiEndpointUrl}api/`,
 			} as const
 			heading('World')
 			settings(world)
@@ -164,6 +214,23 @@ program
 					deviceStepRunners({ certsDir, resourceGroup, intermediateCertId }),
 				)
 				.addStepRunners(storageStepRunners())
+				.addStepRunners(
+					(() => {
+						const tableClient = (tableName: string) =>
+							new TableClient(
+								`https://${mockHTTPApiResourceGroup}.table.core.windows.net`,
+								tableName,
+								new AzureNamedKeyCredential(
+									mockHTTPApiResourceGroup,
+									mockHTTPStorageAccessKey,
+								),
+							)
+						return httpApiMockStepRunners({
+							requestsClient: tableClient('Requests'),
+							responsesClient: tableClient('Responses'),
+						})
+					})(),
+				)
 
 			try {
 				const { success } = await runner.run()

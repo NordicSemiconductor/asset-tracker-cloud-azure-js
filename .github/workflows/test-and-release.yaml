@@ -83,6 +83,7 @@ jobs:
             --mode Complete \
             --name test-${{ github.sha }} \
             --template-file mock-http-api.json
+          echo "MOCK_HTTP_API_ENDPOINT=`az functionapp show -g ${MOCK_HTTP_API_RESOURCE_GROUP} -n ${MOCK_HTTP_API_RESOURCE_GROUP}functions | jq -r '.defaultHostName'`" >> $GITHUB_ENV
           node scripts/pack-mock-http-api-app.js
           az functionapp deployment source config-zip -g ${MOCK_HTTP_API_RESOURCE_GROUP} -n ${MOCK_HTTP_API_RESOURCE_GROUP}functions --src dist/mock-http-api.zip
       - name: Deploy solution
@@ -102,7 +103,9 @@ jobs:
                 appName=${APP_NAME:-nrfassettrackerci} \
                 appRegistrationClientId=${APP_REG_CLIENT_ID} \
                 b2cTenant=${B2C_TENANT} \
-                b2cFlowName=B2C_1_developer
+                b2cFlowName=B2C_1_developer \
+                unwiredlabsApiKey=my-secret \
+                unwiredlabsApiEndpoint=${MOCK_HTTP_API_ENDPOINT}/api/eu1.unwiredlabs.com/
       - name: Deploy Function App
         if: env.AZURE_CREDENTIALS != ''
         uses: nick-invision/retry@v2

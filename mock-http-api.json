@@ -101,6 +101,10 @@
             {
               "name": "STORAGE_ACCOUNT_NAME",
               "value": "[parameters('storageAccountName')]"
+            },
+            {
+              "name": "APPINSIGHTS_INSTRUMENTATIONKEY",
+              "value": "[reference(resourceId('microsoft.insights/components/', concat(parameters('storageAccountName'), 'Insights')), '2015-05-01').InstrumentationKey]"
             }
           ],
           "use32BitWorkerProcess": false,
@@ -126,6 +130,19 @@
           }
         }
       ]
+    },
+    {
+      "type": "microsoft.insights/components",
+      "apiVersion": "2018-05-01-preview",
+      "name": "[concat(parameters('storageAccountName'), 'Insights')]",
+      "location": "[parameters('location')]",
+      "tags": {
+        "[concat('hidden-link:', resourceGroup().id, '/providers/Microsoft.Web/sites/', parameters('storageAccountName'))]": "Resource"
+      },
+      "properties": {
+        "ApplicationId": "[parameters('storageAccountName')]",
+        "Request_Source": "IbizaWebAppExtensionCreate"
+      }
     },
     {
       "name": "[concat(parameters('storageAccountName'), '/default')]",
