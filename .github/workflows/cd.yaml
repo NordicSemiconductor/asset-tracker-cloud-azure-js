@@ -87,8 +87,7 @@ jobs:
             --parameters \
               appName=${APP_NAME:-nrfassettracker} \
               appRegistrationClientId=$APP_REG_CLIENT_ID \
-              b2cTenant=${B2C_TENANT} \
-              unwiredlabsApiKey=${UNWIRED_LABS_API_KEY}
+              b2cTenant=${B2C_TENANT}
       - name: Deploy Function App
         if: env.AZURE_CREDENTIALS != ''
         run: |

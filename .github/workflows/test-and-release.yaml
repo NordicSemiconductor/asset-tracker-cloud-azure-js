@@ -104,8 +104,9 @@ jobs:
                 appRegistrationClientId=${APP_REG_CLIENT_ID} \
                 b2cTenant=${B2C_TENANT} \
                 b2cFlowName=B2C_1_developer \
-                unwiredlabsApiKey=my-secret \
-                unwiredlabsApiEndpoint=${MOCK_HTTP_API_ENDPOINT}/api/eu1.unwiredlabs.com/
+                unwiredlabsApiEndpoint=${MOCK_HTTP_API_ENDPOINT}/api/eu1.unwiredlabs.com/ \
+                nrfcloudTeamId=`uuidgen` \
+                nrfcloudEndpoint=${MOCK_HTTP_API_ENDPOINT}/api/api.nrfcloud.com/
       - name: Deploy Function App
         if: env.AZURE_CREDENTIALS != ''
         uses: nick-invision/retry@v2
