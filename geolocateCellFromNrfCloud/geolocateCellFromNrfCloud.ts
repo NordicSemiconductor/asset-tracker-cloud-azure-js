@@ -8,30 +8,34 @@ import {
 	cellId,
 	NetworkMode,
 } from '@nordicsemiconductor/cell-geolocation-helpers'
-import { isLeft, left, Either } from 'fp-ts/lib/Either.js'
+import { isLeft } from 'fp-ts/lib/Either.js'
+import { SecretClient } from '@azure/keyvault-secrets'
+import { DefaultAzureCredential } from '@azure/identity'
+import { apiClient } from './apiclient.js'
+import { URL } from 'url'
+import { Type } from '@sinclair/typebox'
 
-const { connectionString } = fromEnv({
+const { keyVaultName, connectionString } = fromEnv({
 	connectionString: 'HISTORICAL_DATA_COSMOSDB_CONNECTION_STRING',
+	keyVaultName: 'KEYVAULT_NAME',
 })(process.env)
 
-const { cellLocationServiceKey, endpoint, teamId } = (() => {
+const { endpoint, teamId } = (() => {
 	try {
 		return fromEnv({
-			cellLocationServiceKey: 'NRFCLOUD_LOCATION_SERVICE_KEY',
-			endpoint: 'NRFCLOUD_LOCATION_API_ENDPOINT',
-			teamId: 'NRFCLOUD_LOCATION_TEAM_ID',
+			endpoint: 'NRFCLOUD_API_ENDPOINT',
+			teamId: 'NRFCLOUD_TEAM_ID',
 		})(process.env)
 	} catch {
-		console.warn(`No nRF Cloud Cell Location key defined. Disabling lookups.`)
+		console.warn(
+			`No nRF Cloud Cell Location Service key defined. Disabling lookups.`,
+		)
 		return {
-			cellLocationServiceKey: undefined,
 			endpoint: undefined,
 			teamId: undefined,
 		}
 	}
 })()
-
-console.log({ cellLocationServiceKey, endpoint, teamId })
 
 const { AccountEndpoint, AccountKey } = parseConnectionString(connectionString)
 const cosmosClient = new CosmosClient({
@@ -42,6 +46,43 @@ const cosmosClient = new CosmosClient({
 const container = cosmosClient
 	.database('cellGeolocation')
 	.container('nrfCloudCache')
+
+const nrfCloudCellLocationServiceKeyPromise = (async () => {
+	const credentials = new DefaultAzureCredential()
+	const keyVaultClient = new SecretClient(
+		`https://${keyVaultName}.vault.azure.net`,
+		credentials,
+	)
+	const nrfCloudCellLocationServiceKeySecretName =
+		'nrfCloudCellLocationServiceKey'
+
+	const latestSecret = await keyVaultClient.getSecret(
+		nrfCloudCellLocationServiceKeySecretName,
+	)
+	return latestSecret.value as string
+})()
+
+const locateRequestSchema = Type.Record(
+	Type.Union([Type.Literal('nbiot'), Type.Literal('lte')]),
+	Type.Array(
+		Type.Object(
+			{
+				eci: Type.Integer({ minimum: 1 }),
+				mcc: Type.Integer({ minimum: 100, maximum: 999 }),
+				mnc: Type.Integer({ minimum: 1, maximum: 99 }),
+				tac: Type.Integer({ minimum: 1 }),
+			},
+			{ additionalProperties: false },
+		),
+		{ minItems: 1 },
+	),
+)
+
+const locateResultSchema = Type.Object({
+	lat: Type.Number({ minimum: -90, maximum: 90 }),
+	lon: Type.Number({ minimum: -180, maximum: 180 }),
+	uncertainty: Type.Number({ minimum: 0 }),
+})
 
 const geolocateCellFromNrfCloud: AzureFunction = async (
 	context: Context,
@@ -82,12 +123,31 @@ const geolocateCellFromNrfCloud: AzureFunction = async (
 				context.res = result(context)({ error: `Unknown cell ${id}` }, 404)
 			}
 		} else {
-			const maybeLocation: Either<
-				Error,
-				{ lat: number; lng: number; accuracy: number }
-			> = left<Error>(new Error(`Not implemented.`))
-			if (isLeft(maybeLocation)) {
-				logError(context)({ error: maybeLocation.left.message })
+			const c = apiClient({
+				endpoint: new URL(endpoint as string),
+				serviceKey: await nrfCloudCellLocationServiceKeyPromise,
+				teamId: teamId as string,
+			})
+
+			const mccmnc = cell.mccmnc.toFixed(0)
+			const maybeCellGeoLocation = await c.post({
+				resource: 'location/cell',
+				payload: {
+					[cell.nw === NetworkMode.NBIoT ? 'nbiot' : `lte`]: [
+						{
+							eci: cell.cell,
+							mcc: parseInt(mccmnc.substr(0, mccmnc.length - 2), 10),
+							mnc: parseInt(mccmnc.substr(-2), 10),
+							tac: cell.area,
+						},
+					],
+				},
+				requestSchema: locateRequestSchema,
+				responseSchema: locateResultSchema,
+			})()
+
+			if (isLeft(maybeCellGeoLocation)) {
+				logError(context)({ error: maybeCellGeoLocation.left.message })
 				context.res = result(context)(
 					{ error: `Could not resolve cell ${id}` },
 					404,
@@ -97,13 +157,18 @@ const geolocateCellFromNrfCloud: AzureFunction = async (
 					...cell,
 				})
 			} else {
+				const location = {
+					lat: maybeCellGeoLocation.right.lat,
+					lng: maybeCellGeoLocation.right.lon,
+					accuracy: maybeCellGeoLocation.right.uncertainty,
+				}
 				context.bindings.cellGeolocation = JSON.stringify({
 					cellId: id,
 					...cell,
-					...maybeLocation.right,
+					...location,
 				})
-				log(context)({ location: maybeLocation.right })
-				context.res = result(context)(maybeLocation.right)
+				log(context)({ location })
+				context.res = result(context)(location)
 			}
 		}
 	} catch (error) {

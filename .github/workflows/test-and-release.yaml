@@ -104,9 +104,18 @@ jobs:
                 appRegistrationClientId=${APP_REG_CLIENT_ID} \
                 b2cTenant=${B2C_TENANT} \
                 b2cFlowName=B2C_1_developer \
-                unwiredlabsApiEndpoint=${MOCK_HTTP_API_ENDPOINT}/api/eu1.unwiredlabs.com/ \
-                nrfcloudTeamId=`uuidgen` \
-                nrfcloudEndpoint=${MOCK_HTTP_API_ENDPOINT}/api/api.nrfcloud.com/
+                enableUnwiredLabsCellLocation=true \
+                unwiredlabsApiEndpoint=https://${MOCK_HTTP_API_ENDPOINT}/api/eu1.unwiredlabs.com/ \
+                enableNrfCloudCellLocation=true \
+                nrfCloudTeamId=`uuidgen` \
+                nrfCloudApiEndpoint=https://${MOCK_HTTP_API_ENDPOINT}/api/api.nrfcloud.com/
+      - name: Set secrets for third party APIs
+        run: |
+          USER_OBJECT_ID=`az ad signed-in-user show --query 'objectId' -o tsv | tr -d '\n'`
+          az keyvault set-policy --name ${APP_NAME:-nrfassettrackerci}-keyvault --object-id ${USER_OBJECT_ID} --secret-permissions set
+          az keyvault secret set --vault-name ${APP_NAME:-nrfassettrackerci}-keyvault --name unwiredlabsApiKey --value my-secret
+          openssl ecparam -name secp256k1 -genkey > nrfcloudlocationservice.key
+          az keyvault secret set --vault-name ${APP_NAME:-nrfassettrackerci}-keyvault --name nrfCloudCellLocationServiceKey --file nrfcloudlocationservice.key
       - name: Deploy Function App
         if: env.AZURE_CREDENTIALS != ''
         uses: nick-invision/retry@v2

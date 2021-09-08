@@ -39,7 +39,7 @@ Feature: nRF Cloud Cell Geolocation
         When I GET /cellgeolocation/nrfcloud?cell={cellId}&area=30401&mccmnc=24201&nw=<nw>&ts={ts}
         Then the response status code should be 200
         And the response Access-Control-Allow-Origin should be "*"
-        And the response Content-Type should be "application/json"
+        And the response Content-Type should be "application/json; charset=utf-8"
         And the response should equal this JSON
             """
             {
@@ -53,7 +53,7 @@ Feature: nRF Cloud Cell Geolocation
 
         Then the mock HTTP API should have been called with a POST request to api.nrfcloud.com/v1/location/cell
             """
-            Content-Type: application/json
+            content-type: application/json
 
             {
                 "<apiNw>": [
