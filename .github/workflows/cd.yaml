@@ -27,6 +27,9 @@ jobs:
       B2C_TENANT: ${{ secrets.B2C_TENANT }}
       RESOURCE_GROUP: ${{ secrets.RESOURCE_GROUP }}
       UNWIRED_LABS_API_KEY: ${{ secrets.UNWIRED_LABS_API_KEY }}
+      NRF_CLOUD_TEAM_ID: ${{ secrets.NRF_CLOUD_TEAM_ID }}
+      NRF_CLOUD_CELL_LOCATION_SERVICE_KEY:
+        ${{ secrets.NRF_CLOUD_CELL_LOCATION_SERVICE_KEY }}
 
     outputs:
       web_app_url: ${{ steps.web-app-url.outputs.web_app_url }}
@@ -76,6 +79,22 @@ jobs:
       - name: Compile source
         if: env.AZURE_CREDENTIALS != ''
         run: npx tsc
+      - name: Enable Unwired Labs API
+        if: env.UNWIRED_LABS_API_KEY != ''
+        run: echo "enableUnwiredLabsCellLocation=true" >> $GITHUB_ENV
+      - name: Disable Unwired Labs API
+        if: env.UNWIRED_LABS_API_KEY == ''
+        run: echo "enableUnwiredLabsCellLocation=false" >> $GITHUB_ENV
+      - name: Enable nRF Cloud Cell Location API
+        if:
+          env.NRF_CLOUD_TEAM_ID != '' && env.NRF_CLOUD_CELL_LOCATION_SERVICE_KEY
+          != ''
+        run: echo "enableNrfCloudCellLocation=true" >> $GITHUB_ENV
+      - name: Disable nRF Cloud Cell Location API
+        if:
+          env.NRF_CLOUD_TEAM_ID == '' || env.NRF_CLOUD_CELL_LOCATION_SERVICE_KEY
+          == ''
+        run: echo "enableNrfCloudCellLocation=false" >> $GITHUB_ENV
       - name: Deploy solution
         if: env.AZURE_CREDENTIALS != ''
         run: |
@@ -87,7 +106,32 @@ jobs:
             --parameters \
               appName=${APP_NAME:-nrfassettracker} \
               appRegistrationClientId=$APP_REG_CLIENT_ID \
-              b2cTenant=${B2C_TENANT}
+              b2cTenant=${B2C_TENANT} \
+              enableUnwiredLabsCellLocation=${enableUnwiredLabsCellLocation} \
+              enableNrfCloudCellLocation=${enableNrfCloudCellLocation} \
+              nrfCloudTeamId=${NRF_CLOUD_TEAM_ID}
+      - name: Get Azure object ID for current user
+        if: env.AZURE_CREDENTIALS != ''
+        run: |
+          echo "USER_OBJECT_ID=`az ad signed-in-user show --query 'objectId' -o tsv | tr -d '\n'`" >> $GITHUB_ENV
+      - name: Grant user write access to key vault
+        if: env.AZURE_CREDENTIALS != ''
+        run: |
+          az keyvault set-policy --name ${APP_NAME:-nrfassettrackerci}-keyvault --object-id ${USER_OBJECT_ID} --secret-permissions set
+      - name: Set Unwired Labs API key
+        if:
+          env.AZURE_CREDENTIALS != '' && env.enableUnwiredLabsCellLocation ==
+          'true'
+        run: |
+          az keyvault secret set --vault-name ${APP_NAME:-nrfassettrackerci}-keyvault --name unwiredlabsApiKey --value ${{ secrets.UNWIRED_LABS_API_KEY }}
+      - name: Set nRF Cloud Cell Location service key
+        if:
+          env.AZURE_CREDENTIALS != '' && env.enableNrfCloudCellLocation ==
+          'true'
+        run: |
+          echo ${{ secrets.NRF_CLOUD_CELL_LOCATION_SERVICE_KEY }} > nrfcloudlocationservice.key
+          az keyvault secret set --vault-name ${APP_NAME:-nrfassettrackerci}-keyvault --name nrfCloudCellLocationServiceKey --file nrfcloudlocationservice.key
+          rm nrfcloudlocationservice.key
       - name: Deploy Function App
         if: env.AZURE_CREDENTIALS != ''
         run: |
