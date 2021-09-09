@@ -75,10 +75,10 @@ jobs:
             --name test-${{ github.sha }} \
             --template-file mock-http-api.json \
             --parameters \
-              storageAccountName=${APP_NAME:-nrfassettrackerci}mockhttpapi
-          echo "MOCK_HTTP_API_ENDPOINT=`az functionapp show -g ${RESOURCE_GROUP:-nrfassettrackerci} -n ${APP_NAME:-nrfassettrackerci}mockhttpapiFunctions | jq -r '.defaultHostName'`" >> $GITHUB_ENV
+              storageAccountName=mockhttpapi
+          echo "MOCK_HTTP_API_ENDPOINT=`az functionapp show -g ${RESOURCE_GROUP:-nrfassettrackerci} -n mockhttpapiFunctions | jq -r '.defaultHostName'`" >> $GITHUB_ENV
           node scripts/pack-mock-http-api-app.js
-          az functionapp deployment source config-zip -g ${RESOURCE_GROUP:-nrfassettrackerci} -n ${APP_NAME:-nrfassettrackerci}mockhttpapiFunctions --src dist/mock-http-api.zip
+          az functionapp deployment source config-zip -g ${RESOURCE_GROUP:-nrfassettrackerci} -n mockhttpapiFunctions --src dist/mock-http-api.zip
       - name: Deploy solution
         if: env.AZURE_CREDENTIALS != ''
         uses: nick-invision/retry@v2
