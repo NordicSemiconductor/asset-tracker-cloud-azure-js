@@ -72,7 +72,7 @@ jobs:
           az deployment group create \
             --resource-group ${RESOURCE_GROUP:-nrfassettrackerci} \
             --mode Incremental \
-            --name test-${{ github.sha }} \
+            --name test-mock-http-api-${{ github.sha }} \
             --template-file mock-http-api.json \
             --parameters \
               storageAccountName=mockhttpapi
@@ -105,10 +105,10 @@ jobs:
       - name: Set secrets for third party APIs
         run: |
           USER_OBJECT_ID=`az ad signed-in-user show --query 'objectId' -o tsv | tr -d '\n'`
-          az keyvault set-policy --name ${APP_NAME:-nrfassettrackerci}-keyvault --object-id ${USER_OBJECT_ID} --secret-permissions set
-          az keyvault secret set --vault-name ${APP_NAME:-nrfassettrackerci}-keyvault --name unwiredlabsApiKey --value my-secret
+          az keyvault set-policy --name assetTracker --object-id ${USER_OBJECT_ID} --secret-permissions set
+          az keyvault secret set --vault-name assetTracker --name unwiredlabsApiKey --value my-secret
           openssl ecparam -name secp256k1 -genkey > nrfcloudlocationservice.key
-          az keyvault secret set --vault-name ${APP_NAME:-nrfassettrackerci}-keyvault --name nrfCloudCellLocationServiceKey --file nrfcloudlocationservice.key
+          az keyvault secret set --vault-name assetTracker --name nrfCloudCellLocationServiceKey --file nrfcloudlocationservice.key
       - name: Deploy Function App
         if: env.AZURE_CREDENTIALS != ''
         uses: nick-invision/retry@v2
