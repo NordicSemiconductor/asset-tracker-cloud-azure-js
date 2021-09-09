@@ -159,10 +159,6 @@ jobs:
       - name: Delete device certificates
         if: env.AZURE_CREDENTIALS != ''
         run: rm ./certificates/*/device-*
-      - name: Delete Mock HTTP API
-        continue-on-error: true
-        run: |
-          az group delete -y --no-wait --name ${RESOURCE_GROUP:-nrfassettrackerci} --location ${LOCATION:-northeurope}
       - name: Semantic release
         if: success()
         continue-on-error: true
