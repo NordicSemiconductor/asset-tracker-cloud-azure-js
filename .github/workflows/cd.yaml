@@ -113,7 +113,7 @@ jobs:
       - name: Get Azure object ID for current user
         if: env.AZURE_CREDENTIALS != ''
         run: |
-          echo "USER_OBJECT_ID=`az ad signed-in-user show --query 'objectId' -o tsv | tr -d '\n'`" >> $GITHUB_ENV
+          echo "USER_OBJECT_ID=`az ad sp list --spn 'https://nrfassettracker.invalid/cd' --query '[0].objectId' -o tsv | tr -d '\n'`" >> $GITHUB_ENV
       - name: Grant user write access to key vault
         if: env.AZURE_CREDENTIALS != ''
         run: |

@@ -104,7 +104,7 @@ jobs:
                 nrfCloudApiEndpoint=https://${MOCK_HTTP_API_ENDPOINT}/api/api.nrfcloud.com/
       - name: Set secrets for third party APIs
         run: |
-          USER_OBJECT_ID=`az ad signed-in-user show --query 'objectId' -o tsv | tr -d '\n'`
+          USER_OBJECT_ID=`az ad sp list --spn 'https://nrfassettracker.invalid/ci' --query '[0].objectId' -o tsv | tr -d '\n'`
           az keyvault set-policy --name assetTracker --object-id ${USER_OBJECT_ID} --secret-permissions set
           az keyvault secret set --vault-name assetTracker --name unwiredlabsApiKey --value my-secret
           openssl ecparam -name secp256k1 -genkey > nrfcloudlocationservice.key
