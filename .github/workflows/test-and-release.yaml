@@ -71,7 +71,7 @@ jobs:
         run: |
           az deployment group create \
             --resource-group ${RESOURCE_GROUP:-nrfassettrackerci} \
-            --mode Complete \
+            --mode Incremental \
             --name test-${{ github.sha }} \
             --template-file mock-http-api.json \
             --parameters \
@@ -89,7 +89,7 @@ jobs:
           command: |
             az deployment group create \
               --resource-group ${RESOURCE_GROUP:-nrfassettrackerci} \
-              --mode Complete \
+              --mode Incremental \
               --name test-${{ github.sha }} \
               --template-file azuredeploy.json \
               --parameters \
