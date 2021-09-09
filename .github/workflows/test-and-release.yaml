@@ -67,10 +67,6 @@ jobs:
       - run: npx tsc
       - name: Run Unit Tests
         run: npm test
-      - name: Generate run ID
-        run: |
-          RUN_ID=`uuidgen | cut -d- -f1`
-          echo "RUN_ID=${RUN_ID}" >> $GITHUB_ENV
       - name: Deploy Mock HTTP API
         run: |
           az deployment group create \
