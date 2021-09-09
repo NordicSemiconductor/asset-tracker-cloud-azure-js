@@ -7,8 +7,7 @@
       "minLength": 3,
       "metadata": {
         "description": "Specifies the storage account name to use, which is globally unique."
-      },
-      "defaultValue": "[resourceGroup().name]"
+      }
     },
     "location": {
       "type": "string",
@@ -19,7 +18,7 @@
     }
   },
   "variables": {
-    "storageAccountId": "[concat(resourceGroup().id,'/providers/','Microsoft.Storage/storageAccounts/', parameters('storageAccountName'))]"
+    "mockHttpApiStorageAccountId": "[concat(resourceGroup().id,'/providers/','Microsoft.Storage/storageAccounts/', parameters('storageAccountName'))]"
   },
   "resources": [
     {
@@ -38,41 +37,41 @@
     {
       "type": "Microsoft.Web/serverfarms",
       "apiVersion": "2019-08-01",
-      "name": "[concat(parameters('storageAccountName'), 'serverfarm')]",
+      "name": "[concat(parameters('storageAccountName'), 'Serverfarm')]",
       "location": "[parameters('location')]",
       "sku": {
         "name": "Y1",
         "tier": "Dynamic"
       },
       "properties": {
-        "name": "[concat(parameters('storageAccountName'), 'serverfarm')]",
+        "name": "[concat(parameters('storageAccountName'), 'Serverfarm')]",
         "computeMode": "Dynamic"
       }
     },
     {
       "type": "Microsoft.Web/sites",
       "apiVersion": "2019-08-01",
-      "name": "[concat(parameters('storageAccountName'), 'functions')]",
+      "name": "[concat(parameters('storageAccountName'), 'Functions')]",
       "location": "[parameters('location')]",
       "kind": "functionapp",
       "identity": {
         "type": "SystemAssigned"
       },
       "dependsOn": [
-        "[resourceId('Microsoft.Web/serverfarms', concat(parameters('storageAccountName'), 'serverfarm'))]",
+        "[resourceId('Microsoft.Web/serverfarms', concat(parameters('storageAccountName'), 'Serverfarm'))]",
         "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]"
       ],
       "properties": {
-        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', concat(parameters('storageAccountName'), 'serverfarm'))]",
+        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', concat(parameters('storageAccountName'), 'Serverfarm'))]",
         "siteConfig": {
           "appSettings": [
             {
               "name": "AzureWebJobsStorage",
-              "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', parameters('storageAccountName'),';AccountKey=', listKeys(variables('storageAccountId'),'2015-05-01-preview').key1)]"
+              "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', parameters('storageAccountName'),';AccountKey=', listKeys(variables('mockHttpApiStorageAccountId'),'2015-05-01-preview').key1)]"
             },
             {
               "name": "WEBSITE_CONTENTAZUREFILECONNECTIONSTRING",
-              "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', parameters('storageAccountName'),';AccountKey=', listKeys(variables('storageAccountId'),'2015-05-01-preview').key1)]"
+              "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', parameters('storageAccountName'),';AccountKey=', listKeys(variables('mockHttpApiStorageAccountId'),'2015-05-01-preview').key1)]"
             },
             {
               "name": "FUNCTIONS_EXTENSION_VERSION",
@@ -96,7 +95,7 @@
             },
             {
               "name": "STORAGE_ACCESS_KEY",
-              "value": "[listKeys(variables('storageAccountId'), '2019-04-01').keys[0].value]"
+              "value": "[listKeys(variables('mockHttpApiStorageAccountId'), '2019-04-01').keys[0].value]"
             },
             {
               "name": "STORAGE_ACCOUNT_NAME",

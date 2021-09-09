@@ -71,21 +71,18 @@ jobs:
         run: |
           RUN_ID=`uuidgen | cut -d- -f1`
           echo "RUN_ID=${RUN_ID}" >> $GITHUB_ENV
-      - name: Generate name for Mock HTTP API resource group
-        run: |
-          MOCK_HTTP_API_RESOURCE_GROUP=`echo mock-http-api-${RUN_ID} | tr -dc '[:alnum:]'`
-          echo "MOCK_HTTP_API_RESOURCE_GROUP=${MOCK_HTTP_API_RESOURCE_GROUP}" >> $GITHUB_ENV
       - name: Deploy Mock HTTP API
         run: |
-          az group create --name ${MOCK_HTTP_API_RESOURCE_GROUP} --location ${LOCATION:-northeurope}
           az deployment group create \
-            --resource-group ${MOCK_HTTP_API_RESOURCE_GROUP} \
+            --resource-group ${RESOURCE_GROUP:-nrfassettrackerci} \
             --mode Complete \
             --name test-${{ github.sha }} \
-            --template-file mock-http-api.json
-          echo "MOCK_HTTP_API_ENDPOINT=`az functionapp show -g ${MOCK_HTTP_API_RESOURCE_GROUP} -n ${MOCK_HTTP_API_RESOURCE_GROUP}functions | jq -r '.defaultHostName'`" >> $GITHUB_ENV
+            --template-file mock-http-api.json \
+            --parameters \
+              storageAccountName=${APP_NAME:-nrfassettrackerci}mockHttpApi
+          echo "MOCK_HTTP_API_ENDPOINT=`az functionapp show -g ${RESOURCE_GROUP:-nrfassettrackerci} -n ${APP_NAME:-nrfassettrackerci}mockHttpApiFunctions | jq -r '.defaultHostName'`" >> $GITHUB_ENV
           node scripts/pack-mock-http-api-app.js
-          az functionapp deployment source config-zip -g ${MOCK_HTTP_API_RESOURCE_GROUP} -n ${MOCK_HTTP_API_RESOURCE_GROUP}functions --src dist/mock-http-api.zip
+          az functionapp deployment source config-zip -g ${RESOURCE_GROUP:-nrfassettrackerci} -n ${APP_NAME:-nrfassettrackerci}mockHttpApiFunctions --src dist/mock-http-api.zip
       - name: Deploy solution
         if: env.AZURE_CREDENTIALS != ''
         uses: nick-invision/retry@v2
@@ -169,7 +166,7 @@ jobs:
       - name: Delete Mock HTTP API
         continue-on-error: true
         run: |
-          az group delete -y --no-wait --name ${MOCK_HTTP_API_RESOURCE_GROUP} --location ${LOCATION:-northeurope}
+          az group delete -y --no-wait --name ${RESOURCE_GROUP:-nrfassettrackerci} --location ${LOCATION:-northeurope}
       - name: Semantic release
         if: success()
         continue-on-error: true
