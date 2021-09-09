@@ -1,4 +1,3 @@
-@Only
 Feature: Unwired Labs Cell Geolocation
 
     Optionally, cell locations can be resolved using the Unwired Labs API

@@ -15,39 +15,28 @@ import { apiClient } from './apiclient.js'
 import { URL } from 'url'
 import { Type } from '@sinclair/typebox'
 
-const { keyVaultName, connectionString } = fromEnv({
-	connectionString: 'HISTORICAL_DATA_COSMOSDB_CONNECTION_STRING',
-	keyVaultName: 'KEYVAULT_NAME',
-})(process.env)
+const config = () =>
+	fromEnv({
+		connectionString: 'HISTORICAL_DATA_COSMOSDB_CONNECTION_STRING',
+		keyVaultName: 'KEYVAULT_NAME',
+		endpoint: 'NRFCLOUD_API_ENDPOINT',
+		teamId: 'NRFCLOUD_TEAM_ID',
+	})(process.env)
 
-const { endpoint, teamId } = (() => {
-	try {
-		return fromEnv({
-			endpoint: 'NRFCLOUD_API_ENDPOINT',
-			teamId: 'NRFCLOUD_TEAM_ID',
-		})(process.env)
-	} catch {
-		console.warn(
-			`No nRF Cloud Cell Location Service key defined. Disabling lookups.`,
-		)
-		return {
-			endpoint: undefined,
-			teamId: undefined,
-		}
-	}
+const cosmosDbContainerPromise = (async () => {
+	const { connectionString } = config()
+	const { AccountEndpoint, AccountKey } =
+		parseConnectionString(connectionString)
+	const cosmosClient = new CosmosClient({
+		endpoint: AccountEndpoint,
+		key: AccountKey,
+	})
+
+	return cosmosClient.database('cellGeolocation').container('nrfCloudCache')
 })()
 
-const { AccountEndpoint, AccountKey } = parseConnectionString(connectionString)
-const cosmosClient = new CosmosClient({
-	endpoint: AccountEndpoint,
-	key: AccountKey,
-})
-
-const container = cosmosClient
-	.database('cellGeolocation')
-	.container('nrfCloudCache')
-
 const nrfCloudCellLocationServiceKeyPromise = (async () => {
+	const { keyVaultName } = config()
 	const credentials = new DefaultAzureCredential()
 	const keyVaultClient = new SecretClient(
 		`https://${keyVaultName}.vault.azure.net`,
@@ -110,6 +99,7 @@ const geolocateCellFromNrfCloud: AzureFunction = async (
 	const id = cellId(cell)
 
 	try {
+		const container = await cosmosDbContainerPromise
 		const sql = `SELECT c.lat AS lat, c.lng AS lng, c.accuracy FROM c WHERE c.cellId='${id}'`
 		log(context)({ sql })
 		const locations = (await container.items.query(sql).fetchAll()).resources
@@ -123,10 +113,11 @@ const geolocateCellFromNrfCloud: AzureFunction = async (
 				context.res = result(context)({ error: `Unknown cell ${id}` }, 404)
 			}
 		} else {
+			const { endpoint, teamId } = config()
 			const c = apiClient({
-				endpoint: new URL(endpoint as string),
+				endpoint: new URL(endpoint),
 				serviceKey: await nrfCloudCellLocationServiceKeyPromise,
-				teamId: teamId as string,
+				teamId,
 			})
 
 			const mccmnc = cell.mccmnc.toFixed(0)

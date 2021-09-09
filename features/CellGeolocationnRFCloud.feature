@@ -1,4 +1,3 @@
-@Only
 Feature: nRF Cloud Cell Geolocation
 
     Optionally, cell locations can be resolved using the nRF Cloud API

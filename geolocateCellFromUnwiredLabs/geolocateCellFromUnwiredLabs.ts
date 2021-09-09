@@ -10,57 +10,48 @@ import {
 } from '@nordicsemiconductor/cell-geolocation-helpers'
 import { resolveFromAPI } from './resolveFromAPI.js'
 import { isLeft } from 'fp-ts/lib/Either.js'
+import { SecretClient } from '@azure/keyvault-secrets'
+import { DefaultAzureCredential } from '@azure/identity'
 
-const { connectionString } = fromEnv({
-	connectionString: 'HISTORICAL_DATA_COSMOSDB_CONNECTION_STRING',
-})(process.env)
+const config = () =>
+	fromEnv({
+		connectionString: 'HISTORICAL_DATA_COSMOSDB_CONNECTION_STRING',
+		keyVaultName: 'KEYVAULT_NAME',
+		endpoint: 'UNWIREDLABS_API_ENDPOINT',
+	})(process.env)
 
-const { apiKey, endpoint } = (() => {
-	try {
-		return fromEnv({
-			apiKey: 'UNWIREDLABS_API_KEY',
-			endpoint: 'UNWIREDLABS_API_ENDPOINT',
-		})(process.env)
-	} catch {
-		console.warn(`No Unwired Labs API key defined. Disabling lookups.`)
-		return {
-			apiKey: undefined,
-			endpoint: undefined,
-		}
-	}
+const cosmosDbContainerPromise = (async () => {
+	const { connectionString } = config()
+	const { AccountEndpoint, AccountKey } =
+		parseConnectionString(connectionString)
+	const cosmosClient = new CosmosClient({
+		endpoint: AccountEndpoint,
+		key: AccountKey,
+	})
+
+	return cosmosClient.database('cellGeolocation').container('unwiredLabsCache')
 })()
 
-const locate =
-	apiKey !== undefined && endpoint !== undefined
-		? resolveFromAPI({
-				apiKey,
-				endpoint,
-		  })
-		: undefined
+const unwiredLabsApiKeyPromise = (async () => {
+	const { keyVaultName } = config()
+	const credentials = new DefaultAzureCredential()
+	const keyVaultClient = new SecretClient(
+		`https://${keyVaultName}.vault.azure.net`,
+		credentials,
+	)
+	const unwiredLabsApiKeySecretName = 'unwiredLabsApiKey'
 
-const { AccountEndpoint, AccountKey } = parseConnectionString(connectionString)
-const cosmosClient = new CosmosClient({
-	endpoint: AccountEndpoint,
-	key: AccountKey,
-})
-
-const container = cosmosClient
-	.database('cellGeolocation')
-	.container('unwiredLabsCache')
+	const latestSecret = await keyVaultClient.getSecret(
+		unwiredLabsApiKeySecretName,
+	)
+	return latestSecret.value as string
+})()
 
 const geolocateCellFromUnwiredLabs: AzureFunction = async (
 	context: Context,
 	req: HttpRequest,
 ): Promise<void> => {
 	log(context)({ req })
-
-	if (locate === undefined) {
-		context.res = result(context)(
-			{ error: `No Unwired Labs API key defined.` },
-			402,
-		)
-		return
-	}
 
 	const {
 		cell: c,
@@ -82,6 +73,7 @@ const geolocateCellFromUnwiredLabs: AzureFunction = async (
 	const id = cellId(cell)
 
 	try {
+		const container = await cosmosDbContainerPromise
 		const sql = `SELECT c.lat AS lat, c.lng AS lng, c.accuracy FROM c WHERE c.cellId='${id}'`
 		log(context)({ sql })
 		const locations = (await container.items.query(sql).fetchAll()).resources
@@ -95,7 +87,11 @@ const geolocateCellFromUnwiredLabs: AzureFunction = async (
 				context.res = result(context)({ error: `Unknown cell ${id}` }, 404)
 			}
 		} else {
-			const maybeLocation = await locate(
+			const { endpoint } = config()
+			const maybeLocation = await resolveFromAPI({
+				apiKey: await unwiredLabsApiKeyPromise,
+				endpoint,
+			})(
 				{
 					...cell,
 					nw: cell.nw === NetworkMode.LTEm ? 'lte' : 'nbiot',
