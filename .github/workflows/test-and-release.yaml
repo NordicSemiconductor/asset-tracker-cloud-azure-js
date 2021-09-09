@@ -73,9 +73,7 @@ jobs:
             --resource-group ${RESOURCE_GROUP:-nrfassettrackerci} \
             --mode Incremental \
             --name test-mock-http-api-${{ github.sha }} \
-            --template-file mock-http-api.json \
-            --parameters \
-              storageAccountName=mockhttpapi
+            --template-file mock-http-api.json
           echo "MOCK_HTTP_API_ENDPOINT=`az functionapp show -g ${RESOURCE_GROUP:-nrfassettrackerci} -n mockhttpapiFunctions | jq -r '.defaultHostName'`" >> $GITHUB_ENV
           node scripts/pack-mock-http-api-app.js
           az functionapp deployment source config-zip -g ${RESOURCE_GROUP:-nrfassettrackerci} -n mockhttpapiFunctions --src dist/mock-http-api.zip

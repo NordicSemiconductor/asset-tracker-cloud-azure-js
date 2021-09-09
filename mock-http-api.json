@@ -4,6 +4,7 @@
   "parameters": {
     "storageAccountName": {
       "type": "string",
+      "defaultValue": "mockhttpapi",
       "minLength": 3,
       "metadata": {
         "description": "Specifies the storage account name to use, which is globally unique."

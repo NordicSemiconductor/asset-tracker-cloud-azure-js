@@ -64,7 +64,6 @@ program
 				b2cTenantId,
 				resourceGroup,
 				appName,
-				mockHTTPApiResourceGroup,
 			} = fromEnv({
 				b2cTenant: 'B2C_TENANT',
 				clientId: 'APP_REG_CLIENT_ID',
@@ -72,7 +71,6 @@ program
 				b2cTenantId: 'B2C_TENANT_ID',
 				resourceGroup: 'RESOURCE_GROUP',
 				appName: 'APP_NAME',
-				mockHTTPApiResourceGroup: 'MOCK_HTTP_API_RESOURCE_GROUP',
 			})(process.env)
 
 			const credentials = await AzureCliCredentials.create()
@@ -87,10 +85,7 @@ program
 						.get(resourceGroup, `${appName}api`)
 						.then(({ defaultHostName }) => defaultHostName),
 					wsClient.webApps
-						.get(
-							mockHTTPApiResourceGroup,
-							`${mockHTTPApiResourceGroup}functions`,
-						)
+						.get(resourceGroup, `mockhttpapiFunctions`)
 						.then(({ defaultHostName }) => defaultHostName),
 					// FIXME: there seems to be no NPM package to manage Azure function apps
 					run({
@@ -101,9 +96,9 @@ program
 							'appsettings',
 							'list',
 							'-g',
-							mockHTTPApiResourceGroup,
+							resourceGroup,
 							'-n',
-							`${mockHTTPApiResourceGroup}functions`,
+							`mockhttpapiFunctions`,
 						],
 					}).then(
 						(res) => JSON.parse(res) as { name: string; value: string }[],
