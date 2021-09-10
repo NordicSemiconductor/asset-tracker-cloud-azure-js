@@ -213,10 +213,10 @@ program
 					(() => {
 						const tableClient = (tableName: string) =>
 							new TableClient(
-								`https://${mockHTTPApiResourceGroup}.table.core.windows.net`,
+								`https://${resourceGroup}.table.core.windows.net`,
 								tableName,
 								new AzureNamedKeyCredential(
-									mockHTTPApiResourceGroup,
+									resourceGroup,
 									mockHTTPStorageAccessKey,
 								),
 							)
