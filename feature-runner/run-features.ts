@@ -64,6 +64,7 @@ program
 				b2cTenantId,
 				resourceGroup,
 				appName,
+				mockHTTPStorageAccountName,
 			} = fromEnv({
 				b2cTenant: 'B2C_TENANT',
 				clientId: 'APP_REG_CLIENT_ID',
@@ -71,6 +72,7 @@ program
 				b2cTenantId: 'B2C_TENANT_ID',
 				resourceGroup: 'RESOURCE_GROUP',
 				appName: 'APP_NAME',
+				mockHTTPStorageAccountName: 'MOCK_HTTP_API_STORAGE_ACCOUNT_NAME',
 			})(process.env)
 
 			const credentials = await AzureCliCredentials.create()
@@ -85,7 +87,7 @@ program
 						.get(resourceGroup, `${appName}api`)
 						.then(({ defaultHostName }) => defaultHostName),
 					wsClient.webApps
-						.get(resourceGroup, `mockhttpapiFunctions`)
+						.get(resourceGroup, `${mockHTTPStorageAccountName}Functions`)
 						.then(({ defaultHostName }) => defaultHostName),
 					// FIXME: there seems to be no NPM package to manage Azure function apps
 					run({
@@ -98,7 +100,7 @@ program
 							'-g',
 							resourceGroup,
 							'-n',
-							`mockhttpapiFunctions`,
+							`${mockHTTPStorageAccountName}Functions`,
 						],
 					}).then(
 						(res) => JSON.parse(res) as { name: string; value: string }[],
@@ -213,7 +215,7 @@ program
 					(() => {
 						const tableClient = (tableName: string) =>
 							new TableClient(
-								`https://${resourceGroup}.table.core.windows.net`,
+								`https://${mockHTTPStorageAccountName}.table.core.windows.net`,
 								tableName,
 								new AzureNamedKeyCredential(
 									resourceGroup,

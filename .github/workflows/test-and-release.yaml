@@ -32,6 +32,7 @@ jobs:
       B2C_TENANT_ID: ${{ secrets.B2C_TENANT_ID }}
       AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
       RESOURCE_GROUP: ${{ secrets.RESOURCE_GROUP }}
+      MOCK_HTTP_API_STORAGE_ACCOUNT_NAME: mockhttpapi
 
     steps:
       - uses: actions/checkout@v2
@@ -73,10 +74,12 @@ jobs:
             --resource-group ${RESOURCE_GROUP:-nrfassettrackerci} \
             --mode Incremental \
             --name test-mock-http-api-${{ github.sha }} \
-            --template-file mock-http-api.json
-          echo "MOCK_HTTP_API_ENDPOINT=`az functionapp show -g ${RESOURCE_GROUP:-nrfassettrackerci} -n mockhttpapiFunctions | jq -r '.defaultHostName'`" >> $GITHUB_ENV
+            --template-file mock-http-api.json \
+            --parameters \
+              storageAccountName=${MOCK_HTTP_API_STORAGE_ACCOUNT_NAME:-mockhttpapi}
+          echo "MOCK_HTTP_API_ENDPOINT=`az functionapp show -g ${RESOURCE_GROUP:-nrfassettrackerci} -n ${MOCK_HTTP_API_STORAGE_ACCOUNT_NAME:-mockhttpapi}Functions | jq -r '.defaultHostName'`" >> $GITHUB_ENV
           node scripts/pack-mock-http-api-app.js
-          az functionapp deployment source config-zip -g ${RESOURCE_GROUP:-nrfassettrackerci} -n mockhttpapiFunctions --src dist/mock-http-api.zip
+          az functionapp deployment source config-zip -g ${RESOURCE_GROUP:-nrfassettrackerci} -n ${MOCK_HTTP_API_STORAGE_ACCOUNT_NAME:-mockhttpapi}Functions --src dist/mock-http-api.zip
       - name: Deploy solution
         if: env.AZURE_CREDENTIALS != ''
         uses: nick-invision/retry@v2
