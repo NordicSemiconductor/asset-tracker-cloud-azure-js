@@ -1,6 +1,6 @@
-import { parse } from 'url'
 import { request as nodeRequest, RequestOptions } from 'https'
 import { left, right, Either } from 'fp-ts/lib/Either.js'
+import { URL } from 'url'
 
 export const resolveFromAPI =
 	({ apiKey, endpoint }: { apiKey: string; endpoint: string }) =>
@@ -14,7 +14,7 @@ export const resolveFromAPI =
 		debug?: (...args: any[]) => void,
 	): Promise<Either<Error, { lat: number; lng: number; accuracy: number }>> => {
 		try {
-			const { hostname, path } = parse(endpoint)
+			const { hostname, pathname: path } = new URL(endpoint)
 
 			// See https://eu1.unwiredlabs.com/docs-html/index.html#response
 			const {
