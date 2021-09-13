@@ -89,6 +89,7 @@
     },
     "unwiredlabsApiEndpoint": {
       "type": "string",
+      "defaultValue": "https://eu1.unwiredlabs.com/",
       "metadata": {
         "description": "Endpoint to use for the unwiredlabs.com cell geolocation API"
       }
