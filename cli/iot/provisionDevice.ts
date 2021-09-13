@@ -1,6 +1,5 @@
 import { promises as fs } from 'fs'
 import { connect } from 'mqtt'
-import { URL } from 'url'
 import { DeviceRegistrationState } from 'azure-iot-provisioning-service/dist/interfaces'
 import { dpsTopics } from './dpsTopics.js'
 import { deviceFileLocations } from './deviceFileLocations.js'
@@ -78,7 +77,7 @@ export const provisionDevice = async ({
 				client.on('message', (topic, payload) => {
 					const message = JSON.parse(payload.toString())
 					if (topic.startsWith(dpsTopics.registrationResult(202))) {
-						const args = new URL(topic).searchParams
+						const args = new URLSearchParams(topic.split('?').pop())
 						const { operationId, status } = message
 						log?.('Status', status)
 						log?.('Retry after', args.get('retry-after' as string))
