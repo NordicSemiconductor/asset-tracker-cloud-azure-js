@@ -6,6 +6,7 @@ export const result =
 	(
 		result: unknown,
 		status = 200,
+		headers?: Record<string, string>,
 	): {
 		headers: Record<string, string>
 		status: number
@@ -14,6 +15,8 @@ export const result =
 		const response = {
 			headers: {
 				'Content-Type': 'application/json; charset=uft-8',
+				'Access-Control-Allow-Origin': '*',
+				...headers,
 			},
 			status,
 			body: result,

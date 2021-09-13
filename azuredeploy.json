@@ -10,6 +10,14 @@
       },
       "defaultValue": "nrfassettracker"
     },
+    "keyVaultName": {
+      "type": "string",
+      "minLength": 3,
+      "metadata": {
+        "description": "Specifies the name of the keyVaultName."
+      },
+      "defaultValue": "assetTracker"
+    },
     "appRegistrationClientId": {
       "type": "string",
       "minLength": 36,
@@ -72,18 +80,37 @@
         "description": "The number of SignalR Unit."
       }
     },
-    "unwiredlabsApiKey": {
-      "type": "string",
-      "defaultValue": "",
+    "enableUnwiredLabsCellLocation": {
+      "type": "bool",
+      "defaultValue": false,
       "metadata": {
-        "description": "API key for using the unwiredlabs.com cell geolocation API"
+        "description": "Whether to enable cell geolocation using Unwired Labs API"
       }
     },
     "unwiredlabsApiEndpoint": {
       "type": "string",
-      "defaultValue": "https://eu1.unwiredlabs.com/",
       "metadata": {
         "description": "Endpoint to use for the unwiredlabs.com cell geolocation API"
+      }
+    },
+    "nrfCloudTeamId": {
+      "type": "string",
+      "metadata": {
+        "description": "your nRF Cloud team id"
+      }
+    },
+    "enableNrfCloudCellLocation": {
+      "type": "bool",
+      "defaultValue": false,
+      "metadata": {
+        "description": "Whether to enable cell geolocation using nRF Cloud API"
+      }
+    },
+    "nrfCloudApiEndpoint": {
+      "type": "string",
+      "defaultValue": "https://api.nrfcloud.com/",
+      "metadata": {
+        "description": "Endpoint to use for the nRF Cloud API"
       }
     }
   },
@@ -92,7 +119,8 @@
     "iotHubKeyResource": "[resourceId('Microsoft.Devices/Iothubs/Iothubkeys', concat(parameters('appName'), 'IotHub'), 'iothubowner')]",
     "appStorageAccountId": "[concat(resourceGroup().id,'/providers/','Microsoft.Storage/storageAccounts/', parameters('appName'), 'app')]",
     "FOTAStorageAccountId": "[concat(resourceGroup().id,'/providers/','Microsoft.Storage/storageAccounts/', parameters('appName'), 'fota')]",
-    "avatarStorageAccountId": "[concat(resourceGroup().id,'/providers/','Microsoft.Storage/storageAccounts/', parameters('appName'), 'avatars')]"
+    "avatarStorageAccountId": "[concat(resourceGroup().id,'/providers/','Microsoft.Storage/storageAccounts/', parameters('appName'), 'avatars')]",
+    "apiResourceId": "[concat(resourceId('Microsoft.Web/sites', concat(parameters('appName'), 'API')), '/providers/Microsoft.ManagedIdentity/Identities/default')]"
   },
   "resources": [
     {
@@ -253,90 +281,6 @@
       "properties": {
         "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', concat(parameters('appName'), 'ServerFarm'))]",
         "siteConfig": {
-          "appSettings": [
-            {
-              "name": "AzureWebJobsStorage",
-              "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', concat(parameters('appName'), 'app'), ';AccountKey=', listKeys(variables('appStorageAccountId'),'2015-05-01-preview').key1)]"
-            },
-            {
-              "name": "WEBSITE_CONTENTAZUREFILECONNECTIONSTRING",
-              "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', concat(parameters('appName'), 'app'), ';AccountKey=', listKeys(variables('appStorageAccountId'),'2015-05-01-preview').key1)]"
-            },
-            {
-              "name": "WEBSITE_CONTENTSHARE",
-              "value": "[toLower(concat(parameters('appName'), 'API'))]"
-            },
-            {
-              "name": "FUNCTIONS_EXTENSION_VERSION",
-              "value": "~3"
-            },
-            {
-              "name": "APPINSIGHTS_INSTRUMENTATIONKEY",
-              "value": "[reference(resourceId('microsoft.insights/components/', concat(parameters('appName'), 'Insights')), '2015-05-01').InstrumentationKey]"
-            },
-            {
-              "name": "FUNCTIONS_WORKER_RUNTIME",
-              "value": "node"
-            },
-            {
-              "name": "WEBSITE_NODE_DEFAULT_VERSION",
-              "value": "~14"
-            },
-            {
-              "name": "WEBSITE_RUN_FROM_PACKAGE",
-              "value": "1"
-            },
-            {
-              "name": "SCM_DO_BUILD_DURING_DEPLOYMENT",
-              "value": "0"
-            },
-            {
-              "name": "IOT_HUB_CONNECTION_STRING",
-              "value": "[concat('HostName=', reference(resourceId('Microsoft.Devices/IoTHubs', concat(parameters('appName'), 'IotHub')), providers('Microsoft.Devices', 'IoTHubs').apiVersions[0]).hostName, ';SharedAccessKeyName=iothubowner;SharedAccessKey=', listKeys(resourceId('Microsoft.Devices/IotHubs', concat(parameters('appName'), 'IotHub')), providers('Microsoft.Devices', 'IoTHubs').apiVersions[0]).value[0].primaryKey)]"
-            },
-            {
-              "name": "AVATAR_STORAGE_ACCOUNT_NAME",
-              "value": "[concat(parameters('appName'), 'avatars')]"
-            },
-            {
-              "name": "AVATAR_STORAGE_ACCESS_KEY",
-              "value": "[listKeys(variables('avatarStorageAccountId'), '2019-04-01').keys[0].value]"
-            },
-            {
-              "name": "FOTA_STORAGE_ACCOUNT_NAME",
-              "value": "[concat(parameters('appName'), 'fota')]"
-            },
-            {
-              "name": "FOTA_STORAGE_ACCESS_KEY",
-              "value": "[listKeys(variables('FOTAStorageAccountId'), '2019-04-01').keys[0].value]"
-            },
-            {
-              "name": "IoTHubEventHubCompatibleConnectionString",
-              "value": "[concat('Endpoint=', reference(resourceId('Microsoft.Devices/IoTHubs', concat(parameters('appName'), 'IotHub')), providers('Microsoft.Devices', 'IoTHubs').apiVersions[0]).eventHubEndpoints.events.endpoint, ';SharedAccessKeyName=iothubowner;SharedAccessKey=', listKeys(resourceId('Microsoft.Devices/IotHubs', concat(parameters('appName'), 'IotHub')), providers('Microsoft.Devices', 'IoTHubs').apiVersions[0]).value[0].primaryKey, ';EntityPath=', reference(resourceId('Microsoft.Devices/IoTHubs', concat(parameters('appName'), 'IotHub')), providers('Microsoft.Devices', 'IoTHubs').apiVersions[0]).eventHubEndpoints.events.path)]"
-            },
-            {
-              "name": "IoTHubEventHubName",
-              "value": "[reference(resourceId('Microsoft.Devices/IoTHubs', concat(parameters('appName'), 'IotHub')), providers('Microsoft.Devices', 'IoTHubs').apiVersions[0]).eventHubEndpoints.events.path]"
-            },
-            {
-              "name": "SignalRConnectionString",
-              "value": "[listKeys(resourceId('Microsoft.SignalRService/SignalR', concat(parameters('appName'), 'SignalR')), providers('Microsoft.SignalRService','SignalR').apiVersions[0]).primaryConnectionString]"
-            },
-            {
-              "name": "HISTORICAL_DATA_COSMOSDB_CONNECTION_STRING",
-              "value": "[listConnectionStrings(resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('appName')), providers('Microsoft.DocumentDb', 'databaseAccounts').apiVersions[0]).connectionStrings[0].connectionString]"
-            },
-            {
-              "condition": "[not(empty(parameters('unwiredlabsApiKey')))]",
-              "name": "UNWIREDLABS_API_KEY",
-              "value": "[parameters('unwiredlabsApiKey')]"
-            },
-            {
-              "condition": "[not(empty(parameters('unwiredlabsApiKey')))]",
-              "name": "UNWIREDLABS_API_ENDPOINT",
-              "value": "[parameters('unwiredlabsApiEndpoint')]"
-            }
-          ],
           "use32BitWorkerProcess": false,
           "cors": {
             "allowedOrigins": ["*"],
@@ -353,7 +297,8 @@
           "name": "web",
           "type": "config",
           "dependsOn": [
-            "[concat('Microsoft.Web/Sites/', concat(parameters('appName'), 'API'))]"
+            "[concat('Microsoft.Web/Sites/', concat(parameters('appName'), 'API'))]",
+            "[resourceId('Microsoft.KeyVault/vaults/', parameters('keyVaultName'))]"
           ],
           "properties": {
             "siteAuthEnabled": true,
@@ -375,7 +320,100 @@
               "allowedAudiences": [],
               "isAadAutoProvisioned": false,
               "aadClaimsAuthorization": "{\"allowed_groups\":null,\"allowed_client_applications\":null}"
-            }
+            },
+            "appSettings": [
+              {
+                "name": "AzureWebJobsStorage",
+                "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', concat(parameters('appName'), 'app'), ';AccountKey=', listKeys(variables('appStorageAccountId'),'2015-05-01-preview').key1)]"
+              },
+              {
+                "name": "WEBSITE_CONTENTAZUREFILECONNECTIONSTRING",
+                "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', concat(parameters('appName'), 'app'), ';AccountKey=', listKeys(variables('appStorageAccountId'),'2015-05-01-preview').key1)]"
+              },
+              {
+                "name": "WEBSITE_CONTENTSHARE",
+                "value": "[toLower(concat(parameters('appName'), 'API'))]"
+              },
+              {
+                "name": "FUNCTIONS_EXTENSION_VERSION",
+                "value": "~3"
+              },
+              {
+                "name": "APPINSIGHTS_INSTRUMENTATIONKEY",
+                "value": "[reference(resourceId('microsoft.insights/components/', concat(parameters('appName'), 'Insights')), '2015-05-01').InstrumentationKey]"
+              },
+              {
+                "name": "FUNCTIONS_WORKER_RUNTIME",
+                "value": "node"
+              },
+              {
+                "name": "WEBSITE_NODE_DEFAULT_VERSION",
+                "value": "~14"
+              },
+              {
+                "name": "WEBSITE_RUN_FROM_PACKAGE",
+                "value": "1"
+              },
+              {
+                "name": "SCM_DO_BUILD_DURING_DEPLOYMENT",
+                "value": "0"
+              },
+              {
+                "name": "IOT_HUB_CONNECTION_STRING",
+                "value": "[concat('HostName=', reference(resourceId('Microsoft.Devices/IoTHubs', concat(parameters('appName'), 'IotHub')), providers('Microsoft.Devices', 'IoTHubs').apiVersions[0]).hostName, ';SharedAccessKeyName=iothubowner;SharedAccessKey=', listKeys(resourceId('Microsoft.Devices/IotHubs', concat(parameters('appName'), 'IotHub')), providers('Microsoft.Devices', 'IoTHubs').apiVersions[0]).value[0].primaryKey)]"
+              },
+              {
+                "name": "AVATAR_STORAGE_ACCOUNT_NAME",
+                "value": "[concat(parameters('appName'), 'avatars')]"
+              },
+              {
+                "name": "AVATAR_STORAGE_ACCESS_KEY",
+                "value": "[listKeys(variables('avatarStorageAccountId'), '2019-04-01').keys[0].value]"
+              },
+              {
+                "name": "FOTA_STORAGE_ACCOUNT_NAME",
+                "value": "[concat(parameters('appName'), 'fota')]"
+              },
+              {
+                "name": "FOTA_STORAGE_ACCESS_KEY",
+                "value": "[listKeys(variables('FOTAStorageAccountId'), '2019-04-01').keys[0].value]"
+              },
+              {
+                "name": "IoTHubEventHubCompatibleConnectionString",
+                "value": "[concat('Endpoint=', reference(resourceId('Microsoft.Devices/IoTHubs', concat(parameters('appName'), 'IotHub')), providers('Microsoft.Devices', 'IoTHubs').apiVersions[0]).eventHubEndpoints.events.endpoint, ';SharedAccessKeyName=iothubowner;SharedAccessKey=', listKeys(resourceId('Microsoft.Devices/IotHubs', concat(parameters('appName'), 'IotHub')), providers('Microsoft.Devices', 'IoTHubs').apiVersions[0]).value[0].primaryKey, ';EntityPath=', reference(resourceId('Microsoft.Devices/IoTHubs', concat(parameters('appName'), 'IotHub')), providers('Microsoft.Devices', 'IoTHubs').apiVersions[0]).eventHubEndpoints.events.path)]"
+              },
+              {
+                "name": "IoTHubEventHubName",
+                "value": "[reference(resourceId('Microsoft.Devices/IoTHubs', concat(parameters('appName'), 'IotHub')), providers('Microsoft.Devices', 'IoTHubs').apiVersions[0]).eventHubEndpoints.events.path]"
+              },
+              {
+                "name": "SignalRConnectionString",
+                "value": "[listKeys(resourceId('Microsoft.SignalRService/SignalR', concat(parameters('appName'), 'SignalR')), providers('Microsoft.SignalRService','SignalR').apiVersions[0]).primaryConnectionString]"
+              },
+              {
+                "name": "HISTORICAL_DATA_COSMOSDB_CONNECTION_STRING",
+                "value": "[listConnectionStrings(resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('appName')), providers('Microsoft.DocumentDb', 'databaseAccounts').apiVersions[0]).connectionStrings[0].connectionString]"
+              },
+              {
+                "condition": "[parameters('enableUnwiredLabsCellLocation')]",
+                "name": "UNWIREDLABS_API_ENDPOINT",
+                "value": "[parameters('unwiredlabsApiEndpoint')]"
+              },
+              {
+                "condition": "[not(empty(parameters('nrfCloudTeamId')))]",
+                "name": "NRFCLOUD_TEAM_ID",
+                "value": "[parameters('nrfCloudTeamId')]"
+              },
+              {
+                "condition": "[not(empty(parameters('nrfCloudTeamId')))]",
+                "name": "NRFCLOUD_API_ENDPOINT",
+                "value": "[parameters('nrfCloudApiEndpoint')]"
+              },
+              {
+                "name": "KEYVAULT_NAME",
+                "value": "[parameters('keyVaultName')]"
+              }
+            ]
           }
         }
       ]
@@ -581,7 +619,7 @@
       }
     },
     {
-      "condition": "[not(empty(parameters('unwiredlabsApiKey')))]",
+      "condition": "[parameters('enableUnwiredLabsCellLocation')]",
       "type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers",
       "apiVersion": "2020-03-01",
       "name": "[concat(parameters('appName'), '/cellGeolocation/unwiredLabsCache')]",
@@ -624,6 +662,80 @@
           ],
           "defaultTtl": 2592000
         }
+      }
+    },
+    {
+      "condition": "[parameters('enableNrfCloudCellLocation')]",
+      "type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers",
+      "apiVersion": "2020-03-01",
+      "name": "[concat(parameters('appName'), '/cellGeolocation/nrfCloudCache')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlDatabases', parameters('appName'), 'cellGeolocation')]",
+        "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('appName'))]"
+      ],
+      "properties": {
+        "resource": {
+          "id": "nrfCloudCache",
+          "indexingPolicy": {
+            "indexingMode": "consistent",
+            "automatic": true,
+            "includedPaths": [
+              {
+                "path": "/*"
+              }
+            ],
+            "excludedPaths": [
+              {
+                "path": "/\"_etag\"/?"
+              }
+            ]
+          },
+          "partitionKey": {
+            "paths": ["/cellId"],
+            "kind": "Hash"
+          },
+          "conflictResolutionPolicy": {
+            "mode": "LastWriterWins",
+            "conflictResolutionPath": "/_ts"
+          },
+          "compositeIndexes": [
+            [
+              {
+                "path": "/source",
+                "order": "ascending"
+              }
+            ]
+          ],
+          "defaultTtl": 2592000
+        }
+      }
+    },
+    {
+      "type": "Microsoft.KeyVault/vaults",
+      "name": "[parameters('keyVaultName')]",
+      "apiVersion": "2018-02-14",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[concat('Microsoft.Web/Sites/', concat(parameters('appName'), 'API'))]"
+      ],
+      "properties": {
+        "enabledForDeployment": false,
+        "enabledForDiskEncryption": false,
+        "enabledForTemplateDeployment": false,
+        "tenantId": "[subscription().tenantId]",
+        "sku": {
+          "name": "Standard",
+          "family": "A"
+        },
+        "accessPolicies": [
+          {
+            "tenantId": "[reference(variables('apiResourceId'), '2018-11-30').tenantId]",
+            "objectId": "[reference(variables('apiResourceId'), '2018-11-30').principalId]",
+            "permissions": {
+              "secrets": ["get"]
+            }
+          }
+        ]
       }
     }
   ],

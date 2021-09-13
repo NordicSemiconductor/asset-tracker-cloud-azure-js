@@ -2,11 +2,6 @@ name: Test and Release
 
 on:
   workflow_dispatch:
-    inputs:
-      clearCertificates:
-        description: "Clear certificates"
-        required: false
-        default: "no"
   push:
     paths-ignore:
       - Dockerfile
@@ -32,6 +27,7 @@ jobs:
       B2C_TENANT_ID: ${{ secrets.B2C_TENANT_ID }}
       AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
       RESOURCE_GROUP: ${{ secrets.RESOURCE_GROUP }}
+      MOCK_HTTP_API_STORAGE_ACCOUNT_NAME: mockhttpapi
 
     steps:
       - uses: actions/checkout@v2
@@ -67,6 +63,18 @@ jobs:
       - run: npx tsc
       - name: Run Unit Tests
         run: npm test
+      - name: Deploy Mock HTTP API
+        run: |
+          az deployment group create \
+            --resource-group ${RESOURCE_GROUP:-nrfassettrackerci} \
+            --mode Incremental \
+            --name test-mock-http-api-${{ github.sha }} \
+            --template-file mock-http-api.json \
+            --parameters \
+              storageAccountName=${MOCK_HTTP_API_STORAGE_ACCOUNT_NAME:-mockhttpapi}
+          echo "MOCK_HTTP_API_ENDPOINT=`az functionapp show -g ${RESOURCE_GROUP:-nrfassettrackerci} -n ${MOCK_HTTP_API_STORAGE_ACCOUNT_NAME:-mockhttpapi}Functions | jq -r '.defaultHostName'`" >> $GITHUB_ENV
+          node scripts/pack-mock-http-api-app.js
+          az functionapp deployment source config-zip -g ${RESOURCE_GROUP:-nrfassettrackerci} -n ${MOCK_HTTP_API_STORAGE_ACCOUNT_NAME:-mockhttpapi}Functions --src dist/mock-http-api.zip
       - name: Deploy solution
         if: env.AZURE_CREDENTIALS != ''
         uses: nick-invision/retry@v2
@@ -77,14 +85,26 @@ jobs:
           command: |
             az deployment group create \
               --resource-group ${RESOURCE_GROUP:-nrfassettrackerci} \
-              --mode Complete \
+              --mode Incremental \
               --name test-${{ github.sha }} \
               --template-file azuredeploy.json \
               --parameters \
                 appName=${APP_NAME:-nrfassettrackerci} \
                 appRegistrationClientId=${APP_REG_CLIENT_ID} \
                 b2cTenant=${B2C_TENANT} \
-                b2cFlowName=B2C_1_developer
+                b2cFlowName=B2C_1_developer \
+                enableUnwiredLabsCellLocation=true \
+                unwiredlabsApiEndpoint=https://${MOCK_HTTP_API_ENDPOINT}/api/eu1.unwiredlabs.com/ \
+                enableNrfCloudCellLocation=true \
+                nrfCloudTeamId=`uuidgen` \
+                nrfCloudApiEndpoint=https://${MOCK_HTTP_API_ENDPOINT}/api/api.nrfcloud.com/
+      - name: Set secrets for third party APIs
+        run: |
+          USER_OBJECT_ID=`az ad sp list --spn 'https://nrfassettracker.invalid/ci' --query '[0].objectId' -o tsv | tr -d '\n'`
+          az keyvault set-policy --name assetTracker --object-id ${USER_OBJECT_ID} --secret-permissions set
+          az keyvault secret set --vault-name assetTracker --name unwiredlabsApiKey --value my-secret
+          openssl ecparam -name secp256k1 -genkey > nrfcloudlocationservice.key
+          az keyvault secret set --vault-name assetTracker --name nrfCloudCellLocationServiceKey --file nrfcloudlocationservice.key
       - name: Deploy Function App
         if: env.AZURE_CREDENTIALS != ''
         uses: nick-invision/retry@v2
@@ -93,32 +113,23 @@ jobs:
           retry_wait_seconds: 300
           max_attempts: 3
           command: |
-            node dist/pack/package-function-app.js functionapp.zip
-            az functionapp deployment source config-zip -g ${RESOURCE_GROUP:-nrfassettrackerci} -n ${APP_NAME:-nrfassettrackerci}api --src functionapp.zip
+            node scripts/pack-app.js
+            az functionapp deployment source config-zip -g ${RESOURCE_GROUP:-nrfassettrackerci} -n ${APP_NAME:-nrfassettrackerci}api --src dist/functionapp.zip
       - uses: actions/upload-artifact@v2
         if: always()
         with:
           name: functionapp-${{ github.sha }}
-          path: functionapp.zip
+          path: dist/functionapp.zip
       - name: Cache certificates
-        if: env.AZURE_CREDENTIALS != ''
+        if: env.AZURE_CREDENTIALS != '' != 'yes'
         uses: actions/cache@v2
+        id: certs-cache
         with:
           path: ./certificates
-          key: certificates-2021-09-01
-      - name: Clear certificates
-        if: github.event.inputs.clearCertificates == 'yes'
-        run: |
-          rm -rf ./certificates
-        continue-on-error: true
-      - name: Check if intermediate cert exists
-        if: env.AZURE_CREDENTIALS != ''
-        run: |
-          ls ./certificates/*/CA.intermediate.* 1> /dev/null 2>&1
-          echo "SKIP_CERT_GENERATION=1" >> $GITHUB_ENV
-        continue-on-error: true
+          key: certificates-2021-09-13
       - name: Create Intermediate CA certificate
-        if: env.AZURE_CREDENTIALS != '' && env.SKIP_CERT_GENERATION != '1'
+        if: |
+          env.AZURE_CREDENTIALS != '' && steps.certs-cache.outputs.cache-hit != 'true'
         run: |
           node cli create-ca-root
           node cli proof-ca-root-possession
