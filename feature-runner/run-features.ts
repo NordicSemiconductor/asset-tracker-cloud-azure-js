@@ -213,19 +213,12 @@ program
 				.addStepRunners(storageStepRunners())
 				.addStepRunners(
 					(() => {
-						console.log({
-							tableClientCredentials: {
-								endpoint: `https://${mockHTTPStorageAccountName}.table.core.windows.net`,
-								resourceGroup,
-								mockHTTPStorageAccessKey,
-							},
-						})
 						const tableClient = (tableName: string) =>
 							new TableClient(
 								`https://${mockHTTPStorageAccountName}.table.core.windows.net`,
 								tableName,
 								new AzureNamedKeyCredential(
-									resourceGroup,
+									mockHTTPStorageAccountName,
 									mockHTTPStorageAccessKey,
 								),
 							)
