@@ -126,16 +126,13 @@ jobs:
           name: functionapp-${{ github.sha }}
           path: dist/functionapp.zip
       - name: Cache certificates
-        if: env.AZURE_CREDENTIALS != ''
+        if:
+          env.AZURE_CREDENTIALS != '' && github.event.inputs.clearCertificates
+          != 'yes'
         uses: actions/cache@v2
         with:
           path: ./certificates
           key: certificates-2021-09-01
-      - name: Clear certificates
-        if: github.event.inputs.clearCertificates == 'yes'
-        run: |
-          rm -rf ./certificates
-        continue-on-error: true
       - name: Check if intermediate cert exists
         if: env.AZURE_CREDENTIALS != ''
         run: |
