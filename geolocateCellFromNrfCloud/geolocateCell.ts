@@ -8,16 +8,19 @@ import {
 	cellId,
 	NetworkMode,
 } from '@nordicsemiconductor/cell-geolocation-helpers'
-import { resolveFromAPI } from './resolveFromAPI.js'
 import { isLeft } from 'fp-ts/lib/Either.js'
 import { SecretClient } from '@azure/keyvault-secrets'
 import { DefaultAzureCredential } from '@azure/identity'
+import { apiClient } from './apiclient.js'
+import { URL } from 'url'
+import { Type } from '@sinclair/typebox'
 
 const config = () =>
 	fromEnv({
 		connectionString: 'HISTORICAL_DATA_COSMOSDB_CONNECTION_STRING',
 		keyVaultName: 'KEYVAULT_NAME',
-		endpoint: 'UNWIREDLABS_API_ENDPOINT',
+		endpoint: 'NRFCLOUD_API_ENDPOINT',
+		teamId: 'NRFCLOUD_TEAM_ID',
 	})(process.env)
 
 const cosmosDbContainerPromise = (async () => {
@@ -29,29 +32,59 @@ const cosmosDbContainerPromise = (async () => {
 		key: AccountKey,
 	})
 
-	return cosmosClient.database('cellGeolocation').container('unwiredLabsCache')
+	return cosmosClient.database('cellGeolocation').container('nrfCloudCache')
 })()
 
-const unwiredLabsApiKeyPromise = (async () => {
+const nrfCloudCellLocationServiceKeyPromise = (async () => {
 	const { keyVaultName } = config()
 	const credentials = new DefaultAzureCredential()
 	const keyVaultClient = new SecretClient(
 		`https://${keyVaultName}.vault.azure.net`,
 		credentials,
 	)
-	const unwiredLabsApiKeySecretName = 'unwiredLabsApiKey'
+	const nrfCloudCellLocationServiceKeySecretName =
+		'nrfCloudCellLocationServiceKey'
 
 	const latestSecret = await keyVaultClient.getSecret(
-		unwiredLabsApiKeySecretName,
+		nrfCloudCellLocationServiceKeySecretName,
 	)
 	return latestSecret.value as string
 })()
 
-const geolocateCellFromUnwiredLabs: AzureFunction = async (
+const locateRequestSchema = Type.Record(
+	Type.Union([Type.Literal('nbiot'), Type.Literal('lte')]),
+	Type.Array(
+		Type.Object(
+			{
+				eci: Type.Integer({ minimum: 1 }),
+				mcc: Type.Integer({ minimum: 100, maximum: 999 }),
+				mnc: Type.Integer({ minimum: 1, maximum: 99 }),
+				tac: Type.Integer({ minimum: 1 }),
+			},
+			{ additionalProperties: false },
+		),
+		{ minItems: 1 },
+	),
+)
+
+const locateResultSchema = Type.Object({
+	lat: Type.Number({ minimum: -90, maximum: 90 }),
+	lon: Type.Number({ minimum: -180, maximum: 180 }),
+	uncertainty: Type.Number({ minimum: 0 }),
+})
+
+const geolocateCell: AzureFunction = async (
 	context: Context,
 	req: HttpRequest,
 ): Promise<void> => {
 	log(context)({ req })
+
+	try {
+		config()
+	} catch (error) {
+		context.res = result(context)({ error: (error as Error).message }, 402)
+		return
+	}
 
 	const {
 		cell: c,
@@ -87,19 +120,32 @@ const geolocateCellFromUnwiredLabs: AzureFunction = async (
 				context.res = result(context)({ error: `Unknown cell ${id}` }, 404)
 			}
 		} else {
-			const { endpoint } = config()
-			const maybeLocation = await resolveFromAPI({
-				apiKey: await unwiredLabsApiKeyPromise,
-				endpoint,
-			})(
-				{
-					...cell,
-					nw: cell.nw === NetworkMode.LTEm ? 'lte' : 'nbiot',
+			const { endpoint, teamId } = config()
+			const c = apiClient({
+				endpoint: new URL(endpoint),
+				serviceKey: await nrfCloudCellLocationServiceKeyPromise,
+				teamId,
+			})
+
+			const mccmnc = cell.mccmnc.toFixed(0)
+			const maybeCellGeoLocation = await c.post({
+				resource: 'location/cell',
+				payload: {
+					[cell.nw === NetworkMode.NBIoT ? 'nbiot' : `lte`]: [
+						{
+							eci: cell.cell,
+							mcc: parseInt(mccmnc.substr(0, mccmnc.length - 2), 10),
+							mnc: parseInt(mccmnc.substr(-2), 10),
+							tac: cell.area,
+						},
+					],
 				},
-				log(context),
-			)
-			if (isLeft(maybeLocation)) {
-				logError(context)({ error: maybeLocation.left.message })
+				requestSchema: locateRequestSchema,
+				responseSchema: locateResultSchema,
+			})()
+
+			if (isLeft(maybeCellGeoLocation)) {
+				logError(context)({ error: maybeCellGeoLocation.left.message })
 				context.res = result(context)(
 					{ error: `Could not resolve cell ${id}` },
 					404,
@@ -109,13 +155,18 @@ const geolocateCellFromUnwiredLabs: AzureFunction = async (
 					...cell,
 				})
 			} else {
+				const location = {
+					lat: maybeCellGeoLocation.right.lat,
+					lng: maybeCellGeoLocation.right.lon,
+					accuracy: maybeCellGeoLocation.right.uncertainty,
+				}
 				context.bindings.cellGeolocation = JSON.stringify({
 					cellId: id,
 					...cell,
-					...maybeLocation.right,
+					...location,
 				})
-				log(context)({ location: maybeLocation.right })
-				context.res = result(context)(maybeLocation.right)
+				log(context)({ location })
+				context.res = result(context)(location)
 			}
 		}
 	} catch (error) {
@@ -124,4 +175,4 @@ const geolocateCellFromUnwiredLabs: AzureFunction = async (
 	}
 }
 
-export default geolocateCellFromUnwiredLabs
+export default geolocateCell
