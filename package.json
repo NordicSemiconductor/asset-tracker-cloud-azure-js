@@ -41,7 +41,7 @@
     "@nordicsemiconductor/random-words": "5.1.0",
     "@octokit/rest": "18.10.0",
     "@sinclair/typebox": "0.20.5",
-    "ajv": "8.6.2",
+    "ajv": "8.6.3",
     "azure-iot-provisioning-service": "1.8.11",
     "azure-iothub": "1.14.4",
     "backoff": "2.5.0",
@@ -54,7 +54,7 @@
     "@commitlint/cli": "13.1.0",
     "@commitlint/config-angular": "13.1.0",
     "@nordicsemiconductor/asset-tracker-cloud-code-style": "9.1.0",
-    "@nordicsemiconductor/e2e-bdd-test-runner": "14.4.15",
+    "@nordicsemiconductor/e2e-bdd-test-runner": "14.4.17",
     "@nordicsemiconductor/eslint-config-asset-tracker-cloud-typescript": "8.1.2",
     "@nordicsemiconductor/firmware-ci-device-helpers": "11.0.1",
     "@types/backoff": "2.5.2",
@@ -73,7 +73,7 @@
     "dependency-tree": "^8.1.1",
     "eslint": "7.32.0",
     "husky": "7.0.2",
-    "jest": "27.1.1",
+    "jest": "27.2.0",
     "lint-staged": "11.1.2",
     "node-fetch": "3.0.0",
     "pem": "1.14.4",
@@ -81,7 +81,7 @@
     "prettier": "2.4.0",
     "semver": "7.3.5",
     "ts-jest": "27.0.5",
-    "typescript": "4.4.2"
+    "typescript": "4.4.3"
   },
   "lint-staged": {
     "*.{md,json,yaml,yml}": [
