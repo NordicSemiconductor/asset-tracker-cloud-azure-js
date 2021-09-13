@@ -2,11 +2,6 @@ name: Test and Release
 
 on:
   workflow_dispatch:
-    inputs:
-      clearCertificates:
-        description: "Clear certificates"
-        required: false
-        default: "no"
   push:
     paths-ignore:
       - Dockerfile
@@ -126,21 +121,15 @@ jobs:
           name: functionapp-${{ github.sha }}
           path: dist/functionapp.zip
       - name: Cache certificates
-        if:
-          env.AZURE_CREDENTIALS != '' && github.event.inputs.clearCertificates
-          != 'yes'
+        if: env.AZURE_CREDENTIALS != '' != 'yes'
         uses: actions/cache@v2
+        id: certs-cache
         with:
           path: ./certificates
-          key: certificates-2021-09-01
-      - name: Check if intermediate cert exists
-        if: env.AZURE_CREDENTIALS != ''
-        run: |
-          ls ./certificates/*/CA.intermediate.* 1> /dev/null 2>&1
-          echo "SKIP_CERT_GENERATION=1" >> $GITHUB_ENV
-        continue-on-error: true
+          key: certificates-2021-09-13
       - name: Create Intermediate CA certificate
-        if: env.AZURE_CREDENTIALS != '' && env.SKIP_CERT_GENERATION != '1'
+        if: |
+          env.AZURE_CREDENTIALS != '' && steps.certs-cache.outputs.cache-hit != 'true'
         run: |
           node cli create-ca-root
           node cli proof-ca-root-possession
