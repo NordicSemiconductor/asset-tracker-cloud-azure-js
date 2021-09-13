@@ -75,6 +75,9 @@ jobs:
           echo "MOCK_HTTP_API_ENDPOINT=`az functionapp show -g ${RESOURCE_GROUP:-nrfassettrackerci} -n ${MOCK_HTTP_API_STORAGE_ACCOUNT_NAME:-mockhttpapi}Functions | jq -r '.defaultHostName'`" >> $GITHUB_ENV
           node scripts/pack-mock-http-api-app.js
           az functionapp deployment source config-zip -g ${RESOURCE_GROUP:-nrfassettrackerci} -n ${MOCK_HTTP_API_STORAGE_ACCOUNT_NAME:-mockhttpapi}Functions --src dist/mock-http-api.zip
+      - name: Set Key Vault name
+        run: |
+          echo "keyVaultName=${APP_NAME:-nrfassettrackerci}" >> $GITHUB_ENV
       - name: Deploy solution
         if: env.AZURE_CREDENTIALS != ''
         uses: nick-invision/retry@v2
@@ -97,14 +100,15 @@ jobs:
                 unwiredlabsApiEndpoint=https://${MOCK_HTTP_API_ENDPOINT}/api/eu1.unwiredlabs.com/ \
                 enableNrfCloudCellLocation=true \
                 nrfCloudTeamId=`uuidgen` \
-                nrfCloudApiEndpoint=https://${MOCK_HTTP_API_ENDPOINT}/api/api.nrfcloud.com/
+                nrfCloudApiEndpoint=https://${MOCK_HTTP_API_ENDPOINT}/api/api.nrfcloud.com/ \
+                keyVaultName=${keyVaultName}
       - name: Set secrets for third party APIs
         run: |
           USER_OBJECT_ID=`az ad sp list --spn 'https://nrfassettracker.invalid/ci' --query '[0].objectId' -o tsv | tr -d '\n'`
-          az keyvault set-policy --name assetTracker --object-id ${USER_OBJECT_ID} --secret-permissions set
-          az keyvault secret set --vault-name assetTracker --name unwiredlabsApiKey --value my-secret
+          az keyvault set-policy --name ${keyVaultName} --object-id ${USER_OBJECT_ID} --secret-permissions set
+          az keyvault secret set --vault-name ${keyVaultName} --name unwiredlabsApiKey --value my-secret
           openssl ecparam -name secp256k1 -genkey > nrfcloudlocationservice.key
-          az keyvault secret set --vault-name assetTracker --name nrfCloudCellLocationServiceKey --file nrfcloudlocationservice.key
+          az keyvault secret set --vault-name ${keyVaultName} --name nrfCloudCellLocationServiceKey --file nrfcloudlocationservice.key
       - name: Deploy Function App
         if: env.AZURE_CREDENTIALS != ''
         uses: nick-invision/retry@v2
