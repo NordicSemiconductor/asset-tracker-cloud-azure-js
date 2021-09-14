@@ -14,5 +14,5 @@
       "name": "res"
     }
   ],
-  "scriptFile": "../dist/queryHistoricalDeviceData/queryHistoricalDeviceData.js"
+  "scriptFile": "./handler.mjs"
 }

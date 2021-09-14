@@ -24,5 +24,5 @@
       "direction": "out"
     }
   ],
-  "scriptFile": "../dist/geolocateCellFromUnwiredLabs/geolocateCell.js"
+  "scriptFile": "./handler.mjs"
 }
