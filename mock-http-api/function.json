@@ -14,5 +14,5 @@
       "name": "res"
     }
   ],
-  "scriptFile": "../dist/mock-http-api/mock-http-api.js"
+  "scriptFile": "./handler.mjs"
 }

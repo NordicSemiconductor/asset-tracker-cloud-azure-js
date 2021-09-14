@@ -123,26 +123,19 @@ export const packageFunctionApp = async ({
 		),
 	)
 
-	// Rename the extension of the function handler file to .mjs and update the
-	// function.json
+	// Azure functions expect .mjs files. Copy the .js scriptFile to .mjs.
+	// @see https://docs.microsoft.com/en-us/azure/azure-functions/functions-reference-node?tabs=v2#ecmascript-modules
+	// Copy function.json and handler.mjs
 	await Promise.all(
 		functions.map(async (f) => {
-			const fJSON = path.join(process.cwd(), f, 'function.json')
-			const { scriptFile, ...functionJSON } = JSON.parse(
-				await fs.readFile(fJSON, 'utf-8'),
-			)
-			await copyFile(
-				path.resolve(tempDir, f, scriptFile),
-				path.resolve(tempDir, f, scriptFile.replace(/\.js$/, '.mjs')),
-			)
-			await fs.rm(path.resolve(tempDir, f, scriptFile))
 			await fs.mkdir(path.resolve(tempDir, f))
-			await fs.writeFile(
+			await fs.copyFile(
 				path.resolve(tempDir, f, 'function.json'),
-				JSON.stringify({
-					...functionJSON,
-					scriptFile: scriptFile.replace(/\.js$/, '.mjs'),
-				}),
+				path.join(process.cwd(), f, 'function.json'),
+			)
+			await fs.copyFile(
+				path.resolve(tempDir, f, 'function.json'),
+				path.join(process.cwd(), f, 'handler.mjs'),
 			)
 		}),
 	)
