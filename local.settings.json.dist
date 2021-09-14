@@ -1,9 +1,9 @@
 {
   "IsEncrypted": false,
   "Values": {
-    "IoTHubEventHubCompatibleConnectionString": "< ... >",
+    "IoTHubEventsConnectionString": "< ... >",
     "AzureWebJobsStorage": "< ... >",
-    "IoTHubEventHubName": "< ... >",
+    "IoTHubEventsEventHubName": "< ... >",
     "SignalRConnectionString": "< ... >"
   },
   "Host": {

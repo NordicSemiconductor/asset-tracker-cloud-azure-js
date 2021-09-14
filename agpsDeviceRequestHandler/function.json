@@ -1,0 +1,14 @@
+{
+  "bindings": [
+    {
+      "name": "requests",
+      "type": "eventHubTrigger",
+      "direction": "in",
+      "eventHubName": "%IoTHubEventHubName%",
+      "cardinality": "many",
+      "connection": "IoTHubEventsConnectionString",
+      "consumerGroup": "agpsrequests"
+    }
+  ],
+  "scriptFile": "./handler.mjs"
+}

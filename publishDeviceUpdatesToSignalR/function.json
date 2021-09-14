@@ -5,8 +5,8 @@
       "direction": "in",
       "name": "updates",
       "cardinality": "many",
-      "eventHubName": "%IoTHubEventHubName%",
-      "connection": "IoTHubEventHubCompatibleConnectionString",
+      "eventHubName": "%IoTHubEventsEventHubName%",
+      "connection": "IoTHubEventsConnectionString",
       "consumerGroup": "publishdeviceupdates"
     },
     {

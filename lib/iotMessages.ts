@@ -24,3 +24,11 @@ export type BatchDeviceUpdate = Record<
 >
 
 export type DeviceUpdate = TwinChangeEvent | DeviceMessage
+
+export type AGPSRequest = {
+	mcc: number
+	mnc: number
+	cell: number
+	area: number
+	types: number[]
+}
