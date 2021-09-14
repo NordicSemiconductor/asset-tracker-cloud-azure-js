@@ -4,9 +4,9 @@
       "name": "update",
       "type": "eventHubTrigger",
       "direction": "in",
-      "eventHubName": "%IoTHubEventHubName%",
+      "eventHubName": "%IoTHubEventsEventHubName%",
       "cardinality": "one",
-      "connection": "IoTHubEventHubCompatibleConnectionString",
+      "connection": "IoTHubEventsConnectionString",
       "consumerGroup": "storedeviceupdate"
     },
     {
