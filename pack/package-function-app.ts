@@ -129,12 +129,12 @@ export const packageFunctionApp = async ({
 	await Promise.all(
 		functions.map(async (f) => {
 			await fs.copyFile(
-				path.resolve(tempDir, f, 'function.json'),
 				path.join(process.cwd(), f, 'function.json'),
+				path.resolve(tempDir, f, 'function.json'),
 			)
 			await fs.copyFile(
-				path.resolve(tempDir, f, 'function.json'),
 				path.join(process.cwd(), f, 'handler.mjs'),
+				path.resolve(tempDir, f, 'function.json'),
 			)
 		}),
 	)
