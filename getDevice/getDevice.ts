@@ -1,14 +1,16 @@
 import { AzureFunction, Context, HttpRequest } from '@azure/functions'
-import azureIotHub from 'azure-iothub'
-const { Registry } = azureIotHub
+import iothub from 'azure-iothub'
+const { Registry } = iothub
 import { result } from '../lib/http.js'
 import { ErrorInfo, ErrorType, toStatusCode } from '../lib/ErrorInfo.js'
 import { log } from '../lib/log.js'
 import { fromEnv } from '../lib/fromEnv.js'
 
-const { connectionString } = fromEnv({
-	connectionString: 'IOT_HUB_CONNECTION_STRING',
+const { iotHubConnectionString } = fromEnv({
+	iotHubConnectionString: 'IOTHUB_CONNECTION_STRING',
 })(process.env)
+
+const registry = Registry.fromConnectionString(iotHubConnectionString)
 
 const getDevice: AzureFunction = async (
 	context: Context,
@@ -16,7 +18,6 @@ const getDevice: AzureFunction = async (
 ): Promise<void> => {
 	log(context)({ req })
 	try {
-		const registry = Registry.fromConnectionString(connectionString)
 		const devices = registry.createQuery(
 			`SELECT * FROM devices WHERE deviceId='${req.params.id}'`,
 		)

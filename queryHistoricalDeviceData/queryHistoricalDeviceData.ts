@@ -6,7 +6,7 @@ import { parseConnectionString } from '../lib/parseConnectionString.js'
 import { fromEnv } from '../lib/fromEnv.js'
 
 const { connectionString } = fromEnv({
-	connectionString: 'HISTORICAL_DATA_COSMOSDB_CONNECTION_STRING',
+	connectionString: 'COSMOSDB_CONNECTION_STRING',
 })(process.env)
 
 const { AccountEndpoint, AccountKey } = parseConnectionString(connectionString)

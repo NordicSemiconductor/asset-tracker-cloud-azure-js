@@ -15,11 +15,13 @@ import {
 } from '@nordicsemiconductor/cell-geolocation-helpers'
 import { exponential } from 'backoff'
 
-const { connectionString } = fromEnv({
-	connectionString: 'HISTORICAL_DATA_COSMOSDB_CONNECTION_STRING',
+const { cosmosDbConnectionString } = fromEnv({
+	cosmosDbConnectionString: 'COSMOSDB_CONNECTION_STRING',
 })(process.env)
 
-const { AccountEndpoint, AccountKey } = parseConnectionString(connectionString)
+const { AccountEndpoint, AccountKey } = parseConnectionString(
+	cosmosDbConnectionString,
+)
 const cosmosClient = new CosmosClient({
 	endpoint: AccountEndpoint,
 	key: AccountKey,

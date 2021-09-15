@@ -12,7 +12,7 @@ import {
 import { isSome } from 'fp-ts/lib/Option.js'
 
 const { connectionString } = fromEnv({
-	connectionString: 'HISTORICAL_DATA_COSMOSDB_CONNECTION_STRING',
+	connectionString: 'COSMOSDB_CONNECTION_STRING',
 })(process.env)
 
 const { AccountEndpoint, AccountKey } = parseConnectionString(connectionString)

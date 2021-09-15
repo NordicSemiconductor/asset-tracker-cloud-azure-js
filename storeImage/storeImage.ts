@@ -8,18 +8,18 @@ import {
 import { log } from '../lib/log.js'
 import { fromEnv } from '../lib/fromEnv.js'
 
-const { avatarStorageAccountName, avatarStorageAccessKey } = fromEnv({
-	avatarStorageAccountName: 'AVATAR_STORAGE_ACCOUNT_NAME',
-	avatarStorageAccessKey: 'AVATAR_STORAGE_ACCESS_KEY',
+const { storageAccountName, storageAccessKey } = fromEnv({
+	storageAccountName: 'STORAGE_ACCOUNT_NAME',
+	storageAccessKey: 'STORAGE_ACCESS_KEY',
 })(process.env)
 const avatarStorageContainer = 'avatars'
 
 const sharedKeyCredential = new StorageSharedKeyCredential(
-	avatarStorageAccountName,
-	avatarStorageAccessKey,
+	storageAccountName,
+	storageAccessKey,
 )
 const blobServiceClient = new BlobServiceClient(
-	`https://${avatarStorageAccountName}.blob.core.windows.net`,
+	`https://${storageAccountName}.blob.core.windows.net`,
 	sharedKeyCredential,
 )
 const containerClient = blobServiceClient.getContainerClient(
@@ -33,8 +33,8 @@ const storeImage: AzureFunction = async (
 	const { body, ...rest } = req
 	log(context)({
 		req: rest,
-		avatarStorageAccountName,
-		avatarStorageAccessKey,
+		storageAccountName,
+		storageAccessKey,
 		bodyLength: body.length,
 	})
 
@@ -54,7 +54,7 @@ const storeImage: AzureFunction = async (
 
 	context.res = result(context)(
 		{
-			url: `https://${avatarStorageAccountName}.blob.core.windows.net/${avatarStorageContainer}/${blobName}`,
+			url: `https://${storageAccountName}.blob.core.windows.net/${avatarStorageContainer}/${blobName}`,
 		},
 		202,
 	)
