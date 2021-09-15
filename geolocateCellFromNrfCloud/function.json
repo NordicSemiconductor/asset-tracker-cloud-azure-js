@@ -20,7 +20,7 @@
       "collectionName": "nrfCloudCache",
       "createIfNotExists": true,
       "partitionKey": "/cellId",
-      "connectionStringSetting": "HISTORICAL_DATA_COSMOSDB_CONNECTION_STRING",
+      "connectionStringSetting": "COSMOSDB_CONNECTION_STRING",
       "direction": "out"
     }
   ],
