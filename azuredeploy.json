@@ -115,6 +115,20 @@
         "description": "Whether to enable cell geolocation using nRF Cloud API"
       }
     },
+    "enableNrfCloudAssistedGPSLocation": {
+      "type": "bool",
+      "defaultValue": false,
+      "metadata": {
+        "description": "Whether to enable nRF Cloud Assisted GPS Location Service"
+      }
+    },
+    "agpsBinHours": {
+      "type": "string",
+      "defaultValue": "1",
+      "metadata": {
+        "description": "Number of hours to bin A-GPS requests"
+      }
+    },
     "nrfCloudApiEndpoint": {
       "type": "string",
       "defaultValue": "https://api.nrfcloud.com/",
