@@ -128,7 +128,6 @@ export const packageFunctionApp = async ({
 	// Copy function.json and handler.mjs
 	await Promise.all(
 		functions.map(async (f) => {
-			await fs.mkdir(path.resolve(tempDir, f))
 			await fs.copyFile(
 				path.resolve(tempDir, f, 'function.json'),
 				path.join(process.cwd(), f, 'function.json'),
