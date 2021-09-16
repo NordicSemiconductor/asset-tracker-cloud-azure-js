@@ -55,12 +55,13 @@ const agpsQueuedDeviceRequestsHandler: AzureFunction = async (
 	context: Context,
 	{ deviceId, request, delayInSeconds, timestamp }: QueuedAGPSRequest,
 ): Promise<void> => {
-	log(context)({ context, request })
+	log(context)({ request, deviceId, delayInSeconds, timestamp, context })
 
 	let binHours: number
 	let iotHubClient: iothub.Client
 	let cosmosDbContainer: Container
-	let queueClient: QueueClient
+	let agpsRequestsQueueClient: QueueClient
+	let nrfCloudAgpsRequestsQueueClient: QueueClient
 	let maxResolutionTimeInSeconds: number
 	let delayFactor: number
 	let initialDelay: number
@@ -90,11 +91,18 @@ const agpsQueuedDeviceRequestsHandler: AzureFunction = async (
 			.database('agpsRequests')
 			.container('nrfCloudCache')
 
-		queueClient = new QueueServiceClient(
+		agpsRequestsQueueClient = new QueueServiceClient(
 			`https://${storageAccountName}.queue.core.windows.net`,
 			new StorageSharedKeyCredential(storageAccountName, storageAccessKey),
 		).getQueueClient('agpsrequests')
-		await queueClient.create()
+		await agpsRequestsQueueClient.create()
+
+		nrfCloudAgpsRequestsQueueClient = new QueueServiceClient(
+			`https://${storageAccountName}.queue.core.windows.net`,
+			new StorageSharedKeyCredential(storageAccountName, storageAccessKey),
+		).getQueueClient('nrfcloudagpsrequests')
+		await nrfCloudAgpsRequestsQueueClient.create()
+
 		maxResolutionTimeInSeconds = parseInt(maxResolutionTimeInMinutes, 10) * 60
 		delayFactor = parseFloat(delayFactorString)
 		initialDelay = parseInt(initialDelayString, 10)
@@ -104,7 +112,7 @@ const agpsQueuedDeviceRequestsHandler: AzureFunction = async (
 	}
 
 	// Resolve data
-	const requestCacheKey = cacheKey({ request: request, binHours })
+	const requestCacheKey = cacheKey({ request, binHours })
 	if (resolvedRequests[requestCacheKey] === undefined) {
 		log(context)(requestCacheKey, 'Load from DB', request)
 		const { resources } = await cosmosDbContainer.items
@@ -126,22 +134,20 @@ const agpsQueuedDeviceRequestsHandler: AzureFunction = async (
 			}
 		} else {
 			context.log.verbose(requestCacheKey, 'cache does not exist')
-			const r = request
 			await Promise.all([
 				// Put in DB
 				cosmosDbContainer.items.create({
 					cacheKey: requestCacheKey,
-					nw: r.nw,
-					mcc: r.mcc,
-					mnc: r.mnc,
-					cell: r.cell,
-					area: r.area,
-					phycell: r.phycell,
-					types: r.types,
+					...request,
 					updatedAt: new Date().toISOString(),
 				}),
-				// FIXME: Kick off resolution
-				Promise.resolve(),
+				// Kick off resolution
+				nrfCloudAgpsRequestsQueueClient.sendMessage(
+					Buffer.from(JSON.stringify(request), 'utf-8').toString('base64'),
+					{
+						messageTimeToLive: maxResolutionTimeInSeconds,
+					},
+				),
 			])
 		}
 	}
@@ -202,10 +208,18 @@ const agpsQueuedDeviceRequestsHandler: AzureFunction = async (
 	const visibilityTimeout = Math.floor(
 		Math.min(900, (delayInSeconds ?? initialDelay) * delayFactor),
 	)
-	await queueClient.sendMessage(
-		Buffer.from(JSON.stringify(request), 'utf-8').toString('base64'),
+	await agpsRequestsQueueClient.sendMessage(
+		Buffer.from(
+			JSON.stringify({
+				deviceId,
+				request,
+				delayInSeconds: visibilityTimeout,
+				timestamp,
+			}),
+			'utf-8',
+		).toString('base64'),
 		{
-			messageTimeToLive: 15 * 60 * 60,
+			messageTimeToLive: maxResolutionTimeInSeconds,
 			visibilityTimeout,
 		},
 	)
