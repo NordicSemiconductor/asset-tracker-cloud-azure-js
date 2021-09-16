@@ -776,6 +776,15 @@
       "properties": {}
     },
     {
+      "type": "Microsoft.Storage/storageAccounts/queueServices/queues",
+      "apiVersion": "2021-04-01",
+      "name": "[concat(parameters('storageAccountName'), '/default/nrfcloudagpsrequests')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]"
+      ],
+      "properties": {}
+    },
+    {
       "type": "Microsoft.KeyVault/vaults",
       "name": "[parameters('keyVaultName')]",
       "apiVersion": "2018-02-14",
