@@ -1,2 +1,2 @@
-import handler from '../dist/geolocateCellFromUnwiredLabs/geolocateCellFromUnwiredLabs.js'
-export default handler
+import handler from "../dist/geolocateCellFromUnwiredLabs/geolocateCell.js";
+export default handler;
