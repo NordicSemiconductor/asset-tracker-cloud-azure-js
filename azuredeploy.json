@@ -175,7 +175,7 @@
               "isEnabled": true
             },
             {
-              "name": "twinMessagesToEventHub",
+              "name": "deviceMessagesToEventHub",
               "source": "DeviceMessages",
               "condition": "true",
               "endpointNames": ["events"],
