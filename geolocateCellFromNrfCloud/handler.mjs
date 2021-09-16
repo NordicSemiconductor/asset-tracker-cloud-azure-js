@@ -1,2 +1,2 @@
-import handler from '../dist/geolocateCellFromNrfCloud/geolocateCellFromNrfCloud.js'
-export default handler
+import handler from "../dist/geolocateCellFromNrfCloud/geolocateCell.js";
+export default handler;

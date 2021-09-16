@@ -11,7 +11,7 @@
  * Therefore, the scriptFiles are renamed to .mjs while packaging.
  */
 
-import { promises as fs, statSync } from 'fs'
+import { promises as fs, statSync, readFileSync } from 'fs'
 import path from 'path'
 import os from 'os'
 import { progress, debug } from '../cli/logging.js'
@@ -96,22 +96,31 @@ export const packageFunctionApp = async ({
 	})
 
 	// Build list of dist files based on scriptFiles of functions and their dependencies
-	progress('Packaging app', 'Copying function files')
+	progress('Packaging app', 'Copying function dependencies')
 	const functionFiles = (
 		await Promise.all(
 			functions.map(async (f) =>
 				fs
 					.readFile(path.join(process.cwd(), f, 'function.json'), 'utf-8')
 					.then(JSON.parse)
-					.then(({ scriptFile }) =>
-						flattenDependencies(
-							dependencyTree({
-								directory: path.join(process.cwd(), 'dist'),
-								filename: path.join(process.cwd(), f, scriptFile),
-								filter: (path) => !path.includes('node_modules'),
-							}) as TreeInnerNode,
-						),
-					),
+					.then(({ scriptFile }) => {
+						// dependencyTree does not handle the import / export properly
+						const importRx = /import [^ ]+ from ["']([^"']+)["']/
+						const handler = readFileSync(
+							path.resolve(process.cwd(), f, scriptFile),
+							'utf-8',
+						)
+							.split(os.EOL)
+							.filter((l) => l.startsWith('import'))
+							.map((l) => importRx.exec(l)?.[1]) as string[]
+						const handlerScript = path.resolve(process.cwd(), f, handler[0])
+						const deps = dependencyTree({
+							directory: path.join(process.cwd(), 'dist'),
+							filename: handlerScript,
+							filter: (path) => !path.includes('node_modules'),
+						}) as TreeInnerNode
+						return [handlerScript, ...flattenDependencies(deps)]
+					}),
 			),
 		)
 	).flat()
@@ -123,18 +132,25 @@ export const packageFunctionApp = async ({
 		),
 	)
 
-	// Azure functions expect .mjs files. Copy the .js scriptFile to .mjs.
+	// Azure functions expect .mjs files.
 	// @see https://docs.microsoft.com/en-us/azure/azure-functions/functions-reference-node?tabs=v2#ecmascript-modules
 	// Copy function.json and handler.mjs
+	progress('Packaging app', 'Copying function definition')
 	await Promise.all(
 		functions.map(async (f) => {
+			const functionFolder = path.resolve(tempDir, f)
+			try {
+				await fs.stat(functionFolder)
+			} catch {
+				await fs.mkdir(functionFolder)
+			}
 			await fs.copyFile(
 				path.join(process.cwd(), f, 'function.json'),
 				path.resolve(tempDir, f, 'function.json'),
 			)
 			await fs.copyFile(
 				path.join(process.cwd(), f, 'handler.mjs'),
-				path.resolve(tempDir, f, 'function.json'),
+				path.resolve(tempDir, f, 'handler.mjs'),
 			)
 		}),
 	)
