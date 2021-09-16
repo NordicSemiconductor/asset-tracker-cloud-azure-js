@@ -1,4 +1,4 @@
-@Only
+@Skip
 Feature: A-GPS
 
   Devices can request A-GPS data to decrease their time-to-fix when using GPS

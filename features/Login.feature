@@ -1,4 +1,3 @@
-@Only
 Feature: Login
 
     As a user
