@@ -99,6 +99,7 @@ jobs:
                 enableUnwiredLabsCellLocation=true \
                 unwiredlabsApiEndpoint=https://${MOCK_HTTP_API_ENDPOINT}/api/eu1.unwiredlabs.com/ \
                 enableNrfCloudCellLocation=true \
+                enableNrfCloudAGPSLocationService=true \
                 nrfCloudTeamId=`uuidgen` \
                 nrfCloudApiEndpoint=https://${MOCK_HTTP_API_ENDPOINT}/api/api.nrfcloud.com/ \
                 keyVaultName=${keyVaultName}
@@ -107,8 +108,10 @@ jobs:
           USER_OBJECT_ID=`az ad sp list --spn 'https://nrfassettracker.invalid/ci' --query '[0].objectId' -o tsv | tr -d '\n'`
           az keyvault set-policy --name ${keyVaultName} --object-id ${USER_OBJECT_ID} --secret-permissions set
           az keyvault secret set --vault-name ${keyVaultName} --name unwiredlabsApiKey --value my-secret
-          openssl ecparam -name secp256k1 -genkey > nrfcloudlocationservice.key
-          az keyvault secret set --vault-name ${keyVaultName} --name nrfCloudCellLocationServiceKey --file nrfcloudlocationservice.key
+          openssl ecparam -name secp256k1 -genkey > nrfcloudcelllocationservice.key
+          az keyvault secret set --vault-name ${keyVaultName} --name nrfCloudCellLocationServiceKey --file nrfcloudcelllocationservice.key
+          openssl ecparam -name secp256k1 -genkey > nrfcloudagpslocationservice.key
+          az keyvault secret set --vault-name ${keyVaultName} --name nrfCloudAGPSLocationServiceKey --file nrfcloudagpslocationservice.key
       - name: Deploy Function App
         if: env.AZURE_CREDENTIALS != ''
         uses: nick-invision/retry@v2

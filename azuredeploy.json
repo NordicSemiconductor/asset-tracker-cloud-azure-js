@@ -115,7 +115,7 @@
         "description": "Whether to enable cell geolocation using nRF Cloud API"
       }
     },
-    "enableNrfCloudAssistedGPSLocation": {
+    "enableNrfCloudAGPSLocationService": {
       "type": "bool",
       "defaultValue": false,
       "metadata": {
@@ -206,6 +206,7 @@
       ]
     },
     {
+      "condition": "[parameters('enableNrfCloudAGPSLocationService')]",
       "type": "Microsoft.Devices/iotHubs/eventhubEndpoints/ConsumerGroups",
       "apiVersion": "2020-03-01",
       "name": "[concat(parameters('appName'), 'IotHub', '/events/agpsRequests')]",
@@ -706,7 +707,7 @@
       }
     },
     {
-      "condition": "[parameters('enableNrfCloudAssistedGPSLocation')]",
+      "condition": "[parameters('enableNrfCloudAGPSLocationService')]",
       "type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases",
       "apiVersion": "2020-03-01",
       "name": "[concat(parameters('appName'), '/agpsRequests')]",
@@ -721,17 +722,17 @@
       }
     },
     {
-      "condition": "[parameters('enableNrfCloudAssistedGPSLocation')]",
+      "condition": "[parameters('enableNrfCloudAGPSLocationService')]",
       "type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers",
       "apiVersion": "2020-03-01",
-      "name": "[concat(parameters('appName'), '/agpsRequests/nrfCloudCache')]",
+      "name": "[concat(parameters('appName'), '/agpsRequests/cache')]",
       "dependsOn": [
         "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlDatabases', parameters('appName'), 'agpsRequests')]",
         "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('appName'))]"
       ],
       "properties": {
         "resource": {
-          "id": "nrfCloudCache",
+          "id": "cache",
           "indexingPolicy": {
             "indexingMode": "consistent",
             "automatic": true,
@@ -767,6 +768,7 @@
       }
     },
     {
+      "condition": "[parameters('enableNrfCloudAGPSLocationService')]",
       "type": "Microsoft.Storage/storageAccounts/queueServices/queues",
       "apiVersion": "2021-04-01",
       "name": "[concat(parameters('storageAccountName'), '/default/agpsrequests')]",
@@ -776,6 +778,7 @@
       "properties": {}
     },
     {
+      "condition": "[parameters('enableNrfCloudAGPSLocationService')]",
       "type": "Microsoft.Storage/storageAccounts/queueServices/queues",
       "apiVersion": "2021-04-01",
       "name": "[concat(parameters('storageAccountName'), '/default/nrfcloudagpsrequests')]",

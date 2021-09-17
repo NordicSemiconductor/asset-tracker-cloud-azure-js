@@ -11,7 +11,7 @@ import {
 import { isLeft } from 'fp-ts/lib/Either.js'
 import { SecretClient } from '@azure/keyvault-secrets'
 import { DefaultAzureCredential } from '@azure/identity'
-import { apiClient } from './apiclient.js'
+import { apiClient } from '../third-party/nrfcloud.com/apiclient.js'
 import { URL } from 'url'
 import { Type } from '@sinclair/typebox'
 
@@ -43,11 +43,8 @@ const nrfCloudCellLocationServiceKeyPromise = (async () => {
 		`https://${keyVaultName}.vault.azure.net`,
 		credentials,
 	)
-	const nrfCloudCellLocationServiceKeySecretName =
-		'nrfCloudCellLocationServiceKey'
-
 	const latestSecret = await keyVaultClient.getSecret(
-		nrfCloudCellLocationServiceKeySecretName,
+		'nrfCloudCellLocationServiceKey',
 	)
 	return latestSecret.value as string
 })()

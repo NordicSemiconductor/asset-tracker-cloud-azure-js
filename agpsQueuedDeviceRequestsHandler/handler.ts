@@ -25,11 +25,11 @@ const config = () =>
 		initialDelayString: 'INITIAL_DELAY',
 		delayFactorString: 'DELAY_FACTOR',
 	})({
-		...process.env,
 		BIN_HOURS: '1',
 		AGPS_MAX_RESOLUTION_TIME_IN_MINUTES: '15',
 		INITIAL_DELAY: '5',
 		DELAY_FACTOR: '1.5',
+		...process.env,
 	})
 
 // Keep a local cache in case many devices requests the same location
@@ -49,7 +49,9 @@ type QueuedAGPSRequest = {
 }
 
 /**
- * Resolve A-GPS requests for devices
+ * Resolve A-GPS requests for devices by either fetching the cached data from
+ * a DB or kicking off the resoluting via a third-party API (currently only
+ * nRF Cloud Assisted GPS Location Service is implemented.)
  */
 const agpsQueuedDeviceRequestsHandler: AzureFunction = async (
 	context: Context,
@@ -61,7 +63,7 @@ const agpsQueuedDeviceRequestsHandler: AzureFunction = async (
 	let iotHubClient: iothub.Client
 	let cosmosDbContainer: Container
 	let agpsRequestsQueueClient: QueueClient
-	let nrfCloudAgpsRequestsQueueClient: QueueClient
+	const resolverQueues: QueueClient[] = []
 	let maxResolutionTimeInSeconds: number
 	let delayFactor: number
 	let initialDelay: number
@@ -75,10 +77,12 @@ const agpsQueuedDeviceRequestsHandler: AzureFunction = async (
 			maxResolutionTimeInMinutes,
 			delayFactorString,
 			initialDelayString,
+			cosmosDbConnectionString,
 		} = config()
+
 		binHours = parseInt(binHoursString, 10)
 		iotHubClient = iothub.Client.fromConnectionString(iotHubConnectionString)
-		const { cosmosDbConnectionString } = config()
+
 		const { AccountEndpoint, AccountKey } = parseConnectionString(
 			cosmosDbConnectionString,
 		)
@@ -87,9 +91,7 @@ const agpsQueuedDeviceRequestsHandler: AzureFunction = async (
 			key: AccountKey,
 		})
 
-		cosmosDbContainer = cosmosClient
-			.database('agpsRequests')
-			.container('nrfCloudCache')
+		cosmosDbContainer = cosmosClient.database('agpsRequests').container('cache')
 
 		agpsRequestsQueueClient = new QueueServiceClient(
 			`https://${storageAccountName}.queue.core.windows.net`,
@@ -97,11 +99,12 @@ const agpsQueuedDeviceRequestsHandler: AzureFunction = async (
 		).getQueueClient('agpsrequests')
 		await agpsRequestsQueueClient.create()
 
-		nrfCloudAgpsRequestsQueueClient = new QueueServiceClient(
+		const nrfCloudAgpsRequestsQueueClient = new QueueServiceClient(
 			`https://${storageAccountName}.queue.core.windows.net`,
 			new StorageSharedKeyCredential(storageAccountName, storageAccessKey),
 		).getQueueClient('nrfcloudagpsrequests')
 		await nrfCloudAgpsRequestsQueueClient.create()
+		resolverQueues.push(nrfCloudAgpsRequestsQueueClient)
 
 		maxResolutionTimeInSeconds = parseInt(maxResolutionTimeInMinutes, 10) * 60
 		delayFactor = parseFloat(delayFactorString)
@@ -142,11 +145,13 @@ const agpsQueuedDeviceRequestsHandler: AzureFunction = async (
 					updatedAt: new Date().toISOString(),
 				}),
 				// Kick off resolution
-				nrfCloudAgpsRequestsQueueClient.sendMessage(
-					Buffer.from(JSON.stringify(request), 'utf-8').toString('base64'),
-					{
-						messageTimeToLive: maxResolutionTimeInSeconds,
-					},
+				resolverQueues.map(async (client) =>
+					client.sendMessage(
+						Buffer.from(JSON.stringify(request), 'utf-8').toString('base64'),
+						{
+							messageTimeToLive: maxResolutionTimeInSeconds,
+						},
+					),
 				),
 			])
 		}
@@ -204,7 +209,7 @@ const agpsQueuedDeviceRequestsHandler: AzureFunction = async (
 		return
 	}
 
-	// Re-schedule request
+	// Put reques in queue, with increased delay
 	const visibilityTimeout = Math.floor(
 		Math.min(900, (delayInSeconds ?? initialDelay) * delayFactor),
 	)
