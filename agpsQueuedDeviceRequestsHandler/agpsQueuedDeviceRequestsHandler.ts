@@ -24,6 +24,10 @@ const config = () =>
 		maxResolutionTimeInMinutes: 'AGPS_MAX_RESOLUTION_TIME_IN_MINUTES',
 		initialDelayString: 'INITIAL_DELAY',
 		delayFactorString: 'DELAY_FACTOR',
+		agpsRequestsDatabaseName: 'AGPS_REQUESTS_DATABASE_NAME',
+		agpsRequestsContainerName: 'AGPS_REQUESTS_CONTAINER_NAME',
+		agpsRequestsQueueName: 'AGPS_REQUESTS_QUEUE_NAME',
+		agpsRequestsNrfCloudQueueName: 'AGPS_REQUESTS_NRFCLOUD_QUEUE_NAME',
 	})({
 		BIN_HOURS: '1',
 		AGPS_MAX_RESOLUTION_TIME_IN_MINUTES: '15',
@@ -78,6 +82,10 @@ const agpsQueuedDeviceRequestsHandler: AzureFunction = async (
 			delayFactorString,
 			initialDelayString,
 			cosmosDbConnectionString,
+			agpsRequestsDatabaseName,
+			agpsRequestsQueueName,
+			agpsRequestsContainerName,
+			agpsRequestsNrfCloudQueueName,
 		} = config()
 
 		binHours = parseInt(binHoursString, 10)
@@ -91,18 +99,20 @@ const agpsQueuedDeviceRequestsHandler: AzureFunction = async (
 			key: AccountKey,
 		})
 
-		cosmosDbContainer = cosmosClient.database('agpsRequests').container('cache')
+		cosmosDbContainer = cosmosClient
+			.database(agpsRequestsDatabaseName)
+			.container(agpsRequestsContainerName)
 
 		agpsRequestsQueueClient = new QueueServiceClient(
 			`https://${storageAccountName}.queue.core.windows.net`,
 			new StorageSharedKeyCredential(storageAccountName, storageAccessKey),
-		).getQueueClient('agpsrequests')
+		).getQueueClient(agpsRequestsQueueName)
 		await agpsRequestsQueueClient.create()
 
 		const nrfCloudAgpsRequestsQueueClient = new QueueServiceClient(
 			`https://${storageAccountName}.queue.core.windows.net`,
 			new StorageSharedKeyCredential(storageAccountName, storageAccessKey),
-		).getQueueClient('nrfcloudagpsrequests')
+		).getQueueClient(agpsRequestsNrfCloudQueueName)
 		await nrfCloudAgpsRequestsQueueClient.create()
 		resolverQueues.push(nrfCloudAgpsRequestsQueueClient)
 

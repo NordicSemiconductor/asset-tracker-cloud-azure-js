@@ -26,6 +26,8 @@ const config = () =>
 		keyVaultName: 'KEYVAULT_NAME',
 		endpoint: 'NRFCLOUD_API_ENDPOINT',
 		teamId: 'NRFCLOUD_TEAM_ID',
+		agpsRequestsDatabaseName: 'AGPS_REQUESTS_DATABASE_NAME',
+		agpsRequestsContainerName: 'AGPS_REQUESTS_CONTAINER_NAME',
 	})({
 		BIN_HOURS: '1',
 		AGPS_MAX_RESOLUTION_TIME_IN_MINUTES: '15',
@@ -71,6 +73,8 @@ const agpsResolveRequestFromNrfCloud: AzureFunction = async (
 			keyVaultName,
 			cosmosDbConnectionString,
 			binHoursString,
+			agpsRequestsDatabaseName,
+			agpsRequestsContainerName,
 		} = config()
 
 		if (nrfCloudAGPSLocationServiceKeyPromise === undefined)
@@ -84,6 +88,13 @@ const agpsResolveRequestFromNrfCloud: AzureFunction = async (
 			}),
 		)
 
+		log(context)({
+			nrfCloud: {
+				endpoint,
+				teamId,
+			},
+		})
+
 		const { AccountEndpoint, AccountKey } = parseConnectionString(
 			cosmosDbConnectionString,
 		)
@@ -92,7 +103,16 @@ const agpsResolveRequestFromNrfCloud: AzureFunction = async (
 			key: AccountKey,
 		})
 
-		cosmosDbContainer = cosmosClient.database('agpsRequests').container('cache')
+		log(context)({
+			cosmosDb: {
+				database: agpsRequestsDatabaseName,
+				container: agpsRequestsContainerName,
+			},
+		})
+
+		cosmosDbContainer = cosmosClient
+			.database(agpsRequestsDatabaseName)
+			.container(agpsRequestsContainerName)
 
 		binHours = parseInt(binHoursString, 10)
 	} catch (error) {
@@ -102,22 +122,24 @@ const agpsResolveRequestFromNrfCloud: AzureFunction = async (
 
 	const res = await resolver(request)
 	const requestCacheKey = cacheKey({ request, binHours })
+	const item = {
+		cacheKey: requestCacheKey,
+		...request,
+		updatedAt: new Date().toISOString(),
+		source: 'nrfcloud',
+	} as Record<string, any>
 	if (isLeft(res)) {
-		await cosmosDbContainer.item(requestCacheKey).replace({
-			cacheKey: requestCacheKey,
-			...request,
-			updatedAt: new Date().toISOString(),
-			unresolved: true,
-		})
+		log(context)(`Resolution failed.`)
+		log(context)(res.left.message)
+		item.unresolved = true
 	} else {
-		await cosmosDbContainer.item(requestCacheKey).replace({
-			cacheKey: requestCacheKey,
-			...request,
-			updatedAt: new Date().toISOString(),
-			unresolved: false,
-			dataHex: res.right,
-		})
+		item.unresolved = false
+		item.dataHex = res.right
 	}
+	log(context)({
+		item,
+	})
+	await cosmosDbContainer.items.upsert(item)
 }
 
 export default agpsResolveRequestFromNrfCloud

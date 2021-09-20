@@ -19,6 +19,7 @@ const config = () =>
 		iotHubConnectionString: 'IOTHUB_CONNECTION_STRING',
 		storageAccountName: 'STORAGE_ACCOUNT_NAME',
 		storageAccessKey: 'STORAGE_ACCESS_KEY',
+		agpsRequestsQueueName: 'AGPS_REQUESTS_QUEUE_NAME',
 	})({
 		...process.env,
 	})
@@ -48,8 +49,12 @@ const agpsDeviceRequestsHandler: AzureFunction = async (
 	let queueClient: QueueClient
 
 	try {
-		const { storageAccountName, storageAccessKey, iotHubConnectionString } =
-			config()
+		const {
+			storageAccountName,
+			storageAccessKey,
+			iotHubConnectionString,
+			agpsRequestsQueueName,
+		} = config()
 
 		iotHubRegistry = iothub.Registry.fromConnectionString(
 			iotHubConnectionString,
@@ -57,7 +62,7 @@ const agpsDeviceRequestsHandler: AzureFunction = async (
 		queueClient = new QueueServiceClient(
 			`https://${storageAccountName}.queue.core.windows.net`,
 			new StorageSharedKeyCredential(storageAccountName, storageAccessKey),
-		).getQueueClient('agpsrequests')
+		).getQueueClient(agpsRequestsQueueName)
 		await queueClient.create()
 	} catch (error) {
 		log(context)({ error: (error as Error).message })

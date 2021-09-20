@@ -1,2 +1,2 @@
-import handler from "../dist/agpsDeviceRequestsHandler/handler.js";
+import handler from "../dist/agpsDeviceRequestsHandler/agpsDeviceRequestsHandler.js";
 export default handler;

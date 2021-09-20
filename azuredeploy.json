@@ -135,6 +135,46 @@
       "metadata": {
         "description": "Endpoint to use for the nRF Cloud API"
       }
+    },
+    "agpsRequestDatabaseName": {
+      "type": "string",
+      "minLength": 3,
+      "metadata": {
+        "description": "Name for the database that stores A-GPS requests"
+      },
+      "defaultValue": "agpsRequests"
+    },
+    "agpsRequestContainerName": {
+      "type": "string",
+      "minLength": 3,
+      "metadata": {
+        "description": "Name for the container that stores A-GPS requests"
+      },
+      "defaultValue": "cache"
+    },
+    "agpsRequestQueueName": {
+      "type": "string",
+      "minLength": 3,
+      "metadata": {
+        "description": "Name for the queue that stores A-GPS requests"
+      },
+      "defaultValue": "agpsrequests"
+    },
+    "agpsRequestNrfCloudQueueName": {
+      "type": "string",
+      "minLength": 3,
+      "metadata": {
+        "description": "Name for the queue that stores A-GPS requests to be resolved using the nRF Cloud API"
+      },
+      "defaultValue": "nrfcloudagpsrequests"
+    },
+    "agpsRequestIotEventsConsumerGroupName": {
+      "type": "string",
+      "minLength": 3,
+      "metadata": {
+        "description": "Consumer group name for A-GPS device requests"
+      },
+      "defaultValue": "agpsrequests"
     }
   },
   "variables": {
@@ -209,7 +249,7 @@
       "condition": "[parameters('enableNrfCloudAGPSLocationService')]",
       "type": "Microsoft.Devices/iotHubs/eventhubEndpoints/ConsumerGroups",
       "apiVersion": "2020-03-01",
-      "name": "[concat(parameters('appName'), 'IotHub', '/events/agpsRequests')]",
+      "name": "[concat(parameters('appName'), 'IotHub', '/events/', parameters('agpsRequestDatabaseName'))]",
       "dependsOn": [
         "[resourceId('Microsoft.Devices/IotHubs', concat(parameters('appName'), 'IotHub'))]"
       ]
@@ -421,6 +461,26 @@
               {
                 "name": "BIN_HOURS",
                 "value": "[parameters('agpsBinHours')]"
+              },
+              {
+                "name": "AGPS_REQUESTS_IOT_EVENTS_CONSUMER_GROUP_NAME",
+                "value": "[parameters('agpsRequestIotEventsConsumerGroupName')]"
+              },
+              {
+                "name": "AGPS_REQUESTS_DATABASE_NAME",
+                "value": "[parameters('agpsRequestDatabaseName')]"
+              },
+              {
+                "name": "AGPS_REQUESTS_CONTAINER_NAME",
+                "value": "[parameters('agpsRequestContainerName')]"
+              },
+              {
+                "name": "AGPS_REQUESTS_QUEUE_NAME",
+                "value": "[parameters('agpsRequestQueueName')]"
+              },
+              {
+                "name": "AGPS_REQUESTS_NRFCLOUD_QUEUE_NAME",
+                "value": "[parameters('agpsRequestNrfCloudQueueName')]"
               }
             ]
           }
@@ -710,13 +770,13 @@
       "condition": "[parameters('enableNrfCloudAGPSLocationService')]",
       "type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases",
       "apiVersion": "2020-03-01",
-      "name": "[concat(parameters('appName'), '/agpsRequests')]",
+      "name": "[concat(parameters('appName'), '/', parameters('agpsRequestDatabaseName'))]",
       "dependsOn": [
         "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('appName'))]"
       ],
       "properties": {
         "resource": {
-          "id": "agpsRequests"
+          "id": "[parameters('agpsRequestDatabaseName')]"
         },
         "options": {}
       }
@@ -725,14 +785,14 @@
       "condition": "[parameters('enableNrfCloudAGPSLocationService')]",
       "type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers",
       "apiVersion": "2020-03-01",
-      "name": "[concat(parameters('appName'), '/agpsRequests/cache')]",
+      "name": "[concat(parameters('appName'), '/',parameters('agpsRequestDatabaseName'),'/', parameters('agpsRequestContainerName'))]",
       "dependsOn": [
-        "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlDatabases', parameters('appName'), 'agpsRequests')]",
+        "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlDatabases', parameters('appName'), parameters('agpsRequestDatabaseName'))]",
         "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('appName'))]"
       ],
       "properties": {
         "resource": {
-          "id": "cache",
+          "id": "[parameters('agpsRequestContainerName')]",
           "indexingPolicy": {
             "indexingMode": "consistent",
             "automatic": true,
@@ -771,7 +831,7 @@
       "condition": "[parameters('enableNrfCloudAGPSLocationService')]",
       "type": "Microsoft.Storage/storageAccounts/queueServices/queues",
       "apiVersion": "2021-04-01",
-      "name": "[concat(parameters('storageAccountName'), '/default/agpsrequests')]",
+      "name": "[concat(parameters('storageAccountName'), '/default/', parameters('agpsRequestQueueName'))]",
       "dependsOn": [
         "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]"
       ],
@@ -781,7 +841,7 @@
       "condition": "[parameters('enableNrfCloudAGPSLocationService')]",
       "type": "Microsoft.Storage/storageAccounts/queueServices/queues",
       "apiVersion": "2021-04-01",
-      "name": "[concat(parameters('storageAccountName'), '/default/nrfcloudagpsrequests')]",
+      "name": "[concat(parameters('storageAccountName'), '/default/', parameters('agpsRequestNrfCloudQueueName'))]",
       "dependsOn": [
         "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]"
       ],
