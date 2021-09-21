@@ -1,5 +1,5 @@
 import { AzureFunction, Context } from '@azure/functions'
-import { log } from '../lib/log.js'
+import { log, logError } from '../lib/log.js'
 import { agpsRequestSchema } from '../agps/types.js'
 import { Static } from '@sinclair/typebox'
 import { fromEnv } from '../lib/fromEnv.js'
@@ -30,7 +30,7 @@ const config = () =>
 		agpsRequestsContainerName: 'AGPS_REQUESTS_CONTAINER_NAME',
 	})({
 		BIN_HOURS: '1',
-		AGPS_MAX_RESOLUTION_TIME_IN_MINUTES: '15',
+		AGPS_MAX_RESOLUTION_TIME_IN_MINUTES: '3',
 		INITIAL_DELAY: '5',
 		DELAY_FACTOR: '1.5',
 		...process.env,
@@ -86,6 +86,7 @@ const agpsResolveRequestFromNrfCloud: AzureFunction = async (
 				serviceKey: await nrfCloudAGPSLocationServiceKeyPromise,
 				teamId,
 			}),
+			log(context),
 		)
 
 		log(context)({
@@ -116,23 +117,25 @@ const agpsResolveRequestFromNrfCloud: AzureFunction = async (
 
 		binHours = parseInt(binHoursString, 10)
 	} catch (error) {
-		log(context)({ error: (error as Error).message })
+		logError(context)({ error: (error as Error).message })
 		return
 	}
 
 	const res = await resolver(request)
 	const requestCacheKey = cacheKey({ request, binHours })
 	const item = {
-		cacheKey: requestCacheKey,
+		id: requestCacheKey,
 		...request,
 		updatedAt: new Date().toISOString(),
 		source: 'nrfcloud',
 	} as Record<string, any>
 	if (isLeft(res)) {
-		log(context)(`Resolution failed.`)
-		log(context)(res.left.message)
+		logError(context)(`Resolution failed.`)
+		logError(context)(res.left.message)
 		item.unresolved = true
 	} else {
+		log(context)(`Resolved`)
+		log(context)({ dataHex: res.right })
 		item.unresolved = false
 		item.dataHex = res.right
 	}

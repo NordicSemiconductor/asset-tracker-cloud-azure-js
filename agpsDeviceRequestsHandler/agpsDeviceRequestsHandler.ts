@@ -1,5 +1,5 @@
 import { AzureFunction, Context } from '@azure/functions'
-import { log } from '../lib/log.js'
+import { log, logError } from '../lib/log.js'
 import { validateWithJSONSchema } from '../lib/validateWithJSONSchema.js'
 import { agpsRequestSchema } from '../agps/types.js'
 import { isRight } from 'fp-ts/lib/Either.js'
@@ -65,7 +65,7 @@ const agpsDeviceRequestsHandler: AzureFunction = async (
 		).getQueueClient(agpsRequestsQueueName)
 		await queueClient.create()
 	} catch (error) {
-		log(context)({ error: (error as Error).message })
+		logError(context)({ error: (error as Error).message })
 		return
 	}
 

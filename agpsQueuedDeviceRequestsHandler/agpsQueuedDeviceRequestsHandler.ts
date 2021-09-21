@@ -1,5 +1,5 @@
 import { AzureFunction, Context } from '@azure/functions'
-import { log } from '../lib/log.js'
+import { log, logError } from '../lib/log.js'
 import { agpsRequestSchema } from '../agps/types.js'
 import { cacheKey } from '../agps/cacheKey.js'
 import { Static } from '@sinclair/typebox'
@@ -30,7 +30,7 @@ const config = () =>
 		agpsRequestsNrfCloudQueueName: 'AGPS_REQUESTS_NRFCLOUD_QUEUE_NAME',
 	})({
 		BIN_HOURS: '1',
-		AGPS_MAX_RESOLUTION_TIME_IN_MINUTES: '15',
+		AGPS_MAX_RESOLUTION_TIME_IN_MINUTES: '3',
 		INITIAL_DELAY: '5',
 		DELAY_FACTOR: '1.5',
 		...process.env,
@@ -120,7 +120,7 @@ const agpsQueuedDeviceRequestsHandler: AzureFunction = async (
 		delayFactor = parseFloat(delayFactorString)
 		initialDelay = parseInt(initialDelayString, 10)
 	} catch (error) {
-		log(context)({ error: (error as Error).message })
+		logError(context)({ error: (error as Error).message })
 		return
 	}
 
@@ -129,28 +129,25 @@ const agpsQueuedDeviceRequestsHandler: AzureFunction = async (
 	if (resolvedRequests[requestCacheKey] === undefined) {
 		log(context)(requestCacheKey, 'Load from DB', request)
 		const { resources } = await cosmosDbContainer.items
-			.query(`SELECT * FROM c WHERE c.cacheKey='${requestCacheKey}'`)
+			.query(`SELECT * FROM c WHERE c.id='${requestCacheKey}'`)
 			.fetchNext()
 		log(context)({ resources })
 		if (resources.length) {
 			if (resources[0].unresolved !== undefined) {
-				context.log.verbose(
-					requestCacheKey,
-					'Processing of the request is finished',
-				)
+				log(context)(requestCacheKey, 'Processing of the request is finished')
 				// Cache resolved
 				resolvedRequests[requestCacheKey] = resources[0]
 				if (resources[0].unresolved === true) {
-					context.log.error(requestCacheKey, `A-GPS request is unresolved.`)
+					logError(context)(requestCacheKey, `A-GPS request is unresolved.`)
 					return
 				}
 			}
 		} else {
-			context.log.verbose(requestCacheKey, 'cache does not exist')
+			log(context)(requestCacheKey, 'cache does not exist')
 			await Promise.all([
 				// Put in DB
 				cosmosDbContainer.items.create({
-					cacheKey: requestCacheKey,
+					id: requestCacheKey,
 					...request,
 					updatedAt: new Date().toISOString(),
 				}),
@@ -172,8 +169,8 @@ const agpsQueuedDeviceRequestsHandler: AzureFunction = async (
 		resolvedRequests[requestCacheKey]?.unresolved !== undefined &&
 		resolvedRequests[requestCacheKey].unresolved === false
 	) {
-		context.log.verbose(requestCacheKey, 'data for the request is available')
-		context.log.verbose(
+		log(context)(requestCacheKey, 'data for the request is available')
+		log(context)(
 			JSON.stringify({
 				request,
 				resolvedRequests,
@@ -182,7 +179,7 @@ const agpsQueuedDeviceRequestsHandler: AzureFunction = async (
 		await Promise.all(
 			(resolvedRequests[requestCacheKey]?.dataHex ?? []).map(
 				async (agpsdata) => {
-					context.log(`Sending ${agpsdata.length} bytes to ${deviceId}`)
+					log(context)(`Sending ${agpsdata.length} bytes to ${deviceId}`)
 					const m = new iothubCommon.Message(Buffer.from(agpsdata, 'hex'))
 					m.properties.add('agps', 'result')
 					return iotHubClient.send(deviceId, m)
@@ -190,7 +187,7 @@ const agpsQueuedDeviceRequestsHandler: AzureFunction = async (
 			),
 		)
 
-		context.log.verbose(requestCacheKey, `resolved request for`, deviceId)
+		log(context)(requestCacheKey, `resolved request for`, deviceId)
 		return
 	}
 
@@ -203,10 +200,10 @@ const agpsQueuedDeviceRequestsHandler: AzureFunction = async (
 
 	// Request resolution timed out
 	if (ageInSeconds > maxResolutionTimeInSeconds) {
-		context.log.error(
+		logError(context)(
 			`Cancelling request because of resolution timeout after ${ageInSeconds} seconds.`,
 		)
-		context.log.error(
+		logError(context)(
 			JSON.stringify(
 				{
 					cancelled: request,
@@ -238,7 +235,7 @@ const agpsQueuedDeviceRequestsHandler: AzureFunction = async (
 			visibilityTimeout,
 		},
 	)
-	context.log.verbose(requestCacheKey, `re-scheduled request for`, deviceId)
+	log(context)(requestCacheKey, `re-scheduled request for`, deviceId)
 }
 
 export default agpsQueuedDeviceRequestsHandler

@@ -25,11 +25,11 @@ const apiRequestSchema = Type.Object(
 const validateInput = validateWithJSONSchema(agpsRequestSchema)
 
 export const resolveAgpsRequest =
-	(client: ReturnType<typeof apiClient>) =>
+	(client: ReturnType<typeof apiClient>, debug?: (...args: any[]) => void) =>
 	async (
 		agps: Static<typeof agpsRequestSchema>,
 	): Promise<Either<ErrorInfo, readonly string[]>> => {
-		console.log(JSON.stringify({ event: agps }))
+		debug?.({ agpsRequest: agps })
 		const valid = validateInput(agps)
 		if (isLeft(valid)) {
 			console.error(JSON.stringify(valid.left))
@@ -93,7 +93,7 @@ export const resolveAgpsRequest =
 											} as ErrorInfo),
 									),
 									TE.map((agpsDataInfo) => {
-										console.log(JSON.stringify({ agpsData: agpsDataInfo }))
+										debug?.({ agpsData: agpsDataInfo })
 										return agpsData.toString('hex')
 									}),
 								),

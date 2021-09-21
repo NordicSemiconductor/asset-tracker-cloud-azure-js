@@ -807,10 +807,6 @@
               }
             ]
           },
-          "partitionKey": {
-            "paths": ["/cacheKey"],
-            "kind": "Hash"
-          },
           "conflictResolutionPolicy": {
             "mode": "LastWriterWins",
             "conflictResolutionPath": "/_ts"

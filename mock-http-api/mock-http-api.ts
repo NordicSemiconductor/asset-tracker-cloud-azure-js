@@ -1,5 +1,5 @@
 import { AzureFunction, Context, HttpRequest } from '@azure/functions'
-import { log } from '../lib/log.js'
+import { log, logError } from '../lib/log.js'
 import { result } from '../lib/http.js'
 import { fromEnv } from '../lib/fromEnv.js'
 import { TableClient, AzureNamedKeyCredential } from '@azure/data-tables'
@@ -93,7 +93,7 @@ const mockHTTPAPI: AzureFunction = async (
 		context.res = result(context)('', 404)
 	} catch (err) {
 		context.res = result(context)((err as Error).message, 500)
-		log(context)({ error: (err as Error).message })
+		logError(context)({ error: (err as Error).message })
 	}
 }
 
