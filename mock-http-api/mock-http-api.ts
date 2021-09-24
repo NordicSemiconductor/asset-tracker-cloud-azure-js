@@ -8,6 +8,7 @@ import { URL } from 'url'
 import { encodeQuery } from './encodeQuery.js'
 import { setLogLevel } from '@azure/logger'
 import { splitMockResponse } from './splitMockResponse.js'
+import { sortQueryString } from './sortQueryString.js'
 
 setLogLevel('verbose')
 
@@ -34,9 +35,10 @@ const mockHTTPAPI: AzureFunction = async (
 
 	try {
 		const path = new URL(req.url).pathname.replace(/^\/api\//, '')
-		const methodPathQuery = `${req.method} ${path}${encodeQuery(
-			req.query as Record<string, string>,
-		)}`
+		const pathWithQuery = sortQueryString(
+			`${path}${encodeQuery(req.query as Record<string, string>)}`,
+		)
+		const methodPathQuery = `${req.method} ${pathWithQuery}`
 		const requestId = v4()
 		const request = {
 			partitionKey: requestId,
@@ -77,7 +79,7 @@ const mockHTTPAPI: AzureFunction = async (
 			context.res = result(context)(
 				isBinary
 					? /* body is HEX encoded */ Buffer.from(body, 'hex').toString(
-							'base64',
+							'binary',
 					  )
 					: body,
 				response.statusCode ?? 200,

@@ -122,6 +122,7 @@ const agpsResolveRequestFromNrfCloud: AzureFunction = async (
 	}
 
 	const res = await resolver(request)
+	log(context)({ res })
 	const requestCacheKey = cacheKey({ request, binHours })
 	const item = {
 		id: requestCacheKey,

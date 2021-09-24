@@ -9,6 +9,7 @@ import chaiSubset from 'chai-subset'
 import { splitMockResponse } from '../../mock-http-api/splitMockResponse.js'
 import { TableClient } from '@azure/data-tables'
 import { v4 } from 'uuid'
+import { sortQueryString } from '../../mock-http-api/sortQueryString.js'
 chai.use(chaiSubset)
 
 export const httpApiMockStepRunners = ({
@@ -28,7 +29,7 @@ export const httpApiMockStepRunners = ({
 				throw new Error('Must provide argument!')
 			}
 			const { body, headers } = splitMockResponse(step.interpolatedArgument)
-			const methodPathQuery = `${method} ${path}`
+			const methodPathQuery = `${method} ${sortQueryString(path)}`
 			await responsesClient.createEntity({
 				partitionKey: v4(),
 				rowKey: encodeURIComponent(methodPathQuery),
@@ -50,7 +51,9 @@ export const httpApiMockStepRunners = ({
 				expectedHeaders = headers
 			}
 
-			const filter = `methodPathQuery eq '${method} ${path}' and Timestamp ge datetime'${new Date(
+			const filter = `methodPathQuery eq '${method} ${sortQueryString(
+				path,
+			)}' and Timestamp ge datetime'${new Date(
 				Date.now() - 5 * 60 * 1000,
 			).toISOString()}'`
 
