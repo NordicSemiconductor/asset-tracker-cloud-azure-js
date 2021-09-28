@@ -152,14 +152,15 @@ const agpsQueuedDeviceRequestsHandler: AzureFunction = async (
 					updatedAt: new Date().toISOString(),
 				}),
 				// Kick off resolution
-				resolverQueues.map(async (client) =>
-					client.sendMessage(
+				resolverQueues.map(async (client) => {
+					log(context)(`Adding to resolver queue ${client.name}...`)
+					return client.sendMessage(
 						Buffer.from(JSON.stringify(request), 'utf-8').toString('base64'),
 						{
 							messageTimeToLive: maxResolutionTimeInSeconds,
 						},
-					),
-				),
+					)
+				}),
 			])
 		}
 	}
