@@ -180,8 +180,9 @@ const agpsQueuedDeviceRequestsHandler: AzureFunction = async (
 		await Promise.all(
 			(resolvedRequests[requestCacheKey]?.dataHex ?? []).map(
 				async (agpsdata) => {
-					log(context)(`Sending ${agpsdata.length} bytes to ${deviceId}`)
-					const m = new iothubCommon.Message(Buffer.from(agpsdata, 'hex'))
+					const payload = Buffer.from(agpsdata, 'hex')
+					log(context)(`Sending ${payload.length} bytes to ${deviceId}`)
+					const m = new iothubCommon.Message(payload)
 					m.properties.add('agps', 'result')
 					return iotHubClient.send(deviceId, m)
 				},

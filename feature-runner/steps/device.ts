@@ -95,7 +95,8 @@ export const deviceStepRunners = ({
 					)
 				}, 60 * 1000)
 
-				connection.subscribe(topic)
+				// @see https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-mqtt-support#receiving-cloud-to-device-messages
+				connection.subscribe(`devices/${deviceId}/messages/devicebound/#`)
 
 				const done = (result: any) => {
 					connection.unsubscribe(topic)

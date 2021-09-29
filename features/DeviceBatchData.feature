@@ -10,7 +10,7 @@ Feature: Device: Batch Data
 
   Scenario: Devices can publish batch data
 
-    Given the tracker "{trackerId}" publishes this message to the topic devices/{trackerId}/messages/events/?batch&%24.ct=application%2Fjson&%24.ce=utf-8
+    Given the tracker "{trackerId}" publishes this message to the topic devices/{trackerId}/messages/events/batch&%24.ct=application%2Fjson&%24.ce=utf-8
       """
       {
         "gps": [

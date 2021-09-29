@@ -1,4 +1,3 @@
-@Only
 Feature: A-GPS
 
   Devices can request A-GPS data to decrease their time-to-fix when using GPS
@@ -8,7 +7,7 @@ Feature: A-GPS
     Prepare the mock API responses. The A-GPS data request will be split into
     two requests, one for type 2 (ephemerides) and one for the rest.
 
-    Given I connect the device "{trackerId}"
+    Given I am run after the "Connect a tracker" feature
     And I store a random number between 100 and 999 into "agpsMcc"
     And I store a random number between 0 and 99 into "agpsMnc"
     And I store a random number between 1 and 100000000 into "agpsCellId"
@@ -60,7 +59,7 @@ Feature: A-GPS
     because A-GPS Ephemerides data is so large it cannot
     be combined with other types
 
-    When the tracker "{trackerId}" publishes this message to the topic devices/{trackerId}/messages/events/?agps=get&%24.ct=application%2Fjson&%24.ce=utf-8
+    When the tracker "{trackerId}" publishes this message to the topic devices/{trackerId}/messages/events/agps=get&%24.ct=application%2Fjson&%24.ce=utf-8
       """
       {
         "mcc": {agpsMcc},
@@ -79,6 +78,6 @@ Feature: A-GPS
         ]
       }
       """
-    Then the tracker "{trackerId}" receives 2 raw messages on the topic devices/{trackerId}/messages/events/agps into "agpsData"
+    Then the tracker "{trackerId}" receives 2 raw messages on the topic devices/{trackerId}/messages/devicebound/%24.to=%2Fdevices%2F{trackerId}%2Fmessages%2Fdevicebound&agps=result into "agpsData"
     And  "$length($filter(agpsData, function($v) { $contains($v, '01010100f9fffffffeffffff0f7b12890612031f00017') })) > 0" should be true
     And  "$length($filter(agpsData, function($v) { $contains($v, '01021e0001006400c675009cff859f13000b0000c6753') })) > 0" should be true

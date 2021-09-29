@@ -10,7 +10,7 @@ Feature: Device: Messages
   Scenario: Devices publishes that a button was pressed
 
     Given I store "$millis()" into "ts"
-    Then the tracker "{trackerId}" publishes this message to the topic devices/{trackerId}/messages/events/?%24.ct=application%2Fjson&%24.ce=utf-8
+    Then the tracker "{trackerId}" publishes this message to the topic devices/{trackerId}/messages/events/%24.ct=application%2Fjson&%24.ce=utf-8
       """
       {
       "btn": {
@@ -20,7 +20,7 @@ Feature: Device: Messages
       }
       """
     Given I store "$millis()" into "ts"
-    Then the tracker "{trackerId}" publishes this message to the topic devices/{trackerId}/messages/events/?%24.ct=application%2Fjson&%24.ce=utf-8
+    Then the tracker "{trackerId}" publishes this message to the topic devices/{trackerId}/messages/events/%24.ct=application%2Fjson&%24.ce=utf-8
       """
       {
       "btn": {
