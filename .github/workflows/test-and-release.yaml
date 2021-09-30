@@ -98,7 +98,7 @@ jobs:
                 b2cFlowName=B2C_1_developer \
                 enableUnwiredLabsCellLocation=true \
                 unwiredlabsApiEndpoint=https://${MOCK_HTTP_API_ENDPOINT}/api/eu1.unwiredlabs.com/ \
-                enableNrfCloudCellLocation=true \
+                enableNrfCloudCellLocationService=true \
                 enableNrfCloudAGPSLocationService=true \
                 nrfCloudTeamId=`uuidgen` \
                 nrfCloudApiEndpoint=https://${MOCK_HTTP_API_ENDPOINT}/api/api.nrfcloud.com/ \

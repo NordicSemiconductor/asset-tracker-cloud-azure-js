@@ -108,7 +108,7 @@
         "description": "your nRF Cloud team id"
       }
     },
-    "enableNrfCloudCellLocation": {
+    "enableNrfCloudCellLocationService": {
       "type": "bool",
       "defaultValue": false,
       "metadata": {
@@ -721,7 +721,7 @@
       }
     },
     {
-      "condition": "[parameters('enableNrfCloudCellLocation')]",
+      "condition": "[parameters('enableNrfCloudCellLocationService')]",
       "type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers",
       "apiVersion": "2020-03-01",
       "name": "[concat(parameters('appName'), '/cellGeolocation/nrfCloudCache')]",
