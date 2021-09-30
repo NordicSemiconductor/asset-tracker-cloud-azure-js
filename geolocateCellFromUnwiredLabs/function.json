@@ -20,9 +20,9 @@
       "collectionName": "unwiredLabsCache",
       "createIfNotExists": true,
       "partitionKey": "/cellId",
-      "connectionStringSetting": "HISTORICAL_DATA_COSMOSDB_CONNECTION_STRING",
+      "connectionStringSetting": "COSMOSDB_CONNECTION_STRING",
       "direction": "out"
     }
   ],
-  "scriptFile": "../dist/geolocateCellFromUnwiredLabs/geolocateCell.js"
+  "scriptFile": "./handler.mjs"
 }

@@ -11,22 +11,23 @@ import {
 import { isLeft } from 'fp-ts/lib/Either.js'
 import { SecretClient } from '@azure/keyvault-secrets'
 import { DefaultAzureCredential } from '@azure/identity'
-import { apiClient } from './apiclient.js'
+import { apiClient } from '../third-party/nrfcloud.com/apiclient.js'
 import { URL } from 'url'
 import { Type } from '@sinclair/typebox'
 
 const config = () =>
 	fromEnv({
-		connectionString: 'HISTORICAL_DATA_COSMOSDB_CONNECTION_STRING',
+		cosmosDbConnectionString: 'COSMOSDB_CONNECTION_STRING',
 		keyVaultName: 'KEYVAULT_NAME',
 		endpoint: 'NRFCLOUD_API_ENDPOINT',
 		teamId: 'NRFCLOUD_TEAM_ID',
 	})(process.env)
 
 const cosmosDbContainerPromise = (async () => {
-	const { connectionString } = config()
-	const { AccountEndpoint, AccountKey } =
-		parseConnectionString(connectionString)
+	const { cosmosDbConnectionString } = config()
+	const { AccountEndpoint, AccountKey } = parseConnectionString(
+		cosmosDbConnectionString,
+	)
 	const cosmosClient = new CosmosClient({
 		endpoint: AccountEndpoint,
 		key: AccountKey,
@@ -42,11 +43,8 @@ const nrfCloudCellLocationServiceKeyPromise = (async () => {
 		`https://${keyVaultName}.vault.azure.net`,
 		credentials,
 	)
-	const nrfCloudCellLocationServiceKeySecretName =
-		'nrfCloudCellLocationServiceKey'
-
 	const latestSecret = await keyVaultClient.getSecret(
-		nrfCloudCellLocationServiceKeySecretName,
+		'nrfCloudCellLocationServiceKey',
 	)
 	return latestSecret.value as string
 })()

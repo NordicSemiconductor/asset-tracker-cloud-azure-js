@@ -41,8 +41,8 @@ export const connectDevice = async ({
 			args: ['cli', 'provision-simulator-device', deviceId],
 			log,
 			env: {
-				...process.env,
 				DONT_DIE_ON_UNHANDLED_EXCEPTIONS: '1',
+				...process.env,
 			},
 		})
 	}

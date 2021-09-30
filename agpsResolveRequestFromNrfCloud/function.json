@@ -1,0 +1,11 @@
+{
+  "bindings": [
+    {
+      "type": "queueTrigger",
+      "direction": "in",
+      "name": "request",
+      "queueName": "%AGPS_REQUESTS_NRFCLOUD_QUEUE_NAME%"
+    }
+  ],
+  "scriptFile": "./handler.mjs"
+}

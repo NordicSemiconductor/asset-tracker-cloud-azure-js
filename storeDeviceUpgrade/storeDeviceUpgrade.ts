@@ -8,18 +8,18 @@ import {
 } from '@azure/storage-blob'
 import { fromEnv } from '../lib/fromEnv.js'
 
-const { fotaStorageAccountName, fotaStorageAccessKey } = fromEnv({
-	fotaStorageAccountName: 'FOTA_STORAGE_ACCOUNT_NAME',
-	fotaStorageAccessKey: 'FOTA_STORAGE_ACCESS_KEY',
+const { storageAccountName, storageAccessKey } = fromEnv({
+	storageAccountName: 'STORAGE_ACCOUNT_NAME',
+	storageAccessKey: 'STORAGE_ACCESS_KEY',
 })(process.env)
 const fotaStorageContainer = 'upgrades'
 
 const sharedKeyCredential = new StorageSharedKeyCredential(
-	fotaStorageAccountName,
-	fotaStorageAccessKey,
+	storageAccountName,
+	storageAccessKey,
 )
 const blobServiceClient = new BlobServiceClient(
-	`https://${fotaStorageAccountName}.blob.core.windows.net`,
+	`https://${storageAccountName}.blob.core.windows.net`,
 	sharedKeyCredential,
 )
 const containerClient =
@@ -31,8 +31,8 @@ const storeDeviceUpgrade: AzureFunction = async (
 ): Promise<void> => {
 	const { body } = req
 	log(context)({
-		fotaStorageAccountName,
-		fotaStorageAccessKey,
+		storageAccountName,
+		storageAccessKey,
 		bodyLength: body.length,
 	})
 	try {
@@ -46,7 +46,7 @@ const storeDeviceUpgrade: AzureFunction = async (
 				blobCacheControl: 'public, max-age=31536000',
 			},
 		})
-		const url = `https://${fotaStorageAccountName}.blob.core.windows.net/${fotaStorageContainer}/${blobName}`
+		const url = `https://${storageAccountName}.blob.core.windows.net/${fotaStorageContainer}/${blobName}`
 		log(context)(`Upload block blob ${blobName} successfully`, url)
 		context.res = result(context)({ success: true, url })
 	} catch (error) {

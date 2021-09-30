@@ -1,13 +1,13 @@
 import { AzureFunction, Context, HttpRequest } from '@azure/functions'
-import { log } from '../lib/log.js'
-import { result } from '../lib/http.js'
+import { log, logError } from '../lib/log.js'
 import { fromEnv } from '../lib/fromEnv.js'
 import { TableClient, AzureNamedKeyCredential } from '@azure/data-tables'
 import { v4 } from 'uuid'
 import { URL } from 'url'
 import { encodeQuery } from './encodeQuery.js'
 import { setLogLevel } from '@azure/logger'
-import { splitMockResponse } from './splitMockResponse.js'
+import { sortQueryString } from './sortQueryString.js'
+import { result } from '../lib/http.js'
 
 setLogLevel('verbose')
 
@@ -34,9 +34,10 @@ const mockHTTPAPI: AzureFunction = async (
 
 	try {
 		const path = new URL(req.url).pathname.replace(/^\/api\//, '')
-		const methodPathQuery = `${req.method} ${path}${encodeQuery(
-			req.query as Record<string, string>,
-		)}`
+		const pathWithQuery = sortQueryString(
+			`${path}${encodeQuery(req.query as Record<string, string>)}`,
+		)
+		const methodPathQuery = `${req.method} ${pathWithQuery}`
 		const requestId = v4()
 		const request = {
 			partitionKey: requestId,
@@ -60,6 +61,7 @@ const mockHTTPAPI: AzureFunction = async (
 			methodPathQuery: string
 			statusCode: number
 			body?: string
+			headers?: string
 			ttl: number
 		}>({
 			queryOptions: {
@@ -72,28 +74,39 @@ const mockHTTPAPI: AzureFunction = async (
 		for await (const response of res) {
 			log(context)({ response })
 			await responsesClient.deleteEntity(response.partitionKey, response.rowKey)
-			const { body, headers } = splitMockResponse(response.body ?? '')
-			const isBinary = /^[0-9a-f]+$/.test(body)
-			context.res = result(context)(
-				isBinary
-					? /* body is HEX encoded */ Buffer.from(body, 'hex').toString(
-							'base64',
-					  )
-					: body,
-				response.statusCode ?? 200,
-				isBinary
-					? {
-							...headers,
-							'Content-Type': 'application/octet-stream',
-					  }
-					: headers,
-			)
+			const isBinary = /^[0-9a-f]+$/.test(response.body ?? '')
+			const headers =
+				response.headers !== undefined ? JSON.parse(response.headers) : {}
+
+			if (isBinary) {
+				const binaryBody = Buffer.from(response.body as string, 'hex')
+				context.res = result(context)(
+					binaryBody,
+					response.statusCode ?? 200,
+					{
+						'content-type': 'application/octet-stream',
+						'content-length': `${binaryBody.length}`,
+						...headers,
+					},
+					true,
+				)
+			} else {
+				context.res = result(context)(
+					response.body ?? '',
+					response.statusCode ?? 200,
+					{
+						'content-length': `${(response.body ?? '').length}`,
+						...headers,
+					},
+					false,
+				)
+			}
 			return
 		}
 		context.res = result(context)('', 404)
 	} catch (err) {
 		context.res = result(context)((err as Error).message, 500)
-		log(context)({ error: (err as Error).message })
+		logError(context)({ error: (err as Error).message })
 	}
 }
 

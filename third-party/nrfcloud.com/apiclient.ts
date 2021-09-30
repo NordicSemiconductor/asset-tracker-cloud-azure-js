@@ -10,7 +10,7 @@ import {
 import * as E from 'fp-ts/lib/Either.js'
 import { request as nodeRequest, RequestOptions } from 'https'
 import { URL } from 'url'
-import { ErrorInfo, ErrorType } from '../lib/ErrorInfo.js'
+import { ErrorInfo, ErrorType } from '../../lib/ErrorInfo.js'
 import { Static, TSchema } from '@sinclair/typebox'
 import { pipe } from 'fp-ts/lib/function.js'
 import Ajv from 'ajv'

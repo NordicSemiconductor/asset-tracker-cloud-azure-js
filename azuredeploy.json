@@ -10,6 +10,14 @@
       },
       "defaultValue": "nrfassettracker"
     },
+    "storageAccountName": {
+      "type": "string",
+      "minLength": 3,
+      "metadata": {
+        "description": "Specifies the storage account name to use, which is globally unique."
+      },
+      "defaultValue": "[parameters('appName')]"
+    },
     "keyVaultName": {
       "type": "string",
       "minLength": 3,
@@ -107,20 +115,72 @@
         "description": "Whether to enable cell geolocation using nRF Cloud API"
       }
     },
+    "enableNrfCloudAGPSLocationService": {
+      "type": "bool",
+      "defaultValue": false,
+      "metadata": {
+        "description": "Whether to enable nRF Cloud Assisted GPS Location Service"
+      }
+    },
+    "agpsBinHours": {
+      "type": "string",
+      "defaultValue": "1",
+      "metadata": {
+        "description": "Number of hours to bin A-GPS requests"
+      }
+    },
     "nrfCloudApiEndpoint": {
       "type": "string",
       "defaultValue": "https://api.nrfcloud.com/",
       "metadata": {
         "description": "Endpoint to use for the nRF Cloud API"
       }
+    },
+    "agpsRequestDatabaseName": {
+      "type": "string",
+      "minLength": 3,
+      "metadata": {
+        "description": "Name for the database that stores A-GPS requests"
+      },
+      "defaultValue": "agpsRequests"
+    },
+    "agpsRequestContainerName": {
+      "type": "string",
+      "minLength": 3,
+      "metadata": {
+        "description": "Name for the container that stores A-GPS requests"
+      },
+      "defaultValue": "cache"
+    },
+    "agpsRequestQueueName": {
+      "type": "string",
+      "minLength": 3,
+      "metadata": {
+        "description": "Name for the queue that stores A-GPS requests"
+      },
+      "defaultValue": "agpsrequests"
+    },
+    "agpsRequestNrfCloudQueueName": {
+      "type": "string",
+      "minLength": 3,
+      "metadata": {
+        "description": "Name for the queue that stores A-GPS requests to be resolved using the nRF Cloud API"
+      },
+      "defaultValue": "nrfcloudagpsrequests"
+    },
+    "agpsRequestIotEventsConsumerGroupName": {
+      "type": "string",
+      "minLength": 3,
+      "metadata": {
+        "description": "Consumer group name for A-GPS device requests"
+      },
+      "defaultValue": "agpsrequests"
     }
   },
   "variables": {
     "iotHubResourceId": "[resourceId('Microsoft.Devices/Iothubs', concat(parameters('appName'), 'IotHub'))]",
     "iotHubKeyResource": "[resourceId('Microsoft.Devices/Iothubs/Iothubkeys', concat(parameters('appName'), 'IotHub'), 'iothubowner')]",
-    "appStorageAccountId": "[concat(resourceGroup().id,'/providers/','Microsoft.Storage/storageAccounts/', parameters('appName'), 'app')]",
-    "FOTAStorageAccountId": "[concat(resourceGroup().id,'/providers/','Microsoft.Storage/storageAccounts/', parameters('appName'), 'fota')]",
-    "avatarStorageAccountId": "[concat(resourceGroup().id,'/providers/','Microsoft.Storage/storageAccounts/', parameters('appName'), 'avatars')]",
+    "storageAccountId": "[concat(resourceGroup().id,'/providers/','Microsoft.Storage/storageAccounts/', parameters('storageAccountName'))]",
     "apiResourceId": "[concat(resourceId('Microsoft.Web/sites', concat(parameters('appName'), 'API')), '/providers/Microsoft.ManagedIdentity/Identities/default')]"
   },
   "resources": [
@@ -155,7 +215,7 @@
               "isEnabled": true
             },
             {
-              "name": "twinMessagesToEventHub",
+              "name": "deviceMessagesToEventHub",
               "source": "DeviceMessages",
               "condition": "true",
               "endpointNames": ["events"],
@@ -181,6 +241,15 @@
       "type": "Microsoft.Devices/iotHubs/eventhubEndpoints/ConsumerGroups",
       "apiVersion": "2020-03-01",
       "name": "[concat(parameters('appName'), 'IotHub', '/events/storedeviceupdate')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Devices/IotHubs', concat(parameters('appName'), 'IotHub'))]"
+      ]
+    },
+    {
+      "condition": "[parameters('enableNrfCloudAGPSLocationService')]",
+      "type": "Microsoft.Devices/iotHubs/eventhubEndpoints/ConsumerGroups",
+      "apiVersion": "2020-03-01",
+      "name": "[concat(parameters('appName'), 'IotHub', '/events/', parameters('agpsRequestDatabaseName'))]",
       "dependsOn": [
         "[resourceId('Microsoft.Devices/IotHubs', concat(parameters('appName'), 'IotHub'))]"
       ]
@@ -216,38 +285,25 @@
     {
       "type": "Microsoft.Storage/storageAccounts",
       "apiVersion": "2019-06-01",
-      "name": "[concat(parameters('appName'), 'app')]",
+      "name": "[parameters('storageAccountName')]",
       "location": "[parameters('location')]",
       "sku": {
         "name": "Standard_LRS"
       },
       "kind": "StorageV2",
       "properties": {
-        "supportsHttpsTrafficOnly": true
+        "supportsHttpsTrafficOnly": false
       }
     },
     {
-      "type": "Microsoft.Storage/storageAccounts",
-      "apiVersion": "2019-06-01",
-      "name": "[concat(parameters('appName'), 'avatars')]",
-      "location": "[parameters('location')]",
-      "sku": {
-        "name": "Standard_LRS"
-      },
-      "kind": "StorageV2",
-      "properties": {
-        "supportsHttpsTrafficOnly": true
-      }
-    },
-    {
-      "name": "[concat(parameters('appName'), 'avatars','/default/avatars')]",
+      "name": "[concat(parameters('storageAccountName'),'/default/avatars')]",
       "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
       "apiVersion": "2019-06-01",
       "properties": {
         "publicAccess": "Blob"
       },
       "dependsOn": [
-        "[concat('Microsoft.Storage/storageAccounts/', concat(parameters('appName'), 'avatars'))]"
+        "[concat('Microsoft.Storage/storageAccounts/', parameters('storageAccountName'))]"
       ]
     },
     {
@@ -275,7 +331,7 @@
       },
       "dependsOn": [
         "[resourceId('Microsoft.Web/serverfarms', concat(parameters('appName'), 'ServerFarm'))]",
-        "[resourceId('Microsoft.Storage/storageAccounts', concat(parameters('appName'), 'app'))]",
+        "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]",
         "[concat(parameters('appName'), 'IotHub')]",
         "[concat(parameters('appName'), 'SignalR')]"
       ],
@@ -325,11 +381,11 @@
             "appSettings": [
               {
                 "name": "AzureWebJobsStorage",
-                "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', concat(parameters('appName'), 'app'), ';AccountKey=', listKeys(variables('appStorageAccountId'),'2015-05-01-preview').key1)]"
+                "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', parameters('storageAccountName'), ';AccountKey=', listKeys(variables('storageAccountId'),'2015-05-01-preview').key1)]"
               },
               {
                 "name": "WEBSITE_CONTENTAZUREFILECONNECTIONSTRING",
-                "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', concat(parameters('appName'), 'app'), ';AccountKey=', listKeys(variables('appStorageAccountId'),'2015-05-01-preview').key1)]"
+                "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', parameters('storageAccountName'), ';AccountKey=', listKeys(variables('storageAccountId'),'2015-05-01-preview').key1)]"
               },
               {
                 "name": "WEBSITE_CONTENTSHARE",
@@ -360,39 +416,27 @@
                 "value": "0"
               },
               {
-                "name": "IOT_HUB_CONNECTION_STRING",
+                "name": "IOTHUB_CONNECTION_STRING",
                 "value": "[concat('HostName=', reference(resourceId('Microsoft.Devices/IoTHubs', concat(parameters('appName'), 'IotHub')), providers('Microsoft.Devices', 'IoTHubs').apiVersions[0]).hostName, ';SharedAccessKeyName=iothubowner;SharedAccessKey=', listKeys(resourceId('Microsoft.Devices/IotHubs', concat(parameters('appName'), 'IotHub')), providers('Microsoft.Devices', 'IoTHubs').apiVersions[0]).value[0].primaryKey)]"
               },
               {
-                "name": "AVATAR_STORAGE_ACCOUNT_NAME",
-                "value": "[concat(parameters('appName'), 'avatars')]"
+                "name": "STORAGE_ACCOUNT_NAME",
+                "value": "[parameters('storageAccountName')]"
               },
               {
-                "name": "AVATAR_STORAGE_ACCESS_KEY",
-                "value": "[listKeys(variables('avatarStorageAccountId'), '2019-04-01').keys[0].value]"
+                "name": "STORAGE_ACCESS_KEY",
+                "value": "[listKeys(variables('storageAccountId'), '2019-04-01').keys[0].value]"
               },
               {
-                "name": "FOTA_STORAGE_ACCOUNT_NAME",
-                "value": "[concat(parameters('appName'), 'fota')]"
-              },
-              {
-                "name": "FOTA_STORAGE_ACCESS_KEY",
-                "value": "[listKeys(variables('FOTAStorageAccountId'), '2019-04-01').keys[0].value]"
-              },
-              {
-                "name": "IoTHubEventHubCompatibleConnectionString",
+                "name": "IOTHUB_EVENTS_CONNECTION_STRING",
                 "value": "[concat('Endpoint=', reference(resourceId('Microsoft.Devices/IoTHubs', concat(parameters('appName'), 'IotHub')), providers('Microsoft.Devices', 'IoTHubs').apiVersions[0]).eventHubEndpoints.events.endpoint, ';SharedAccessKeyName=iothubowner;SharedAccessKey=', listKeys(resourceId('Microsoft.Devices/IotHubs', concat(parameters('appName'), 'IotHub')), providers('Microsoft.Devices', 'IoTHubs').apiVersions[0]).value[0].primaryKey, ';EntityPath=', reference(resourceId('Microsoft.Devices/IoTHubs', concat(parameters('appName'), 'IotHub')), providers('Microsoft.Devices', 'IoTHubs').apiVersions[0]).eventHubEndpoints.events.path)]"
               },
               {
-                "name": "IoTHubEventHubName",
+                "name": "IOTHUB_EVENTS_EVENT_HUB_NAME",
                 "value": "[reference(resourceId('Microsoft.Devices/IoTHubs', concat(parameters('appName'), 'IotHub')), providers('Microsoft.Devices', 'IoTHubs').apiVersions[0]).eventHubEndpoints.events.path]"
               },
               {
-                "name": "SignalRConnectionString",
-                "value": "[listKeys(resourceId('Microsoft.SignalRService/SignalR', concat(parameters('appName'), 'SignalR')), providers('Microsoft.SignalRService','SignalR').apiVersions[0]).primaryConnectionString]"
-              },
-              {
-                "name": "HISTORICAL_DATA_COSMOSDB_CONNECTION_STRING",
+                "name": "COSMOSDB_CONNECTION_STRING",
                 "value": "[listConnectionStrings(resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('appName')), providers('Microsoft.DocumentDb', 'databaseAccounts').apiVersions[0]).connectionStrings[0].connectionString]"
               },
               {
@@ -413,6 +457,30 @@
               {
                 "name": "KEYVAULT_NAME",
                 "value": "[parameters('keyVaultName')]"
+              },
+              {
+                "name": "BIN_HOURS",
+                "value": "[parameters('agpsBinHours')]"
+              },
+              {
+                "name": "AGPS_REQUESTS_IOT_EVENTS_CONSUMER_GROUP_NAME",
+                "value": "[parameters('agpsRequestIotEventsConsumerGroupName')]"
+              },
+              {
+                "name": "AGPS_REQUESTS_DATABASE_NAME",
+                "value": "[parameters('agpsRequestDatabaseName')]"
+              },
+              {
+                "name": "AGPS_REQUESTS_CONTAINER_NAME",
+                "value": "[parameters('agpsRequestContainerName')]"
+              },
+              {
+                "name": "AGPS_REQUESTS_QUEUE_NAME",
+                "value": "[parameters('agpsRequestQueueName')]"
+              },
+              {
+                "name": "AGPS_REQUESTS_NRFCLOUD_QUEUE_NAME",
+                "value": "[parameters('agpsRequestNrfCloudQueueName')]"
               }
             ]
           }
@@ -452,27 +520,14 @@
       }
     },
     {
-      "type": "Microsoft.Storage/storageAccounts",
-      "apiVersion": "2019-06-01",
-      "name": "[concat(parameters('appName'), 'fota')]",
-      "location": "[parameters('location')]",
-      "sku": {
-        "name": "Standard_LRS"
-      },
-      "kind": "StorageV2",
-      "properties": {
-        "supportsHttpsTrafficOnly": false
-      }
-    },
-    {
-      "name": "[concat(parameters('appName'), 'fota','/default/upgrades')]",
+      "name": "[concat(parameters('storageAccountName'),'/default/upgrades')]",
       "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
       "apiVersion": "2019-06-01",
       "properties": {
         "publicAccess": "Blob"
       },
       "dependsOn": [
-        "[concat('Microsoft.Storage/storageAccounts/', concat(parameters('appName'), 'fota'))]"
+        "[concat('Microsoft.Storage/storageAccounts/', parameters('storageAccountName'))]"
       ]
     },
     {
@@ -707,9 +762,86 @@
               }
             ]
           ],
-          "defaultTtl": 2592000
+          "defaultTtl": "[mul(mul(int(parameters('agpsBinHours')), 60), 60)]"
         }
       }
+    },
+    {
+      "condition": "[parameters('enableNrfCloudAGPSLocationService')]",
+      "type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases",
+      "apiVersion": "2020-03-01",
+      "name": "[concat(parameters('appName'), '/', parameters('agpsRequestDatabaseName'))]",
+      "dependsOn": [
+        "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('appName'))]"
+      ],
+      "properties": {
+        "resource": {
+          "id": "[parameters('agpsRequestDatabaseName')]"
+        },
+        "options": {}
+      }
+    },
+    {
+      "condition": "[parameters('enableNrfCloudAGPSLocationService')]",
+      "type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers",
+      "apiVersion": "2020-03-01",
+      "name": "[concat(parameters('appName'), '/',parameters('agpsRequestDatabaseName'),'/', parameters('agpsRequestContainerName'))]",
+      "dependsOn": [
+        "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlDatabases', parameters('appName'), parameters('agpsRequestDatabaseName'))]",
+        "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('appName'))]"
+      ],
+      "properties": {
+        "resource": {
+          "id": "[parameters('agpsRequestContainerName')]",
+          "indexingPolicy": {
+            "indexingMode": "consistent",
+            "automatic": true,
+            "includedPaths": [
+              {
+                "path": "/*"
+              }
+            ],
+            "excludedPaths": [
+              {
+                "path": "/\"_etag\"/?"
+              }
+            ]
+          },
+          "conflictResolutionPolicy": {
+            "mode": "LastWriterWins",
+            "conflictResolutionPath": "/_ts"
+          },
+          "compositeIndexes": [
+            [
+              {
+                "path": "/source",
+                "order": "ascending"
+              }
+            ]
+          ],
+          "defaultTtl": 3600
+        }
+      }
+    },
+    {
+      "condition": "[parameters('enableNrfCloudAGPSLocationService')]",
+      "type": "Microsoft.Storage/storageAccounts/queueServices/queues",
+      "apiVersion": "2021-04-01",
+      "name": "[concat(parameters('storageAccountName'), '/default/', parameters('agpsRequestQueueName'))]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]"
+      ],
+      "properties": {}
+    },
+    {
+      "condition": "[parameters('enableNrfCloudAGPSLocationService')]",
+      "type": "Microsoft.Storage/storageAccounts/queueServices/queues",
+      "apiVersion": "2021-04-01",
+      "name": "[concat(parameters('storageAccountName'), '/default/', parameters('agpsRequestNrfCloudQueueName'))]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]"
+      ],
+      "properties": {}
     },
     {
       "type": "Microsoft.KeyVault/vaults",
@@ -745,7 +877,7 @@
       "type": "string",
       "value": "[concat('HostName=', reference(resourceId('Microsoft.Devices/IoTHubs', concat(parameters('appName'), 'IotHub')), providers('Microsoft.Devices', 'IoTHubs').apiVersions[0]).hostName, ';SharedAccessKeyName=iothubowner;SharedAccessKey=', listKeys(resourceId('Microsoft.Devices/IotHubs', concat(parameters('appName'), 'IotHub')), providers('Microsoft.Devices', 'IoTHubs').apiVersions[0]).value[0].primaryKey)]"
     },
-    "IoTHubEventHubCompatibleConnectionString": {
+    "IOTHUB_EVENTS_CONNECTION_STRING": {
       "type": "string",
       "value": "[concat('Endpoint=', reference(resourceId('Microsoft.Devices/IoTHubs', concat(parameters('appName'), 'IotHub')), providers('Microsoft.Devices', 'IoTHubs').apiVersions[0]).eventHubEndpoints.events.endpoint, ';SharedAccessKeyName=iothubowner;SharedAccessKey=', listKeys(resourceId('Microsoft.Devices/IotHubs', concat(parameters('appName'), 'IotHub')), providers('Microsoft.Devices', 'IoTHubs').apiVersions[0]).value[0].primaryKey, ';EntityPath=', reference(resourceId('Microsoft.Devices/IoTHubs', concat(parameters('appName'), 'IotHub')), providers('Microsoft.Devices', 'IoTHubs').apiVersions[0]).eventHubEndpoints.events.path)]"
     },

@@ -15,15 +15,16 @@ import { DefaultAzureCredential } from '@azure/identity'
 
 const config = () =>
 	fromEnv({
-		connectionString: 'HISTORICAL_DATA_COSMOSDB_CONNECTION_STRING',
+		cosmosDbConnectionString: 'COSMOSDB_CONNECTION_STRING',
 		keyVaultName: 'KEYVAULT_NAME',
 		endpoint: 'UNWIREDLABS_API_ENDPOINT',
 	})(process.env)
 
 const cosmosDbContainerPromise = (async () => {
-	const { connectionString } = config()
-	const { AccountEndpoint, AccountKey } =
-		parseConnectionString(connectionString)
+	const { cosmosDbConnectionString } = config()
+	const { AccountEndpoint, AccountKey } = parseConnectionString(
+		cosmosDbConnectionString,
+	)
 	const cosmosClient = new CosmosClient({
 		endpoint: AccountEndpoint,
 		key: AccountKey,

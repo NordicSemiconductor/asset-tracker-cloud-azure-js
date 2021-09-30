@@ -5,8 +5,8 @@
       "direction": "in",
       "name": "updates",
       "cardinality": "many",
-      "eventHubName": "%IoTHubEventHubName%",
-      "connection": "IoTHubEventHubCompatibleConnectionString",
+      "eventHubName": "%IOTHUB_EVENTS_EVENT_HUB_NAME%",
+      "connection": "IOTHUB_EVENTS_CONNECTION_STRING",
       "consumerGroup": "publishdeviceupdates"
     },
     {
@@ -17,5 +17,5 @@
       "direction": "out"
     }
   ],
-  "scriptFile": "../dist/publishDeviceUpdatesToSignalR/publishDeviceUpdatesToSignalR.js"
+  "scriptFile": "./handler.mjs"
 }

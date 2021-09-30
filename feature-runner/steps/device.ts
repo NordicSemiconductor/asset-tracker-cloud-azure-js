@@ -75,6 +75,71 @@ export const deviceStepRunners = ({
 			connection.publish(topic, JSON.stringify(message))
 		}),
 		regexGroupMatcher(
+			/^the (?:device|tracker) "(?<deviceId>[^"]+)" receives (?<messageCount>a|[1-9][0-9]*) (?<raw>raw )?messages? on the topic (?<topic>[^ ]+)(?: into "(?<storeName>[^"]+)")?$/,
+		)(async ({ deviceId, messageCount, raw, topic, storeName }, _, runner) => {
+			const connection = connections[deviceId]
+			const isRaw = raw !== undefined
+
+			const expectedMessageCount =
+				messageCount === 'a' ? 1 : parseInt(messageCount, 10)
+			const messages: (Record<string, any> | string)[] = []
+
+			return new Promise((resolve, reject) => {
+				const timeout = setTimeout(() => {
+					reject(
+						new Error(
+							`timed out with ${
+								expectedMessageCount - messages.length
+							} message${expectedMessageCount > 1 ? 's' : ''} yet to receive.`,
+						),
+					)
+				}, 60 * 1000)
+
+				// @see https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-mqtt-support#receiving-cloud-to-device-messages
+				connection.subscribe(`devices/${deviceId}/messages/devicebound/#`)
+
+				const done = (result: any) => {
+					connection.unsubscribe(topic)
+					resolve(result)
+				}
+
+				connection.on('message', async (t: string, message: Buffer) => {
+					if (topic !== t) return
+					await runner.progress(`Iot`, JSON.stringify(message))
+					const m = isRaw
+						? message.toString('hex')
+						: JSON.parse(message.toString('utf-8'))
+					messages.push(m)
+					if (messages.length === expectedMessageCount) {
+						clearTimeout(timeout)
+
+						const result = messages.length > 1 ? messages : messages[0]
+
+						if (storeName !== undefined) runner.store[storeName] = result
+
+						if (isRaw) {
+							if (messages.length > 1)
+								return done(
+									messages.map(
+										(m) =>
+											`(${
+												Buffer.from(m as string, 'hex').length
+											} bytes of data)`,
+									),
+								)
+							return done(
+								`(${
+									Buffer.from(messages[0] as string, 'hex').length
+								} bytes of data)`,
+							)
+						}
+
+						return done(result)
+					}
+				})
+			})
+		}),
+		regexGroupMatcher(
 			/^the (?<desiredOrReported>desired|reported) state of the (?:device|tracker) "(?<deviceId>[^"]+)" (?:should )?(?<equalOrMatch>equals?|match(?:es)?)$/,
 		)(async ({ desiredOrReported, deviceId, equalOrMatch }, step) => {
 			if (step.interpolatedArgument === undefined) {
