@@ -19,7 +19,7 @@ export const setting = (property: string, value: string): void => {
 	console.error(settingsKey(`${property}:`), settingsValue(value))
 }
 
-export const settings = (s: Record<string, string>): void => {
+export const settings = (s: Record<string, any>): void => {
 	const maxKeyLen = Object.keys(s).reduce(
 		(len, k) => (k.length > len ? k.length : len),
 		0,

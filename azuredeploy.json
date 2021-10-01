@@ -122,11 +122,11 @@
         "description": "Whether to enable nRF Cloud Assisted GPS Location Service"
       }
     },
-    "agpsBinHours": {
-      "type": "string",
-      "defaultValue": "1",
+    "enableNrfCloudPGPSLocationService": {
+      "type": "bool",
+      "defaultValue": false,
       "metadata": {
-        "description": "Number of hours to bin A-GPS requests"
+        "description": "Whether to enable nRF Cloud Predicted GPS Location Service"
       }
     },
     "nrfCloudApiEndpoint": {
@@ -134,6 +134,13 @@
       "defaultValue": "https://api.nrfcloud.com/",
       "metadata": {
         "description": "Endpoint to use for the nRF Cloud API"
+      }
+    },
+    "agpsBinHours": {
+      "type": "string",
+      "defaultValue": "1",
+      "metadata": {
+        "description": "Number of hours to bin A-GPS requests"
       }
     },
     "agpsRequestDatabaseName": {
@@ -174,7 +181,62 @@
       "metadata": {
         "description": "Consumer group name for A-GPS device requests"
       },
-      "defaultValue": "agpsrequests"
+      "defaultValue": "agpsRequests"
+    },
+    "pgpsBinHours": {
+      "type": "string",
+      "defaultValue": "1",
+      "metadata": {
+        "description": "Number of hours to bin P-GPS requests"
+      }
+    },
+    "pgpsRequestDatabaseName": {
+      "type": "string",
+      "minLength": 3,
+      "metadata": {
+        "description": "Name for the database that stores P-GPS requests"
+      },
+      "defaultValue": "pgpsRequests"
+    },
+    "pgpsRequestContainerName": {
+      "type": "string",
+      "minLength": 3,
+      "metadata": {
+        "description": "Name for the container that stores P-GPS requests"
+      },
+      "defaultValue": "cache"
+    },
+    "pgpsRequestQueueName": {
+      "type": "string",
+      "minLength": 3,
+      "metadata": {
+        "description": "Name for the queue that stores P-GPS requests"
+      },
+      "defaultValue": "pgpsrequests"
+    },
+    "pgpsRequestNrfCloudQueueName": {
+      "type": "string",
+      "minLength": 3,
+      "metadata": {
+        "description": "Name for the queue that stores P-GPS requests to be resolved using the nRF Cloud API"
+      },
+      "defaultValue": "nrfcloudpgpsrequests"
+    },
+    "pgpsRequestIotEventsConsumerGroupName": {
+      "type": "string",
+      "minLength": 3,
+      "metadata": {
+        "description": "Consumer group name for P-GPS device requests"
+      },
+      "defaultValue": "pgpsRequests"
+    },
+    "cellGeoLocationIotEventsConsumerGroupName": {
+      "type": "string",
+      "minLength": 3,
+      "metadata": {
+        "description": "Consumer group name for cell geolocation updates"
+      },
+      "defaultValue": "cellgeolocation"
     }
   },
   "variables": {
@@ -249,7 +311,16 @@
       "condition": "[parameters('enableNrfCloudAGPSLocationService')]",
       "type": "Microsoft.Devices/iotHubs/eventhubEndpoints/ConsumerGroups",
       "apiVersion": "2020-03-01",
-      "name": "[concat(parameters('appName'), 'IotHub', '/events/', parameters('agpsRequestDatabaseName'))]",
+      "name": "[concat(parameters('appName'), 'IotHub', '/events/', parameters('agpsRequestIotEventsConsumerGroupName'))]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Devices/IotHubs', concat(parameters('appName'), 'IotHub'))]"
+      ]
+    },
+    {
+      "condition": "[parameters('enableNrfCloudAGPSLocationService')]",
+      "type": "Microsoft.Devices/iotHubs/eventhubEndpoints/ConsumerGroups",
+      "apiVersion": "2020-03-01",
+      "name": "[concat(parameters('appName'), 'IotHub', '/events/', parameters('pgpsRequestIotEventsConsumerGroupName'))]",
       "dependsOn": [
         "[resourceId('Microsoft.Devices/IotHubs', concat(parameters('appName'), 'IotHub'))]"
       ]
@@ -257,7 +328,7 @@
     {
       "type": "Microsoft.Devices/iotHubs/eventhubEndpoints/ConsumerGroups",
       "apiVersion": "2020-03-01",
-      "name": "[concat(parameters('appName'), 'IotHub', '/events/cellgeolocation')]",
+      "name": "[concat(parameters('appName'), 'IotHub', '/events/', parameters('cellGeoLocationIotEventsConsumerGroupName'))]",
       "dependsOn": [
         "[resourceId('Microsoft.Devices/IotHubs', concat(parameters('appName'), 'IotHub'))]"
       ]
@@ -459,7 +530,7 @@
                 "value": "[parameters('keyVaultName')]"
               },
               {
-                "name": "BIN_HOURS",
+                "name": "AGPS_BIN_HOURS",
                 "value": "[parameters('agpsBinHours')]"
               },
               {
@@ -481,6 +552,34 @@
               {
                 "name": "AGPS_REQUESTS_NRFCLOUD_QUEUE_NAME",
                 "value": "[parameters('agpsRequestNrfCloudQueueName')]"
+              },
+              {
+                "name": "PGPS_BIN_HOURS",
+                "value": "[parameters('pgpsBinHours')]"
+              },
+              {
+                "name": "PGPS_REQUESTS_IOT_EVENTS_CONSUMER_GROUP_NAME",
+                "value": "[parameters('pgpsRequestIotEventsConsumerGroupName')]"
+              },
+              {
+                "name": "PGPS_REQUESTS_DATABASE_NAME",
+                "value": "[parameters('pgpsRequestDatabaseName')]"
+              },
+              {
+                "name": "PGPS_REQUESTS_CONTAINER_NAME",
+                "value": "[parameters('pgpsRequestContainerName')]"
+              },
+              {
+                "name": "PGPS_REQUESTS_QUEUE_NAME",
+                "value": "[parameters('pgpsRequestQueueName')]"
+              },
+              {
+                "name": "PGPS_REQUESTS_NRFCLOUD_QUEUE_NAME",
+                "value": "[parameters('pgpsRequestNrfCloudQueueName')]"
+              },
+              {
+                "name": "CELL_GEOLOCATION_IOT_EVENTS_CONSUMER_GROUP_NAME",
+                "value": "[parameters('cellGeoLocationIotEventsConsumerGroupName')]"
               }
             ]
           }
@@ -838,6 +937,83 @@
       "type": "Microsoft.Storage/storageAccounts/queueServices/queues",
       "apiVersion": "2021-04-01",
       "name": "[concat(parameters('storageAccountName'), '/default/', parameters('agpsRequestNrfCloudQueueName'))]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]"
+      ],
+      "properties": {}
+    },
+    {
+      "condition": "[parameters('enableNrfCloudPGPSLocationService')]",
+      "type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases",
+      "apiVersion": "2020-03-01",
+      "name": "[concat(parameters('appName'), '/', parameters('pgpsRequestDatabaseName'))]",
+      "dependsOn": [
+        "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('appName'))]"
+      ],
+      "properties": {
+        "resource": {
+          "id": "[parameters('pgpsRequestDatabaseName')]"
+        },
+        "options": {}
+      }
+    },
+    {
+      "condition": "[parameters('enableNrfCloudPGPSLocationService')]",
+      "type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers",
+      "apiVersion": "2020-03-01",
+      "name": "[concat(parameters('appName'), '/',parameters('pgpsRequestDatabaseName'),'/', parameters('pgpsRequestContainerName'))]",
+      "dependsOn": [
+        "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlDatabases', parameters('appName'), parameters('pgpsRequestDatabaseName'))]",
+        "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('appName'))]"
+      ],
+      "properties": {
+        "resource": {
+          "id": "[parameters('pgpsRequestContainerName')]",
+          "indexingPolicy": {
+            "indexingMode": "consistent",
+            "automatic": true,
+            "includedPaths": [
+              {
+                "path": "/*"
+              }
+            ],
+            "excludedPaths": [
+              {
+                "path": "/\"_etag\"/?"
+              }
+            ]
+          },
+          "conflictResolutionPolicy": {
+            "mode": "LastWriterWins",
+            "conflictResolutionPath": "/_ts"
+          },
+          "compositeIndexes": [
+            [
+              {
+                "path": "/source",
+                "order": "ascending"
+              }
+            ]
+          ],
+          "defaultTtl": 3600
+        }
+      }
+    },
+    {
+      "condition": "[parameters('enableNrfCloudPGPSLocationService')]",
+      "type": "Microsoft.Storage/storageAccounts/queueServices/queues",
+      "apiVersion": "2021-04-01",
+      "name": "[concat(parameters('storageAccountName'), '/default/', parameters('pgpsRequestQueueName'))]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]"
+      ],
+      "properties": {}
+    },
+    {
+      "condition": "[parameters('enableNrfCloudPGPSLocationService')]",
+      "type": "Microsoft.Storage/storageAccounts/queueServices/queues",
+      "apiVersion": "2021-04-01",
+      "name": "[concat(parameters('storageAccountName'), '/default/', parameters('pgpsRequestNrfCloudQueueName'))]",
       "dependsOn": [
         "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]"
       ],
