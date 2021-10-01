@@ -28,12 +28,14 @@ import { run } from '../cli/process/run.js'
 import { httpApiMockStepRunners } from './steps/httpApiMock.js'
 import { TableClient } from '@azure/data-tables'
 import { AzureNamedKeyCredential } from '@azure/core-auth'
+import { gpsDay } from '../pgps/gpsTime.js'
 
 let ran = false
 
 export type World = {
 	apiEndpoint: string
 	'httpApiMock:apiEndpoint': string
+	currentGpsDay: number
 }
 
 program
@@ -169,6 +171,7 @@ program
 			const world: World = {
 				apiEndpoint: `${apiEndpointUrl}api/`,
 				'httpApiMock:apiEndpoint': `${mockHTTPApiEndpointUrl}api/`,
+				currentGpsDay: gpsDay(),
 			} as const
 			heading('World')
 			settings(world)

@@ -7,7 +7,7 @@
       "eventHubName": "%IOTHUB_EVENTS_EVENT_HUB_NAME%",
       "cardinality": "one",
       "connection": "IOTHUB_EVENTS_CONNECTION_STRING",
-      "consumerGroup": "cellgeolocation"
+      "consumerGroup": "%CELL_GEOLOCATION_IOT_EVENTS_CONSUMER_GROUP_NAME%"
     },
     {
       "name": "deviceCellGeolocation",
