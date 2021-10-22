@@ -57,7 +57,7 @@ export const connectDevice = async ({
 			rejectUnauthorized: true,
 			clientId: deviceId,
 			protocol: 'mqtts',
-			username: `${iotHub}/${deviceId}/?api-version=2018-06-30`,
+			username: `${iotHub}/${deviceId}/?api-version=2020-09-30`,
 			version: 4,
 			clean: true,
 		})
