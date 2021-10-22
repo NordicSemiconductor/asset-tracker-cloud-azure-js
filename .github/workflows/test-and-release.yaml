@@ -79,7 +79,14 @@ jobs:
         run: node scripts/pack-mock-http-api-app.js
       - name: Deploy mock API function app
         run: |
-          az functionapp deployment source config-zip -g ${RESOURCE_GROUP:-nrfassettrackerci} -n ${MOCK_HTTP_API_STORAGE_ACCOUNT_NAME:-mockhttpapi}Functions --src dist/mock-http-api.zip --debug || az feedback && exit 1
+          az functionapp deployment source config-zip -g ${RESOURCE_GROUP:-nrfassettrackerci} -n ${MOCK_HTTP_API_STORAGE_ACCOUNT_NAME:-mockhttpapi}Functions --src dist/mock-http-api.zip --debug > az.log 2> az.error.log
+      - uses: actions/upload-artifact@v2
+        if: always()
+        with:
+          name: az-mock-functionapp-deployment-${{ github.sha }}
+          path: |
+            az.log
+            az.error.log
       - name: Set Key Vault name
         run: |
           echo "keyVaultName=${APP_NAME:-nrfassettrackerci}" >> $GITHUB_ENV
