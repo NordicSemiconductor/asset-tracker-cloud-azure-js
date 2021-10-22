@@ -72,9 +72,14 @@ jobs:
             --template-file mock-http-api.json \
             --parameters \
               storageAccountName=${MOCK_HTTP_API_STORAGE_ACCOUNT_NAME:-mockhttpapi}
+      - name: Export Mock API endpoint hostname
+        run: |
           echo "MOCK_HTTP_API_ENDPOINT=`az functionapp show -g ${RESOURCE_GROUP:-nrfassettrackerci} -n ${MOCK_HTTP_API_STORAGE_ACCOUNT_NAME:-mockhttpapi}Functions | jq -r '.defaultHostName'`" >> $GITHUB_ENV
-          node scripts/pack-mock-http-api-app.js
-          az functionapp deployment source config-zip -g ${RESOURCE_GROUP:-nrfassettrackerci} -n ${MOCK_HTTP_API_STORAGE_ACCOUNT_NAME:-mockhttpapi}Functions --src dist/mock-http-api.zip
+      - name: Pack mock API functions
+        run: node scripts/pack-mock-http-api-app.js
+      - name: Deploy mock API function app
+        run: |
+          az functionapp deployment source config-zip -g ${RESOURCE_GROUP:-nrfassettrackerci} -n ${MOCK_HTTP_API_STORAGE_ACCOUNT_NAME:-mockhttpapi}Functions --src dist/mock-http-api.zip --debug
       - name: Set Key Vault name
         run: |
           echo "keyVaultName=${APP_NAME:-nrfassettrackerci}" >> $GITHUB_ENV
