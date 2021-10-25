@@ -81,17 +81,7 @@ const agpsDeviceRequestsHandler: AzureFunction = async (
 				string
 			>,
 		}))
-		.filter(
-			({ properties }) =>
-				properties.agps === 'get' ||
-				// Note: there is a bug in Azure's IoT Hub event handling which causes messages with
-				// property bags on the topic that have a question mark to not be parsed correctly.
-				// Despite the '?' being a valid separator of the property bag from the topic name, as
-				// per https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-mqtt-support#receiving-cloud-to-device-messages
-				// it is not stripped from the query string and included as part of the first property.
-				// This has been reported to Microsoft in the support case 2109160040003284.
-				properties['?agps'] === 'get',
-		)
+		.filter(({ properties }) => properties.agps === 'get')
 
 	if (agpsRequests.length === 0) {
 		log(context)(`No A-GPS requests found.`)
