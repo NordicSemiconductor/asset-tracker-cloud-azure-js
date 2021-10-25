@@ -34,7 +34,7 @@ jobs:
       - name: Install Azure CLI
         if: env.AZURE_CREDENTIALS != ''
         run: curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
-      - run: az upgrade --yes
+      - run: az upgrade --yes --all
       - run: |
           pip list --outdated --format=freeze | grep -v '^\-e' | cut -d = -f 1  | xargs -n1 pip install -U
       - name: Login to Azure
