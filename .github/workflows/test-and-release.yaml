@@ -31,11 +31,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-      - name: Install Azure CLI
-        if: env.AZURE_CREDENTIALS != ''
-        run: curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
-      - run: |
-          pip list --outdated --format=freeze | grep -v '^\-e' | cut -d = -f 1  | xargs -n1 pip install -U
       - name: Login to Azure
         if: env.AZURE_CREDENTIALS != ''
         uses: azure/login@v1
@@ -43,7 +38,10 @@ jobs:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
       - name: List Azure accounts
         if: env.AZURE_CREDENTIALS != ''
-        run: az account list --output table
+        uses: azure/CLI@v1
+        with:
+          inlineScript: |
+            az account list --output table
       - name: Install Azures Functions CLI
         if: env.AZURE_CREDENTIALS != ''
         run: |
@@ -66,28 +64,36 @@ jobs:
       - name: Run Unit Tests
         run: npm test
       - name: Deploy Mock HTTP API
-        run: |
-          az deployment group create \
-            --resource-group ${RESOURCE_GROUP:-nrfassettrackerci} \
-            --mode Incremental \
-            --name test-mock-http-api-${{ github.sha }} \
-            --template-file mock-http-api.json \
-            --parameters \
-              storageAccountName=${MOCK_HTTP_API_STORAGE_ACCOUNT_NAME:-mockhttpapi}
-          echo "MOCK_HTTP_API_ENDPOINT=`az functionapp show -g ${RESOURCE_GROUP:-nrfassettrackerci} -n ${MOCK_HTTP_API_STORAGE_ACCOUNT_NAME:-mockhttpapi}Functions | jq -r '.defaultHostName'`" >> $GITHUB_ENV
-          node scripts/pack-mock-http-api-app.js
-          az functionapp deployment source config-zip -g ${RESOURCE_GROUP:-nrfassettrackerci} -n ${MOCK_HTTP_API_STORAGE_ACCOUNT_NAME:-mockhttpapi}Functions --src dist/mock-http-api.zip
+        uses: azure/CLI@v1
+        with:
+          inlineScript: |
+            az deployment group create \
+              --resource-group ${RESOURCE_GROUP:-nrfassettrackerci} \
+              --mode Incremental \
+              --name test-mock-http-api-${{ github.sha }} \
+              --template-file mock-http-api.json \
+              --parameters \
+                storageAccountName=${MOCK_HTTP_API_STORAGE_ACCOUNT_NAME:-mockhttpapi}
+      - name: Determine Mock API endpoint
+        uses: azure/CLI@v1
+        with:
+          inlineScript: |
+            echo "MOCK_HTTP_API_ENDPOINT=`az functionapp show -g ${RESOURCE_GROUP:-nrfassettrackerci} -n ${MOCK_HTTP_API_STORAGE_ACCOUNT_NAME:-mockhttpapi}Functions | jq -r '.defaultHostName'`" >> $GITHUB_ENV
+      - name: Pack mock functions
+        run: node scripts/pack-mock-http-api-app.js
+      - name: Deploy mock functions
+        uses: azure/CLI@v1
+        with:
+          inlineScript: |
+            az functionapp deployment source config-zip -g ${RESOURCE_GROUP:-nrfassettrackerci} -n ${MOCK_HTTP_API_STORAGE_ACCOUNT_NAME:-mockhttpapi}Functions --src dist/mock-http-api.zip
       - name: Set Key Vault name
         run: |
           echo "keyVaultName=${APP_NAME:-nrfassettrackerci}" >> $GITHUB_ENV
       - name: Deploy solution
         if: env.AZURE_CREDENTIALS != ''
-        uses: nick-invision/retry@v2
+        uses: azure/CLI@v1
         with:
-          timeout_minutes: 10
-          retry_wait_seconds: 300
-          max_attempts: 3
-          command: |
+          inlineScript: |
             az deployment group create \
               --resource-group ${RESOURCE_GROUP:-nrfassettrackerci} \
               --mode Incremental \
@@ -106,23 +112,23 @@ jobs:
                 nrfCloudApiEndpoint=https://${MOCK_HTTP_API_ENDPOINT}/api/api.nrfcloud.com/ \
                 keyVaultName=${keyVaultName}
       - name: Set secrets for third party APIs
-        run: |
-          USER_OBJECT_ID=`az ad sp list --spn 'https://nrfassettracker.invalid/ci' --query '[0].objectId' -o tsv | tr -d '\n'`
-          az keyvault set-policy --name ${keyVaultName} --object-id ${USER_OBJECT_ID} --secret-permissions set
-          az keyvault secret set --vault-name ${keyVaultName} --name unwiredlabsApiKey --value my-secret
-          openssl ecparam -name secp256k1 -genkey > nrfcloudcelllocationservice.key
-          az keyvault secret set --vault-name ${keyVaultName} --name nrfCloudCellLocationServiceKey --file nrfcloudcelllocationservice.key
-          openssl ecparam -name secp256k1 -genkey > nrfcloudagpslocationservice.key
-          az keyvault secret set --vault-name ${keyVaultName} --name nrfCloudAGPSLocationServiceKey --file nrfcloudagpslocationservice.key
+        uses: azure/CLI@v1
+        with:
+          inlineScript: |
+            USER_OBJECT_ID=`az ad sp list --spn 'https://nrfassettracker.invalid/ci' --query '[0].objectId' -o tsv | tr -d '\n'`
+            az keyvault set-policy --name ${keyVaultName} --object-id ${USER_OBJECT_ID} --secret-permissions set
+            az keyvault secret set --vault-name ${keyVaultName} --name unwiredlabsApiKey --value my-secret
+            openssl ecparam -name secp256k1 -genkey > nrfcloudcelllocationservice.key
+            az keyvault secret set --vault-name ${keyVaultName} --name nrfCloudCellLocationServiceKey --file nrfcloudcelllocationservice.key
+            openssl ecparam -name secp256k1 -genkey > nrfcloudagpslocationservice.key
+            az keyvault secret set --vault-name ${keyVaultName} --name nrfCloudAGPSLocationServiceKey --file nrfcloudagpslocationservice.key
+      - name: Pack functions
+        run: node scripts/pack-app.js
       - name: Deploy Function App
         if: env.AZURE_CREDENTIALS != ''
-        uses: nick-invision/retry@v2
+        uses: azure/CLI@v1
         with:
-          timeout_minutes: 10
-          retry_wait_seconds: 300
-          max_attempts: 3
-          command: |
-            node scripts/pack-app.js
+          inlineScript: |
             az functionapp deployment source config-zip -g ${RESOURCE_GROUP:-nrfassettrackerci} -n ${APP_NAME:-nrfassettrackerci}api --src dist/functionapp.zip
       - uses: actions/upload-artifact@v2
         if: always()
