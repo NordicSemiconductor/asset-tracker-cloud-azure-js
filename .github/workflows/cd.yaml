@@ -181,7 +181,7 @@ jobs:
         uses: azure/CLI@v1
         with:
           inlineScript: |
-            az storage blob service-properties update --auth-mode login
+            az storage blob service-properties update
             --account-name ${STORAGE_ACCOUNT_NAME:-nrfassettracker}
             --static-website --404-document index.html --index-document index.html
       - name: Determine Web App settings
