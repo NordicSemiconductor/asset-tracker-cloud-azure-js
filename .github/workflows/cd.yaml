@@ -182,6 +182,7 @@ jobs:
         with:
           inlineScript: |
             az storage blob service-properties update
+            --auth-mode login
             --account-name ${STORAGE_ACCOUNT_NAME:-nrfassettracker}
             --static-website --404-document index.html --index-document index.html
       - name: Determine Web App settings
@@ -213,5 +214,4 @@ jobs:
         uses: azure/CLI@v1
         with:
           inlineScript: |
-            export APP_STORAGE_CONNECTION_STRING=`az storage account show-connection-string --name ${STORAGE_ACCOUNT_NAME:-nrfassettracker} --query 'connectionString'`
-            az storage blob upload-batch --connection-string ${APP_STORAGE_CONNECTION_STRING} --account-name ${STORAGE_ACCOUNT_NAME:-nrfassettracker} -s ./app/build -d '$web'
+            az storage blob upload-batch --auth-mode login --account-name ${STORAGE_ACCOUNT_NAME:-nrfassettracker} -s ./app/build -d '$web'
