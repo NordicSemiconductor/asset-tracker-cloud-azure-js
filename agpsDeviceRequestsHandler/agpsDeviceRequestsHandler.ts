@@ -24,6 +24,9 @@ const config = () =>
 		...process.env,
 	})
 
+// Local cache for network mode of devices
+const nwReported: Record<string, string> = {}
+
 /**
  * Queue A-GPS requests from devices
  *
@@ -34,13 +37,17 @@ const config = () =>
  */
 const agpsDeviceRequestsHandler: AzureFunction = async (
 	context: Context,
-	requests: {
-		mcc: number
-		mnc: number
-		cell: number
-		area: number
-		types: number[]
-	}[],
+	requests:
+		| (
+				| {
+						mcc: number
+						mnc: number
+						cell: number
+						area: number
+						types: number[]
+				  }
+				| Record<string, any>
+		  )[],
 ): Promise<void> => {
 	log(context)({ context, requests })
 
@@ -69,6 +76,19 @@ const agpsDeviceRequestsHandler: AzureFunction = async (
 		return
 	}
 
+	// Since this function receives all device message we can use reported updates
+	// directly to cache the network property here
+	for (let i = 0; i < requests.length; i++) {
+		const nw = (requests as Record<string, any>[])[i]?.properties?.reported?.dev
+			?.v?.nw
+		if (nw !== undefined) {
+			const deviceId = context.bindingData.propertiesArray[i].deviceId
+			nwReported[deviceId] = nw
+			log(context)(`${deviceId}: ${nw}`)
+		}
+	}
+
+	// Find A-GPS requests
 	const agpsRequests = requests
 		.map((request, i) => ({
 			request,
@@ -91,25 +111,22 @@ const agpsDeviceRequestsHandler: AzureFunction = async (
 	log(context)({ agpsRequests })
 
 	// Fetch reported network for the devices
-	const nwReported = (
-		(
-			await iotHubRegistry
-				.createQuery(
-					`SELECT deviceId, properties.reported.dev.v.nw FROM devices WHERE deviceId IN [${[
-						...new Set(agpsRequests.map(({ deviceId }) => deviceId)), // Ensure deviceIds are unique
-					]
-						.map((deviceId) => `'${deviceId}'`)
-						.join(',')}]`,
-				)
-				.nextAsTwin()
-		).result as unknown as { deviceId: string; nw: string }[]
-	).reduce(
-		(nwReported, { deviceId, nw }) => ({
-			...nwReported,
-			[deviceId]: nw,
-		}),
-		{} as Record<string, string>,
-	)
+	const nwReportedUpdates = (
+		await iotHubRegistry
+			.createQuery(
+				`SELECT deviceId, properties.reported.dev.v.nw FROM devices WHERE deviceId IN [${[
+					...new Set(agpsRequests.map(({ deviceId }) => deviceId)), // Ensure deviceIds are unique
+				]
+					.map((deviceId) => `'${deviceId}'`)
+					.join(',')}]`,
+			)
+			.nextAsTwin()
+	).result as unknown as { deviceId: string; nw: string }[]
+	// Update our local cache
+	nwReportedUpdates.forEach(({ deviceId, nw }) => {
+		nwReported[deviceId] = nw
+		log(context)(`${deviceId}: ${nw}`)
+	})
 
 	log(context)({ nwReported })
 
