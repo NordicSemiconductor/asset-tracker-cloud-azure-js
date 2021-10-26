@@ -109,20 +109,20 @@ jobs:
         with:
           inlineScript: |
             az deployment group create \
-              --resource-group ${RESOURCE_GROUP:-nrfassettracker} \
+              --resource-group ${{ env.RESOURCE_GROUP }} \
               --mode Complete \
               --name cd-${{ env.VERSION }} \
               --template-file azuredeploy.json \
               --parameters \
                 appName=${APP_NAME:-nrfassettracker} \
-                storageAccountName=${STORAGE_ACCOUNT_NAME:-nrfassettracker} \
-                appRegistrationClientId=${APP_REG_CLIENT_ID} \
-                b2cTenant=${B2C_TENANT} \
+                storageAccountName=${{ env.STORAGE_ACCOUNT_NAME }} \
+                appRegistrationClientId=${{ env.APP_REG_CLIENT_ID }} \
+                b2cTenant=${{ env.B2C_TENANT }} \
                 enableUnwiredLabsCellLocation=${enableUnwiredLabsCellLocation} \
                 enableNrfCloudCellLocationService=${enableNrfCloudCellLocationService} \
                 enableNrfCloudAGPSLocationService=${enableNrfCloudAGPSLocationService} \
-                nrfCloudTeamId=${NRF_CLOUD_TEAM_ID} \
-                keyVaultName=${keyVaultName}
+                nrfCloudTeamId=${{ env.NRF_CLOUD_TEAM_ID }} \
+                keyVaultName=${{ env.keyVaultName }}
       - name: Get Azure object ID for current user
         if: env.AZURE_CREDENTIALS != ''
         uses: azure/CLI@v1
@@ -134,7 +134,7 @@ jobs:
         uses: azure/CLI@v1
         with:
           inlineScript: |
-            az keyvault set-policy --name ${keyVaultName} --object-id ${USER_OBJECT_ID} --secret-permissions set
+            az keyvault set-policy --name ${{ env.keyVaultName }} --object-id ${USER_OBJECT_ID} --secret-permissions set
       - name: Set Unwired Labs API key
         if:
           env.AZURE_CREDENTIALS != '' && env.enableUnwiredLabsCellLocation ==
@@ -142,7 +142,7 @@ jobs:
         uses: azure/CLI@v1
         with:
           inlineScript: |
-            az keyvault secret set --vault-name ${keyVaultName} --name unwiredlabsApiKey --value ${{ secrets.UNWIRED_LABS_API_KEY }}
+            az keyvault secret set --vault-name ${{ env.keyVaultName }} --name unwiredlabsApiKey --value ${{ secrets.UNWIRED_LABS_API_KEY }}
       - name: Set nRF Cloud Cell Location service key
         if:
           env.AZURE_CREDENTIALS != '' && env.enableNrfCloudCellLocationService
@@ -151,7 +151,7 @@ jobs:
         with:
           inlineScript: |
             echo "${{ secrets.NRF_CLOUD_CELL_LOCATION_SERVICE_KEY }}" > nrfcloudcelllocationservice.key
-            az keyvault secret set --vault-name ${keyVaultName} --name nrfCloudCellLocationServiceKey --file nrfcloudcelllocationservice.key
+            az keyvault secret set --vault-name ${{ env.keyVaultName }} --name nrfCloudCellLocationServiceKey --file nrfcloudcelllocationservice.key
             rm nrfcloudcelllocationservice.key
       - name: Set nRF Cloud Assisted GPS Location service key
         if:
@@ -161,7 +161,7 @@ jobs:
         with:
           inlineScript: |
             echo "${{ secrets.NRF_CLOUD_AGPS_LOCATION_SERVICE_KEY }}" > nrfcloudagpslocationservice.key
-            az keyvault secret set --vault-name ${keyVaultName} --name nrfCloudAGPSLocationServiceKey --file nrfcloudagpslocationservice.key
+            az keyvault secret set --vault-name ${{ env.keyVaultName }} --name nrfCloudAGPSLocationServiceKey --file nrfcloudagpslocationservice.key
             rm nrfcloudagpslocationservice.key
       - name: Pack Function App
         run: node scripts/pack-app.js
@@ -170,7 +170,7 @@ jobs:
         uses: azure/CLI@v1
         with:
           inlineScript: |
-            az functionapp deployment source config-zip -g ${RESOURCE_GROUP:-nrfassettracker} -n ${APP_NAME:-nrfassettracker}api --src dist/functionapp.zip
+            az functionapp deployment source config-zip -g ${{ env.RESOURCE_GROUP }} -n ${APP_NAME:-nrfassettracker}api --src dist/functionapp.zip
       - uses: actions/upload-artifact@v2
         if: env.AZURE_CREDENTIALS != ''
         with:
@@ -183,7 +183,7 @@ jobs:
           inlineScript: |
             az storage blob service-properties update
             --auth-mode login
-            --account-name ${STORAGE_ACCOUNT_NAME:-nrfassettracker}
+            --account-name ${{ env.STORAGE_ACCOUNT_NAME }}
             --static-website --404-document index.html --index-document index.html
       - name: Determine Web App settings
         if: env.AZURE_CREDENTIALS != ''
@@ -193,7 +193,7 @@ jobs:
         uses: azure/CLI@v1
         with:
           inlineScript: |
-            PUBLIC_URL=`az storage account show -g ${RESOURCE_GROUP:-nrfassettracker} -n ${STORAGE_ACCOUNT_NAME:-nrfassettracker} --query 'primaryEndpoints.web' --output tsv | tr -d '\n'`
+            PUBLIC_URL=`az storage account show -g ${{ env.RESOURCE_GROUP }} -n ${{ env.STORAGE_ACCOUNT_NAME }} --query 'primaryEndpoints.web' --output tsv | tr -d '\n'`
             echo "::set-output name=web_app_url::${PUBLIC_URL}"
             echo "PUBLIC_URL=${PUBLIC_URL}" >> $GITHUB_ENV
       - name: Build app
@@ -214,4 +214,4 @@ jobs:
         uses: azure/CLI@v1
         with:
           inlineScript: |
-            az storage blob upload-batch --auth-mode login --account-name ${STORAGE_ACCOUNT_NAME:-nrfassettracker} -s ./app/build -d '$web'
+            az storage blob upload-batch --account-name ${{ env.STORAGE_ACCOUNT_NAME }} -s ./app/build -d '$web'
