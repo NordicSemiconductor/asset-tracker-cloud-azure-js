@@ -81,7 +81,7 @@ jobs:
       - name: Set Key Vault name
         run: |
           echo "keyVaultName=${APP_NAME:-nrfassettrackerci}" >> $GITHUB_ENV
-      - name: Set random nRF Cloud Team ID Vault name
+      - name: Set random nRF Cloud Team ID
         run: |
           echo "NRF_CLOUD_TEAM_ID=`uuidgen`" >> $GITHUB_ENV
       - name: Deploy solution
