@@ -183,7 +183,7 @@ jobs:
           inlineScript: |
             export APP_STORAGE_CONNECTION_STRING=`az storage account show-connection-string --name ${{ env.STORAGE_ACCOUNT_NAME }} --query 'connectionString'`
             az storage blob service-properties update
-            --connection-string "${APP_STORAGE_CONNECTION_STRING}" --account-name ${{ env.STORAGE_ACCOUNT_NAME }}
+            --connection-string "${APP_STORAGE_CONNECTION_STRING}"
             --static-website --404-document index.html --index-document index.html
       - name: Determine Web App settings
         if: env.AZURE_CREDENTIALS != ''
@@ -215,4 +215,4 @@ jobs:
         with:
           inlineScript: |
             export APP_STORAGE_CONNECTION_STRING=`az storage account show-connection-string --name ${{ env.STORAGE_ACCOUNT_NAME }} --query 'connectionString'`
-            az storage blob upload-batch --connection-string "${APP_STORAGE_CONNECTION_STRING}" --account-name ${{ env.STORAGE_ACCOUNT_NAME }} -s ./app/build -d '$web'
+            az storage blob upload-batch --connection-string "${APP_STORAGE_CONNECTION_STRING}" -s ./app/build -d '$web'
