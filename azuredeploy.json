@@ -175,6 +175,30 @@
         "description": "Consumer group name for A-GPS device requests"
       },
       "defaultValue": "agpsrequests"
+    },
+    "pgpsRequestQueueName": {
+      "type": "string",
+      "minLength": 3,
+      "metadata": {
+        "description": "Name for the queue that stores P-GPS requests"
+      },
+      "defaultValue": "pgpsrequests"
+    },
+    "pgpsRequestNrfCloudQueueName": {
+      "type": "string",
+      "minLength": 3,
+      "metadata": {
+        "description": "Name for the queue that stores P-GPS requests to be resolved using the nRF Cloud API"
+      },
+      "defaultValue": "nrfcloudpgpsrequests"
+    },
+    "pgpsRequestIotEventsConsumerGroupName": {
+      "type": "string",
+      "minLength": 3,
+      "metadata": {
+        "description": "Consumer group name for P-GPS device requests"
+      },
+      "defaultValue": "pgpsrequests"
     }
   },
   "variables": {
@@ -467,6 +491,10 @@
                 "value": "[parameters('agpsRequestIotEventsConsumerGroupName')]"
               },
               {
+                "name": "PGPS_REQUESTS_IOT_EVENTS_CONSUMER_GROUP_NAME",
+                "value": "[parameters('pgpsRequestIotEventsConsumerGroupName')]"
+              },
+              {
                 "name": "AGPS_REQUESTS_DATABASE_NAME",
                 "value": "[parameters('agpsRequestDatabaseName')]"
               },
@@ -477,6 +505,10 @@
               {
                 "name": "AGPS_REQUESTS_QUEUE_NAME",
                 "value": "[parameters('agpsRequestQueueName')]"
+              },
+              {
+                "name": "PGPS_REQUESTS_QUEUE_NAME",
+                "value": "[parameters('pgpsRequestQueueName')]"
               },
               {
                 "name": "AGPS_REQUESTS_NRFCLOUD_QUEUE_NAME",
@@ -838,6 +870,26 @@
       "type": "Microsoft.Storage/storageAccounts/queueServices/queues",
       "apiVersion": "2021-04-01",
       "name": "[concat(parameters('storageAccountName'), '/default/', parameters('agpsRequestNrfCloudQueueName'))]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]"
+      ],
+      "properties": {}
+    },
+    {
+      "condition": "[parameters('enableNrfCloudPGPSLocationService')]",
+      "type": "Microsoft.Storage/storageAccounts/queueServices/queues",
+      "apiVersion": "2021-04-01",
+      "name": "[concat(parameters('storageAccountName'), '/default/', parameters('pgpsRequestQueueName'))]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]"
+      ],
+      "properties": {}
+    },
+    {
+      "condition": "[parameters('enableNrfCloudPGPSLocationService')]",
+      "type": "Microsoft.Storage/storageAccounts/queueServices/queues",
+      "apiVersion": "2021-04-01",
+      "name": "[concat(parameters('storageAccountName'), '/default/', parameters('pgpsRequestNrfCloudQueueName'))]",
       "dependsOn": [
         "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]"
       ],
