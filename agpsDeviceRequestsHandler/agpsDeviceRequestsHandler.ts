@@ -25,10 +25,10 @@ const config = () =>
 /**
  * Queue A-GPS requests from devices
  *
- * This handler filters for A-GPS requests and enriches them from the device with their reported network mode.
+ * This handler filters for A-GPS requests.
  * See ../adr/007-one-event-hub-for-everything.md for why we have to do filtering of messages here.
  *
- * The enriched requests are put in a queue for resolving.
+ * The requests are put in a queue for resolving.
  */
 const agpsDeviceRequestsHandler: AzureFunction = async (
 	context: Context,
