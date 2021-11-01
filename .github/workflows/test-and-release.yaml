@@ -118,6 +118,8 @@ jobs:
             az keyvault secret set --vault-name ${keyVaultName} --name nrfCloudCellLocationServiceKey --file nrfcloudcelllocationservice.key
             openssl ecparam -name secp256k1 -genkey > nrfcloudagpslocationservice.key
             az keyvault secret set --vault-name ${keyVaultName} --name nrfCloudAGPSLocationServiceKey --file nrfcloudagpslocationservice.key
+            openssl ecparam -name secp256k1 -genkey > nrfcloudpgpslocationservice.key
+            az keyvault secret set --vault-name ${keyVaultName} --name nrfCloudPGPSLocationServiceKey --file nrfcloudpgpslocationservice.key
       - name: Pack functions
         run: node scripts/pack-app.js
       - name: Deploy Function App

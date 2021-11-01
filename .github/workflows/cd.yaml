@@ -175,6 +175,16 @@ jobs:
             echo "${{ secrets.NRF_CLOUD_AGPS_LOCATION_SERVICE_KEY }}" > nrfcloudagpslocationservice.key
             az keyvault secret set --vault-name ${{ env.keyVaultName }} --name nrfCloudAGPSLocationServiceKey --file nrfcloudagpslocationservice.key
             rm nrfcloudagpslocationservice.key
+      - name: Set nRF Cloud Predicted GPS Location service key
+        if:
+          env.AZURE_CREDENTIALS != '' && env.enableNrfCloudPGPSLocationService
+          == 'true'
+        uses: azure/CLI@v1
+        with:
+          inlineScript: |
+            echo "${{ secrets.NRF_CLOUD_PGPS_LOCATION_SERVICE_KEY }}" > nrfcloudpgpslocationservice.key
+            az keyvault secret set --vault-name ${{ env.keyVaultName }} --name nrfCloudPGPSLocationServiceKey --file nrfcloudpgpslocationservice.key
+            rm nrfcloudagpslocationservice.key
       - name: Pack Function App
         run: node scripts/pack-app.js
       - name: Deploy Function App

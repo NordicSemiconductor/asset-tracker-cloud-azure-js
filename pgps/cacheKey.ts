@@ -1,5 +1,4 @@
 import { Static } from '@sinclair/typebox'
-import { gpsDay } from './gpsTime'
 import { pgpsRequestSchema } from './types'
 
 // Default values, all properties for requests are optional
@@ -10,14 +9,16 @@ export const defaultTimeOfDay = 0
 export const cacheKey = ({
 	request,
 	binHours,
+	defaultGpsDay,
 }: {
 	request: Static<typeof pgpsRequestSchema>
 	binHours: number
+	defaultGpsDay: number
 }): string => {
 	const binMs = binHours * 60 * 60 * 1000
 	const { n, day, int, time } = request
 	return `${n ?? defaultNumberOfPredictions}-${int ?? defaultInterval}-${
-		day ?? gpsDay()
+		day ?? defaultGpsDay
 	}-${time ?? defaultTimeOfDay}-${new Date(
 		Math.floor(Date.now() / binMs) * binMs,
 	)

@@ -19,14 +19,14 @@ Feature: P-GPS
 
   Scenario: Request P-GPS data
 
-    When the tracker publishes this message to the topic devices/{trackerId}/messages/events/pgps=get&%24.ct=application%2Fjson&%24.ce=utf-8
+    When the tracker "{trackerId}" publishes this message to the topic devices/{trackerId}/messages/events/pgps=get&%24.ct=application%2Fjson&%24.ce=utf-8
       """
       {
         "n": {predictionCount},
         "time": {startGpsTimeOfDaySeconds}
       }
       """
-    Then the tracker receives a message on the topic devices/{trackerId}/messages/devicebound/%24.to=%2Fdevices%2F{trackerId}%2Fmessages%2Fdevicebound&pgps=result into "pgpsData"
+    Then the tracker "{trackerId}" receives a message on the topic devices/{trackerId}/messages/devicebound/%24.to=%2Fdevices%2F{trackerId}%2Fmessages%2Fdevicebound&pgps=result into "pgpsData"
     And "pgpsData" should match this JSON
       """
       {

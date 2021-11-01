@@ -12,6 +12,7 @@ describe('cacheKey', () => {
 					day: 15160,
 					time: 40655,
 				},
+				defaultGpsDay: gpsDay(),
 			}),
 		).toEqual(
 			`42-240-15160-40655-${new Date()
@@ -24,6 +25,7 @@ describe('cacheKey', () => {
 			cacheKey({
 				request: {},
 				binHours: 1,
+				defaultGpsDay: gpsDay(),
 			}),
 		).toEqual(
 			`42-240-${gpsDay()}-0-${new Date()

@@ -12,6 +12,7 @@ import { parseConnectionString } from '../lib/parseConnectionString.js'
 import { Container, CosmosClient } from '@azure/cosmos'
 import { isLeft } from 'fp-ts/lib/Either.js'
 import { cacheKey } from '../pgps/cacheKey.js'
+import { gpsDay } from '../pgps/gpsTime.js'
 
 const config = () =>
 	fromEnv({
@@ -123,7 +124,11 @@ const pgpsResolveRequestFromNrfCloud: AzureFunction = async (
 
 	const res = await resolver(request)
 	log(context)({ res })
-	const requestCacheKey = cacheKey({ request, binHours })
+	const requestCacheKey = cacheKey({
+		request,
+		binHours,
+		defaultGpsDay: gpsDay(),
+	})
 	const item = {
 		id: requestCacheKey,
 		...request,

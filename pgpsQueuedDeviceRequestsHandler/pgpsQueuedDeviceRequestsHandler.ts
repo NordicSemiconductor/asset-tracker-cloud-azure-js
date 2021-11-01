@@ -13,6 +13,7 @@ import {
 	QueueClient,
 	StorageSharedKeyCredential,
 } from '@azure/storage-queue'
+import { gpsDay } from '../pgps/gpsTime.js'
 
 const config = () =>
 	fromEnv({
@@ -125,7 +126,11 @@ const pgpsQueuedDeviceRequestsHandler: AzureFunction = async (
 	}
 
 	// Resolve data
-	const requestCacheKey = cacheKey({ request, binHours })
+	const requestCacheKey = cacheKey({
+		request,
+		binHours,
+		defaultGpsDay: gpsDay(),
+	})
 	if (resolvedRequests[requestCacheKey] === undefined) {
 		log(context)(requestCacheKey, 'Load from DB', request)
 		const { resources } = await cosmosDbContainer.items
