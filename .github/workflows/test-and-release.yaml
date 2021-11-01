@@ -103,6 +103,7 @@ jobs:
                 unwiredlabsApiEndpoint=https://${MOCK_HTTP_API_ENDPOINT}/api/eu1.unwiredlabs.com/ \
                 enableNrfCloudCellLocationService=true \
                 enableNrfCloudAGPSLocationService=true \
+                enableNrfCloudPGPSLocationService=true \
                 nrfCloudTeamId=${NRF_CLOUD_TEAM_ID} \
                 nrfCloudApiEndpoint=https://${MOCK_HTTP_API_ENDPOINT}/api/api.nrfcloud.com/ \
                 keyVaultName=${keyVaultName}

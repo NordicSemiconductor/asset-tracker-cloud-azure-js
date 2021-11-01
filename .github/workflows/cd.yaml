@@ -33,6 +33,8 @@ jobs:
         ${{ secrets.NRF_CLOUD_CELL_LOCATION_SERVICE_KEY }}
       NRF_CLOUD_AGPS_LOCATION_SERVICE_KEY:
         ${{ secrets.NRF_CLOUD_AGPS_LOCATION_SERVICE_KEY }}
+      NRF_CLOUD_PGPS_LOCATION_SERVICE_KEY:
+        ${{ secrets.NRF_CLOUD_AGPS_LOCATION_SERVICE_KEY }}
 
     outputs:
       web_app_url: ${{ steps.web-app-url.outputs.web_app_url }}
@@ -100,6 +102,16 @@ jobs:
           env.NRF_CLOUD_TEAM_ID == '' || env.NRF_CLOUD_AGPS_LOCATION_SERVICE_KEY
           == ''
         run: echo "enableNrfCloudAGPSLocationService=false" >> $GITHUB_ENV
+      - name: Enable nRF Cloud Predicted GPS Location API
+        if:
+          env.NRF_CLOUD_TEAM_ID != '' && env.NRF_CLOUD_PGPS_LOCATION_SERVICE_KEY
+          != ''
+        run: echo "enableNrfCloudPGPSLocationService=true" >> $GITHUB_ENV
+      - name: Disable nRF Cloud Predicted GPS Location API
+        if:
+          env.NRF_CLOUD_TEAM_ID == '' || env.NRF_CLOUD_PGPS_LOCATION_SERVICE_KEY
+          == ''
+        run: echo "enableNrfCloudPGPSLocationService=false" >> $GITHUB_ENV
       - name: Set Key Vault name
         run: |
           echo "keyVaultName=${APP_NAME:-nrfassettracker}" >> $GITHUB_ENV

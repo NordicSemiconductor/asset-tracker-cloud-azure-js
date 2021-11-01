@@ -181,7 +181,7 @@
       "metadata": {
         "description": "Consumer group name for A-GPS device requests"
       },
-      "defaultValue": "agpsrequests"
+      "defaultValue": "agpsRequests"
     },
     "pgpsBinHours": {
       "type": "string",
@@ -228,7 +228,15 @@
       "metadata": {
         "description": "Consumer group name for P-GPS device requests"
       },
-      "defaultValue": "pgpsrequests"
+      "defaultValue": "pgpsRequests"
+    },
+    "cellGeoLocationIotEventsConsumerGroupName": {
+      "type": "string",
+      "minLength": 3,
+      "metadata": {
+        "description": "Consumer group name for cell geolocation updates"
+      },
+      "defaultValue": "cellgeolocation"
     }
   },
   "variables": {
@@ -303,7 +311,16 @@
       "condition": "[parameters('enableNrfCloudAGPSLocationService')]",
       "type": "Microsoft.Devices/iotHubs/eventhubEndpoints/ConsumerGroups",
       "apiVersion": "2020-03-01",
-      "name": "[concat(parameters('appName'), 'IotHub', '/events/', parameters('agpsRequestDatabaseName'))]",
+      "name": "[concat(parameters('appName'), 'IotHub', '/events/', parameters('agpsRequestIotEventsConsumerGroupName'))]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Devices/IotHubs', concat(parameters('appName'), 'IotHub'))]"
+      ]
+    },
+    {
+      "condition": "[parameters('enableNrfCloudAGPSLocationService')]",
+      "type": "Microsoft.Devices/iotHubs/eventhubEndpoints/ConsumerGroups",
+      "apiVersion": "2020-03-01",
+      "name": "[concat(parameters('appName'), 'IotHub', '/events/', parameters('pgpsRequestIotEventsConsumerGroupName'))]",
       "dependsOn": [
         "[resourceId('Microsoft.Devices/IotHubs', concat(parameters('appName'), 'IotHub'))]"
       ]
@@ -311,7 +328,7 @@
     {
       "type": "Microsoft.Devices/iotHubs/eventhubEndpoints/ConsumerGroups",
       "apiVersion": "2020-03-01",
-      "name": "[concat(parameters('appName'), 'IotHub', '/events/cellgeolocation')]",
+      "name": "[concat(parameters('appName'), 'IotHub', '/events/', parameters('cellGeoLocationIotEventsConsumerGroupName'))]",
       "dependsOn": [
         "[resourceId('Microsoft.Devices/IotHubs', concat(parameters('appName'), 'IotHub'))]"
       ]
@@ -559,6 +576,10 @@
               {
                 "name": "PGPS_REQUESTS_NRFCLOUD_QUEUE_NAME",
                 "value": "[parameters('pgpsRequestNrfCloudQueueName')]"
+              },
+              {
+                "name": "CELL_GEOLOCATION_IOT_EVENTS_CONSUMER_GROUP_NAME",
+                "value": "[parameters('cellGeoLocationIotEventsConsumerGroupName')]"
               }
             ]
           }
