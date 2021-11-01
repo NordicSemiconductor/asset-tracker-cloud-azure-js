@@ -1,9 +1,9 @@
 import { AzureFunction, Context } from '@azure/functions'
 import { log, logError } from '../lib/log.js'
-import { agpsRequestSchema } from '../agps/types.js'
+import { pgpsRequestSchema } from '../pgps/types.js'
 import { Static } from '@sinclair/typebox'
 import { fromEnv } from '../lib/fromEnv.js'
-import { resolveAgpsRequest } from './agps.js'
+import { resolvePgpsRequest } from './pgps.js'
 import { URL } from 'url'
 import { apiClient } from '../third-party/nrfcloud.com/apiclient.js'
 import { SecretClient } from '@azure/keyvault-secrets'
@@ -11,34 +11,34 @@ import { DefaultAzureCredential } from '@azure/identity'
 import { parseConnectionString } from '../lib/parseConnectionString.js'
 import { Container, CosmosClient } from '@azure/cosmos'
 import { isLeft } from 'fp-ts/lib/Either.js'
-import { cacheKey } from '../agps/cacheKey.js'
+import { cacheKey } from '../pgps/cacheKey.js'
 
 const config = () =>
 	fromEnv({
-		binHoursString: 'AGPS_BIN_HOURS',
+		binHoursString: 'PGPS_BIN_HOURS',
 		iotHubConnectionString: 'IOTHUB_CONNECTION_STRING',
 		cosmosDbConnectionString: 'COSMOSDB_CONNECTION_STRING',
 		storageAccountName: 'STORAGE_ACCOUNT_NAME',
 		storageAccessKey: 'STORAGE_ACCESS_KEY',
-		maxResolutionTimeInMinutes: 'AGPS_MAX_RESOLUTION_TIME_IN_MINUTES',
+		maxResolutionTimeInMinutes: 'PGPS_MAX_RESOLUTION_TIME_IN_MINUTES',
 		initialDelayString: 'INITIAL_DELAY',
 		delayFactorString: 'DELAY_FACTOR',
 		keyVaultName: 'KEYVAULT_NAME',
 		endpoint: 'NRFCLOUD_API_ENDPOINT',
 		teamId: 'NRFCLOUD_TEAM_ID',
-		agpsRequestsDatabaseName: 'AGPS_REQUESTS_DATABASE_NAME',
-		agpsRequestsContainerName: 'AGPS_REQUESTS_CONTAINER_NAME',
+		pgpsRequestsDatabaseName: 'PGPS_REQUESTS_DATABASE_NAME',
+		pgpsRequestsContainerName: 'PGPS_REQUESTS_CONTAINER_NAME',
 	})({
-		AGPS_BIN_HOURS: '1',
-		AGPS_MAX_RESOLUTION_TIME_IN_MINUTES: '3',
+		PGPS_BIN_HOURS: '1',
+		PGPS_MAX_RESOLUTION_TIME_IN_MINUTES: '3',
 		INITIAL_DELAY: '5',
 		DELAY_FACTOR: '1.5',
 		...process.env,
 	})
 
-let nrfCloudAGPSLocationServiceKeyPromise: Promise<string>
+let nrfCloudPGPSLocationServiceKeyPromise: Promise<string>
 
-const fetchNrfCloudAGPSLocationServiceKey = async ({
+const fetchNrfCloudPGPSLocationServiceKey = async ({
 	keyVaultName,
 }: {
 	keyVaultName: string
@@ -49,20 +49,20 @@ const fetchNrfCloudAGPSLocationServiceKey = async ({
 		credentials,
 	)
 	const latestSecret = await keyVaultClient.getSecret(
-		'nrfCloudAGPSLocationServiceKey',
+		'nrfCloudPGPSLocationServiceKey',
 	)
 	return latestSecret.value as string
 }
 /**
- * Resolve A-GPS requests from nRF Cloud
+ * Resolve P-GPS requests from nRF Cloud
  */
-const agpsResolveRequestFromNrfCloud: AzureFunction = async (
+const pgpsResolveRequestFromNrfCloud: AzureFunction = async (
 	context: Context,
-	request: Static<typeof agpsRequestSchema>,
+	request: Static<typeof pgpsRequestSchema>,
 ): Promise<void> => {
 	log(context)({ context, request })
 
-	let resolver: ReturnType<typeof resolveAgpsRequest>
+	let resolver: ReturnType<typeof resolvePgpsRequest>
 	let cosmosDbContainer: Container
 	let binHours: number
 
@@ -73,17 +73,17 @@ const agpsResolveRequestFromNrfCloud: AzureFunction = async (
 			keyVaultName,
 			cosmosDbConnectionString,
 			binHoursString,
-			agpsRequestsDatabaseName,
-			agpsRequestsContainerName,
+			pgpsRequestsDatabaseName,
+			pgpsRequestsContainerName,
 		} = config()
 
-		if (nrfCloudAGPSLocationServiceKeyPromise === undefined)
-			nrfCloudAGPSLocationServiceKeyPromise =
-				fetchNrfCloudAGPSLocationServiceKey({ keyVaultName })
-		resolver = resolveAgpsRequest(
+		if (nrfCloudPGPSLocationServiceKeyPromise === undefined)
+			nrfCloudPGPSLocationServiceKeyPromise =
+				fetchNrfCloudPGPSLocationServiceKey({ keyVaultName })
+		resolver = resolvePgpsRequest(
 			apiClient({
 				endpoint: new URL(endpoint),
-				serviceKey: await nrfCloudAGPSLocationServiceKeyPromise,
+				serviceKey: await nrfCloudPGPSLocationServiceKeyPromise,
 				teamId,
 			}),
 			log(context),
@@ -106,14 +106,14 @@ const agpsResolveRequestFromNrfCloud: AzureFunction = async (
 
 		log(context)({
 			cosmosDb: {
-				database: agpsRequestsDatabaseName,
-				container: agpsRequestsContainerName,
+				database: pgpsRequestsDatabaseName,
+				container: pgpsRequestsContainerName,
 			},
 		})
 
 		cosmosDbContainer = cosmosClient
-			.database(agpsRequestsDatabaseName)
-			.container(agpsRequestsContainerName)
+			.database(pgpsRequestsDatabaseName)
+			.container(pgpsRequestsContainerName)
 
 		binHours = parseInt(binHoursString, 10)
 	} catch (error) {
@@ -136,9 +136,9 @@ const agpsResolveRequestFromNrfCloud: AzureFunction = async (
 		item.unresolved = true
 	} else {
 		log(context)(`Resolved`)
-		log(context)({ dataHex: res.right })
+		log(context)(res.right)
 		item.unresolved = false
-		item.dataHex = res.right
+		item.url = res.right
 	}
 	log(context)({
 		item,
@@ -146,4 +146,4 @@ const agpsResolveRequestFromNrfCloud: AzureFunction = async (
 	await cosmosDbContainer.items.upsert(item)
 }
 
-export default agpsResolveRequestFromNrfCloud
+export default pgpsResolveRequestFromNrfCloud

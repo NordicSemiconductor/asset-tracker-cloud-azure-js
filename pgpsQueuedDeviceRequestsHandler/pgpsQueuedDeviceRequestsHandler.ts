@@ -1,7 +1,7 @@
 import { AzureFunction, Context } from '@azure/functions'
 import { log, logError } from '../lib/log.js'
-import { agpsRequestSchema } from '../agps/types.js'
-import { cacheKey } from '../agps/cacheKey.js'
+import { pgpsRequestSchema } from '../pgps/types.js'
+import { cacheKey } from '../pgps/cacheKey.js'
 import { Static } from '@sinclair/typebox'
 import { fromEnv } from '../lib/fromEnv.js'
 import iothub from 'azure-iothub'
@@ -16,57 +16,57 @@ import {
 
 const config = () =>
 	fromEnv({
-		binHoursString: 'AGPS_BIN_HOURS',
+		binHoursString: 'PGPS_BIN_HOURS',
 		iotHubConnectionString: 'IOTHUB_CONNECTION_STRING',
 		cosmosDbConnectionString: 'COSMOSDB_CONNECTION_STRING',
 		storageAccountName: 'STORAGE_ACCOUNT_NAME',
 		storageAccessKey: 'STORAGE_ACCESS_KEY',
-		maxResolutionTimeInMinutes: 'AGPS_MAX_RESOLUTION_TIME_IN_MINUTES',
+		maxResolutionTimeInMinutes: 'PGPS_MAX_RESOLUTION_TIME_IN_MINUTES',
 		initialDelayString: 'INITIAL_DELAY',
 		delayFactorString: 'DELAY_FACTOR',
-		agpsRequestsDatabaseName: 'AGPS_REQUESTS_DATABASE_NAME',
-		agpsRequestsContainerName: 'AGPS_REQUESTS_CONTAINER_NAME',
-		agpsRequestsQueueName: 'AGPS_REQUESTS_QUEUE_NAME',
-		agpsRequestsNrfCloudQueueName: 'AGPS_REQUESTS_NRFCLOUD_QUEUE_NAME',
+		pgpsRequestsDatabaseName: 'PGPS_REQUESTS_DATABASE_NAME',
+		pgpsRequestsContainerName: 'PGPS_REQUESTS_CONTAINER_NAME',
+		pgpsRequestsQueueName: 'PGPS_REQUESTS_QUEUE_NAME',
+		pgpsRequestsNrfCloudQueueName: 'PGPS_REQUESTS_NRFCLOUD_QUEUE_NAME',
 	})({
-		AGPS_BIN_HOURS: '1',
-		AGPS_MAX_RESOLUTION_TIME_IN_MINUTES: '3',
+		PGPS_BIN_HOURS: '1',
+		PGPS_MAX_RESOLUTION_TIME_IN_MINUTES: '3',
 		INITIAL_DELAY: '5',
 		DELAY_FACTOR: '1.5',
 		...process.env,
 	})
 
 // Keep a local cache in case many devices requests the same location
-export type AGPSDataCache = Static<typeof agpsRequestSchema> & {
+export type PGPSDataCache = Static<typeof pgpsRequestSchema> & {
 	source: string
-	dataHex?: string[]
+	url?: URL
 	unresolved?: boolean
 	updatedAt: Date
 }
-const resolvedRequests: Record<string, AGPSDataCache> = {}
+const resolvedRequests: Record<string, PGPSDataCache> = {}
 
-type QueuedAGPSRequest = {
+type QueuedPGPSRequest = {
 	deviceId: string
-	request: Static<typeof agpsRequestSchema>
+	request: Static<typeof pgpsRequestSchema>
 	timestamp: string
 	delayInSeconds?: number
 }
 
 /**
- * Resolve A-GPS requests for devices by either fetching the cached data from
+ * Resolve P-GPS requests for devices by either fetching the cached data from
  * a DB or kicking off the resoluting via a third-party API (currently only
- * nRF Cloud Assisted GPS Location Service is implemented.)
+ * nRF Cloud Predicted GPS Location Service is implemented.)
  */
-const agpsQueuedDeviceRequestsHandler: AzureFunction = async (
+const pgpsQueuedDeviceRequestsHandler: AzureFunction = async (
 	context: Context,
-	{ deviceId, request, delayInSeconds, timestamp }: QueuedAGPSRequest,
+	{ deviceId, request, delayInSeconds, timestamp }: QueuedPGPSRequest,
 ): Promise<void> => {
 	log(context)({ request, deviceId, delayInSeconds, timestamp, context })
 
 	let binHours: number
 	let iotHubClient: iothub.Client
 	let cosmosDbContainer: Container
-	let agpsRequestsQueueClient: QueueClient
+	let pgpsRequestsQueueClient: QueueClient
 	const resolverQueues: QueueClient[] = []
 	let maxResolutionTimeInSeconds: number
 	let delayFactor: number
@@ -82,10 +82,10 @@ const agpsQueuedDeviceRequestsHandler: AzureFunction = async (
 			delayFactorString,
 			initialDelayString,
 			cosmosDbConnectionString,
-			agpsRequestsDatabaseName,
-			agpsRequestsQueueName,
-			agpsRequestsContainerName,
-			agpsRequestsNrfCloudQueueName,
+			pgpsRequestsDatabaseName,
+			pgpsRequestsQueueName,
+			pgpsRequestsContainerName,
+			pgpsRequestsNrfCloudQueueName,
 		} = config()
 
 		binHours = parseInt(binHoursString, 10)
@@ -100,21 +100,21 @@ const agpsQueuedDeviceRequestsHandler: AzureFunction = async (
 		})
 
 		cosmosDbContainer = cosmosClient
-			.database(agpsRequestsDatabaseName)
-			.container(agpsRequestsContainerName)
+			.database(pgpsRequestsDatabaseName)
+			.container(pgpsRequestsContainerName)
 
-		agpsRequestsQueueClient = new QueueServiceClient(
+		pgpsRequestsQueueClient = new QueueServiceClient(
 			`https://${storageAccountName}.queue.core.windows.net`,
 			new StorageSharedKeyCredential(storageAccountName, storageAccessKey),
-		).getQueueClient(agpsRequestsQueueName)
-		await agpsRequestsQueueClient.create()
+		).getQueueClient(pgpsRequestsQueueName)
+		await pgpsRequestsQueueClient.create()
 
-		const nrfCloudAgpsRequestsQueueClient = new QueueServiceClient(
+		const nrfCloudPgpsRequestsQueueClient = new QueueServiceClient(
 			`https://${storageAccountName}.queue.core.windows.net`,
 			new StorageSharedKeyCredential(storageAccountName, storageAccessKey),
-		).getQueueClient(agpsRequestsNrfCloudQueueName)
-		await nrfCloudAgpsRequestsQueueClient.create()
-		resolverQueues.push(nrfCloudAgpsRequestsQueueClient)
+		).getQueueClient(pgpsRequestsNrfCloudQueueName)
+		await nrfCloudPgpsRequestsQueueClient.create()
+		resolverQueues.push(nrfCloudPgpsRequestsQueueClient)
 
 		maxResolutionTimeInSeconds = parseInt(maxResolutionTimeInMinutes, 10) * 60
 		delayFactor = parseFloat(delayFactorString)
@@ -138,7 +138,7 @@ const agpsQueuedDeviceRequestsHandler: AzureFunction = async (
 				// Cache resolved
 				resolvedRequests[requestCacheKey] = resources[0]
 				if (resources[0].unresolved === true) {
-					logError(context)(requestCacheKey, `A-GPS request is unresolved.`)
+					logError(context)(requestCacheKey, `P-GPS request is unresolved.`)
 					return
 				}
 			}
@@ -177,17 +177,18 @@ const agpsQueuedDeviceRequestsHandler: AzureFunction = async (
 				resolvedRequests,
 			}),
 		)
-		await Promise.all(
-			(resolvedRequests[requestCacheKey]?.dataHex ?? []).map(
-				async (agpsdata) => {
-					const payload = Buffer.from(agpsdata, 'hex')
-					log(context)(`Sending ${payload.length} bytes to ${deviceId}`)
-					const m = new iothubCommon.Message(payload)
-					m.properties.add('agps', 'result')
-					return iotHubClient.send(deviceId, m)
-				},
-			),
+		const url = resolvedRequests[requestCacheKey].url as URL
+
+		const m = new iothubCommon.Message(
+			JSON.stringify({
+				path: url.pathname.substr(1), // remove leading slash
+				host: url.hostname,
+			}),
 		)
+		m.properties.add('pgps', 'result')
+		m.properties.add('$.ct', 'application/json')
+		m.properties.add('$.ce', 'utf-8')
+		await iotHubClient.send(deviceId, m)
 
 		log(context)(requestCacheKey, `resolved request for`, deviceId)
 		return
@@ -222,7 +223,7 @@ const agpsQueuedDeviceRequestsHandler: AzureFunction = async (
 	const visibilityTimeout = Math.floor(
 		Math.min(900, (delayInSeconds ?? initialDelay) * delayFactor),
 	)
-	await agpsRequestsQueueClient.sendMessage(
+	await pgpsRequestsQueueClient.sendMessage(
 		Buffer.from(
 			JSON.stringify({
 				deviceId,
@@ -240,4 +241,4 @@ const agpsQueuedDeviceRequestsHandler: AzureFunction = async (
 	log(context)(requestCacheKey, `re-scheduled request for`, deviceId)
 }
 
-export default agpsQueuedDeviceRequestsHandler
+export default pgpsQueuedDeviceRequestsHandler
