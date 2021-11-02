@@ -15,6 +15,7 @@ import chaiSubset from 'chai-subset'
 chai.use(chaiSubset)
 import fetch from 'node-fetch'
 import { createSimulatorKeyAndCSR } from '../../cli/iot/createSimulatorKeyAndCSR.js'
+import { matchDeviceBoundTopic } from './device/matchDeviceBoundTopic.js'
 
 export const deviceStepRunners = ({
 	certsDir,
@@ -77,6 +78,10 @@ export const deviceStepRunners = ({
 		regexGroupMatcher(
 			/^the (?:device|tracker) "(?<deviceId>[^"]+)" receives (?<messageCount>a|[1-9][0-9]*) (?<raw>raw )?messages? on the topic (?<topic>[^ ]+)(?: into "(?<storeName>[^"]+)")?$/,
 		)(async ({ deviceId, messageCount, raw, topic, storeName }, _, runner) => {
+			if (!topic.startsWith(`devices/${deviceId}/messages/devicebound`))
+				throw new Error(
+					`Must subscribe to the device topic devices/${deviceId}/messages/devicebound`,
+				)
 			const connection = connections[deviceId]
 			const isRaw = raw !== undefined
 
@@ -99,12 +104,12 @@ export const deviceStepRunners = ({
 				connection.subscribe(`devices/${deviceId}/messages/devicebound/#`)
 
 				const done = (result: any) => {
-					connection.unsubscribe(topic)
+					connection.unsubscribe(`devices/${deviceId}/messages/devicebound/#`)
 					resolve(result)
 				}
 
 				connection.on('message', async (t: string, message: Buffer) => {
-					if (topic !== t) return
+					if (!matchDeviceBoundTopic(topic, t)) return
 					await runner.progress(`Iot`, JSON.stringify(message))
 					const m = isRaw
 						? message.toString('hex')
