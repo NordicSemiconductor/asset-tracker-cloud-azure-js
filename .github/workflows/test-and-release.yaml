@@ -39,7 +39,7 @@ jobs:
         uses: azure/CLI@v1
         with:
           inlineScript: |
-            az login --identity --username ${AZURE_CLIENT_ID} -p ${AZURE_CLIENT_SECRET} --tenant ${AZURE_TENANT_ID}
+            az login --service-principal -u ${AZURE_CLIENT_ID} -p ${AZURE_CLIENT_SECRET} --tenant ${AZURE_TENANT_ID}
       - name: List Azure accounts
         if: env.AZURE_CREDENTIALS != ''
         uses: azure/CLI@v1
