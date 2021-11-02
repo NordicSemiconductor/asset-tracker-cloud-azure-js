@@ -26,7 +26,7 @@ Feature: P-GPS
         "time": {startGpsTimeOfDaySeconds}
       }
       """
-    Then the tracker "{trackerId}" receives a message on the topic devices/{trackerId}/messages/devicebound/%24.to=%2Fdevices%2F{trackerId}%2Fmessages%2Fdevicebound&pgps=result into "pgpsData"
+    Then the tracker "{trackerId}" receives a message on the topic devices/{trackerId}/messages/devicebound/pgps=result into "pgpsData"
     And "pgpsData" should match this JSON
       """
       {

@@ -31,7 +31,7 @@ Feature: P-GPS Data Fan Out (The cargo container scenario)
         "time": {startGpsTimeOfDaySeconds}
       }
       """
-    Then the device "{pgpsDevice}" receives a messages on the topic devices/{pgpsDevice}/messages/devicebound/%24.to=%2Fdevices%2F{pgpsDevice}%2Fmessages%2Fdevicebound&pgps=result into "pgpsData"
+    Then the device "{pgpsDevice}" receives a messages on the topic devices/{pgpsDevice}/messages/devicebound/pgps=result into "pgpsData"
     And "pgpsData" should match this JSON
       """
       {
