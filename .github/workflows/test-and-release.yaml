@@ -26,23 +26,20 @@ jobs:
       B2C_CLIENT_SECRET: ${{ secrets.B2C_CLIENT_SECRET }}
       B2C_TENANT_ID: ${{ secrets.B2C_TENANT_ID }}
       AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
       RESOURCE_GROUP: ${{ secrets.RESOURCE_GROUP }}
       MOCK_HTTP_API_STORAGE_ACCOUNT_NAME: mockhttpapi
 
     steps:
       - uses: actions/checkout@v2
-      - name: Store credentials locally
-        run: |
-          echo "${AZURE_CREDENTIALS}" > mycertfile.pem
-      - name: Get tenant ID
-        run: |
-          echo "TENANT_ID=`cat mycertfile.pem | jq -r '.tenantId'`" >> $GITHUB_ENV
       - name: Login to Azure
         if: env.AZURE_CREDENTIALS != ''
         uses: azure/CLI@v1
         with:
           inlineScript: |
-            az login --service-principal -u 'GithubActions' -p mycertfile.pem --tenant ${TENANT_ID}
+            az login --identity --username ${AZURE_CLIENT_ID} -p ${AZURE_CLIENT_SECRET} --tenant ${AZURE_TENANT_ID}
       - name: List Azure accounts
         if: env.AZURE_CREDENTIALS != ''
         uses: azure/CLI@v1
