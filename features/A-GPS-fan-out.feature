@@ -43,7 +43,7 @@ Feature: A-GPS Data Fan Out (The cargo container scenario)
         ]
       }
       """
-    Then the device "{agpsDevice}" receives 2 raw messages on the topic devices/{agpsDevice}/messages/devicebound/%24.to=%2Fdevices%2F{agpsDevice}%2Fmessages%2Fdevicebound&agps=result into "agpsData"
+    Then the device "{agpsDevice}" receives 2 raw messages on the topic devices/{agpsDevice}/messages/devicebound/agps=result into "agpsData"
     And  "$length($filter(agpsData, function($v) { $contains($v, '01010100f9fffffffeffffff0f7b12890612031f00017') })) > 0" should be true
     And  "$length($filter(agpsData, function($v) { $contains($v, '01021e0001006400c675009cff859f13000b0000c6753') })) > 0" should be true
     
