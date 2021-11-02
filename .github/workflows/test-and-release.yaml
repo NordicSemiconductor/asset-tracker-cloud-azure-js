@@ -36,9 +36,9 @@ jobs:
         uses: azure/CLI@v1
         with:
           inlineScript: |
-            export tenantId=`jq -r '.tenantId' <<< "${AZURE_CREDENTIALS}"`
-            echo $tenantId
             echo "${AZURE_CREDENTIALS}" > mycertfile.pem
+            export tenantId=`cat mycertfile.pem | jq -r '.tenantId'`
+            echo $tenantId
             az login --service-principal -u 'GithubActions' -p mycertfile.pem --tenant $tenantId
             rm mycertfile.pem
       - name: List Azure accounts
