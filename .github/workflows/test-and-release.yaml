@@ -59,6 +59,8 @@ jobs:
         uses: azure/CLI@v1
         with:
           inlineScript: |
+            az login
+            az account list --output table
             az deployment group create \
               --resource-group ${RESOURCE_GROUP:-nrfassettrackerci} \
               --mode Incremental \
