@@ -37,7 +37,7 @@ jobs:
         with:
           inlineScript: |
             export tenantId=`jq -r '.tenantId' <<< "${{ secrets.AZURE_CREDENTIALS }}"`
-            echo ${{ secrets.AZURE_CREDENTIALS }} > mycertfile.pem
+            echo "${{ secrets.AZURE_CREDENTIALS }}" > mycertfile.pem
             az login --service-principal -u 'GithubActions' -p mycertfile.pem --tenant $tenantId
             rm mycertfile.pem
       - name: List Azure accounts
