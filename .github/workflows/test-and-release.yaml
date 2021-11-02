@@ -25,19 +25,30 @@ jobs:
       APP_REG_CLIENT_ID: ${{ secrets.APP_REG_CLIENT_ID }}
       B2C_CLIENT_SECRET: ${{ secrets.B2C_CLIENT_SECRET }}
       B2C_TENANT_ID: ${{ secrets.B2C_TENANT_ID }}
-      AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
       RESOURCE_GROUP: ${{ secrets.RESOURCE_GROUP }}
       MOCK_HTTP_API_STORAGE_ACCOUNT_NAME: mockhttpapi
 
     steps:
-      - uses: actions/checkout@v2
+      # We are authenticating here the non-containerized environment, so we
+      # can run the Azure JavaScript SDK with these credentials
+      # Needs to be done before the in-container auth in the next step
       - name: Login to Azure
-        if: env.AZURE_CREDENTIALS != ''
         uses: azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
+      # In-container auth in the next step
+      - name: Login to Azure CLI
+        uses: azure/CLI@v1
+        with:
+          inlineScript: |
+            AZURE_CLIENT_ID=`jq -r '.clientId' <<< '${{ secrets.AZURE_CREDENTIALS }}'`
+            AZURE_CLIENT_SECRET=`jq -r '.clientSecret' <<< '${{ secrets.AZURE_CREDENTIALS }}'`
+            AZURE_TENANT_ID=`jq -r '.tenantId' <<< '${{ secrets.AZURE_CREDENTIALS }}'`
+            echo "::add-mask::${AZURE_CLIENT_ID}"
+            echo "::add-mask::${AZURE_CLIENT_SECRET}"
+            echo "::add-mask::${AZURE_TENANT_ID}"
+            az login --service-principal -u ${AZURE_CLIENT_ID} -p ${AZURE_CLIENT_SECRET} --tenant ${AZURE_TENANT_ID}
       - name: List Azure accounts
-        if: env.AZURE_CREDENTIALS != ''
         uses: azure/CLI@v1
         with:
           inlineScript: |
@@ -45,6 +56,7 @@ jobs:
       - uses: actions/setup-node@v2
         with:
           node-version: "16.x"
+      - uses: actions/checkout@v2
       - name: Keep npm cache around to speed up installs
         uses: actions/cache@v2
         with:
@@ -78,14 +90,27 @@ jobs:
         with:
           inlineScript: |
             az functionapp deployment source config-zip -g ${RESOURCE_GROUP:-nrfassettrackerci} -n ${MOCK_HTTP_API_STORAGE_ACCOUNT_NAME:-mockhttpapi}Functions --src dist/mock-http-api.zip
-      - name: Set Key Vault name
-        run: |
-          echo "keyVaultName=${APP_NAME:-nrfassettrackerci}" >> $GITHUB_ENV
       - name: Set random nRF Cloud Team ID
         run: |
           echo "NRF_CLOUD_TEAM_ID=`uuidgen`" >> $GITHUB_ENV
+      - name: Set Key Vault name
+        run: |
+          echo "keyVaultName=${APP_NAME:-nrfassettrackerci}" >> $GITHUB_ENV
+      - name: Set secrets for third party APIs
+        uses: azure/CLI@v1
+        with:
+          inlineScript: |
+            AZURE_CLIENT_ID=`jq -r '.clientId' <<< '${{ secrets.AZURE_CREDENTIALS }}'`
+            echo "::add-mask::${AZURE_CLIENT_ID}"
+            az keyvault set-policy --name ${keyVaultName} --spn ${AZURE_CLIENT_ID} --secret-permissions set
+            az keyvault secret set --vault-name ${keyVaultName} --name unwiredlabsApiKey --value my-secret
+            openssl ecparam -name secp256k1 -genkey > nrfcloudcelllocationservice.key
+            az keyvault secret set --vault-name ${keyVaultName} --name nrfCloudCellLocationServiceKey --file nrfcloudcelllocationservice.key
+            openssl ecparam -name secp256k1 -genkey > nrfcloudagpslocationservice.key
+            az keyvault secret set --vault-name ${keyVaultName} --name nrfCloudAGPSLocationServiceKey --file nrfcloudagpslocationservice.key
+            openssl ecparam -name secp256k1 -genkey > nrfcloudpgpslocationservice.key
+            az keyvault secret set --vault-name ${keyVaultName} --name nrfCloudPGPSLocationServiceKey --file nrfcloudpgpslocationservice.key
       - name: Deploy solution
-        if: env.AZURE_CREDENTIALS != ''
         uses: azure/CLI@v1
         with:
           inlineScript: |
@@ -107,23 +132,9 @@ jobs:
                 nrfCloudTeamId=${NRF_CLOUD_TEAM_ID} \
                 nrfCloudApiEndpoint=https://${MOCK_HTTP_API_ENDPOINT}/api/api.nrfcloud.com/ \
                 keyVaultName=${keyVaultName}
-      - name: Set secrets for third party APIs
-        uses: azure/CLI@v1
-        with:
-          inlineScript: |
-            USER_OBJECT_ID=`az ad sp list --spn 'https://nrfassettracker.invalid/ci' --query '[0].objectId' -o tsv | tr -d '\n'`
-            az keyvault set-policy --name ${keyVaultName} --object-id ${USER_OBJECT_ID} --secret-permissions set
-            az keyvault secret set --vault-name ${keyVaultName} --name unwiredlabsApiKey --value my-secret
-            openssl ecparam -name secp256k1 -genkey > nrfcloudcelllocationservice.key
-            az keyvault secret set --vault-name ${keyVaultName} --name nrfCloudCellLocationServiceKey --file nrfcloudcelllocationservice.key
-            openssl ecparam -name secp256k1 -genkey > nrfcloudagpslocationservice.key
-            az keyvault secret set --vault-name ${keyVaultName} --name nrfCloudAGPSLocationServiceKey --file nrfcloudagpslocationservice.key
-            openssl ecparam -name secp256k1 -genkey > nrfcloudpgpslocationservice.key
-            az keyvault secret set --vault-name ${keyVaultName} --name nrfCloudPGPSLocationServiceKey --file nrfcloudpgpslocationservice.key
       - name: Pack functions
         run: node scripts/pack-app.js
       - name: Deploy Function App
-        if: env.AZURE_CREDENTIALS != ''
         uses: azure/CLI@v1
         with:
           inlineScript: |
@@ -134,21 +145,18 @@ jobs:
           name: functionapp-${{ github.sha }}
           path: dist/functionapp.zip
       - name: Cache certificates
-        if: env.AZURE_CREDENTIALS != '' != 'yes'
         uses: actions/cache@v2
         id: certs-cache
         with:
           path: ./certificates
           key: certificates-2021-09-13
       - name: Create Intermediate CA certificate
-        if: |
-          env.AZURE_CREDENTIALS != '' && steps.certs-cache.outputs.cache-hit != 'true'
+        if: steps.certs-cache.outputs.cache-hit != 'true'
         run: |
           node cli create-ca-root
           node cli proof-ca-root-possession
           node cli create-ca-intermediate
       - name: Run End-to-End Tests
-        if: env.AZURE_CREDENTIALS != ''
         uses: nick-invision/retry@v2
         env:
           FORCE_COLOR: 3
@@ -157,7 +165,6 @@ jobs:
           max_attempts: 3
           command: npm run test:e2e
       - name: Delete device certificates
-        if: env.AZURE_CREDENTIALS != ''
         run: rm ./certificates/*/device-*
       - name: Semantic release
         if: success()
