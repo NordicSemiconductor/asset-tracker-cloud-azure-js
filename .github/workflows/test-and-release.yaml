@@ -31,16 +31,18 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+      - name: Store credentials locally
+        run: |
+          echo "${AZURE_CREDENTIALS}" > mycertfile.pem
+      - name: Get tenant ID
+        run: |
+          echo "TENANT_ID=`cat mycertfile.pem | jq -r '.tenantId'`" >> $GITHUB_ENV
       - name: Login to Azure
         if: env.AZURE_CREDENTIALS != ''
         uses: azure/CLI@v1
         with:
           inlineScript: |
-            echo "${AZURE_CREDENTIALS}" > mycertfile.pem
-            export tenantId=`cat mycertfile.pem | jq -r '.tenantId'`
-            echo $tenantId
-            az login --service-principal -u 'GithubActions' -p mycertfile.pem --tenant $tenantId
-            rm mycertfile.pem
+            az login --service-principal -u 'GithubActions' -p mycertfile.pem --tenant ${TENANT_ID}
       - name: List Azure accounts
         if: env.AZURE_CREDENTIALS != ''
         uses: azure/CLI@v1
