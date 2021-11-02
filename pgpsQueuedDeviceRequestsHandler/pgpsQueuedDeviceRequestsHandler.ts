@@ -14,6 +14,7 @@ import {
 	StorageSharedKeyCredential,
 } from '@azure/storage-queue'
 import { gpsDay } from '../pgps/gpsTime.js'
+import { URL } from 'url'
 
 const config = () =>
 	fromEnv({
@@ -40,7 +41,7 @@ const config = () =>
 // Keep a local cache in case many devices requests the same location
 export type PGPSDataCache = Static<typeof pgpsRequestSchema> & {
 	source: string
-	url?: URL
+	url?: string
 	unresolved?: boolean
 	updatedAt: Date
 }
@@ -182,8 +183,7 @@ const pgpsQueuedDeviceRequestsHandler: AzureFunction = async (
 				resolvedRequests,
 			}),
 		)
-		const url = resolvedRequests[requestCacheKey].url as URL
-
+		const url = new URL(resolvedRequests[requestCacheKey].url as string)
 		const m = new iothubCommon.Message(
 			JSON.stringify({
 				path: url.pathname.substr(1), // remove leading slash
