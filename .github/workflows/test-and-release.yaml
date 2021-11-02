@@ -36,7 +36,10 @@ jobs:
         uses: azure/CLI@v1
         with:
           inlineScript: |
-            az login --service-principal -u 'GithubActions' -p "${{ secrets.AZURE_CREDENTIALS }}" --tenant `jq -r '.tenantId' <<< "${{ secrets.AZURE_CREDENTIALS }}"`
+            export tenantId=`jq -r '.tenantId' <<< "${{ secrets.AZURE_CREDENTIALS }}"`
+            echo ${{ secrets.AZURE_CREDENTIALS }} > mycertfile.pem
+            az login --service-principal -u 'GithubActions' -p mycertfile.pem --tenant $tenantId
+            rm mycertfile.pem
       - name: List Azure accounts
         if: env.AZURE_CREDENTIALS != ''
         uses: azure/CLI@v1
