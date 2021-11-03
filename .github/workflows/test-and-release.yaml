@@ -46,11 +46,6 @@ jobs:
         with:
           inlineScript: |
             az account list --output table
-      - name: List Service principals
-        uses: azure/CLI@v1
-        with:
-          inlineScript: |
-            az ad sp list
       - uses: actions/setup-node@v2
         with:
           node-version: "16.x"
@@ -94,8 +89,8 @@ jobs:
         uses: azure/CLI@v1
         with:
           inlineScript: |
-            AZURE_CLIENT_ID=`jq -r '.clientId' <<< '${{ secrets.AZURE_CREDENTIALS }}'`
-            az keyvault set-policy --name ${keyVaultName} --object-id ${AZURE_CLIENT_ID} --secret-permissions set
+            OBJECT_ID=`az ad signed-in-user show --query 'objectId' --output tsv`
+            az keyvault set-policy --name ${keyVaultName} --object-id ${OBJECT_ID} --secret-permissions set
             az keyvault secret set --vault-name ${keyVaultName} --name unwiredlabsApiKey --value my-secret
             openssl ecparam -name secp256k1 -genkey > nrfcloudcelllocationservice.key
             az keyvault secret set --vault-name ${keyVaultName} --name nrfCloudCellLocationServiceKey --file nrfcloudcelllocationservice.key
