@@ -31,7 +31,6 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Login to Azure
-        if: secrets.AZURE_CREDENTIALS != ''
         uses: azure/CLI@v1
         with:
           inlineScript: |
@@ -43,7 +42,6 @@ jobs:
             echo "::add-mask::${AZURE_TENANT_ID}"
             az login --service-principal -u ${AZURE_CLIENT_ID} -p ${AZURE_CLIENT_SECRET} --tenant ${AZURE_TENANT_ID}
       - name: List Azure accounts
-        if: secrets.AZURE_CREDENTIALS != ''
         uses: azure/CLI@v1
         with:
           inlineScript: |
@@ -103,7 +101,6 @@ jobs:
         run: |
           echo "NRF_CLOUD_TEAM_ID=`uuidgen`" >> $GITHUB_ENV
       - name: Deploy solution
-        if: secrets.AZURE_CREDENTIALS != ''
         uses: azure/CLI@v1
         with:
           inlineScript: |
@@ -128,7 +125,6 @@ jobs:
       - name: Pack functions
         run: node scripts/pack-app.js
       - name: Deploy Function App
-        if: secrets.AZURE_CREDENTIALS != ''
         uses: azure/CLI@v1
         with:
           inlineScript: |
@@ -139,21 +135,18 @@ jobs:
           name: functionapp-${{ github.sha }}
           path: dist/functionapp.zip
       - name: Cache certificates
-        if: secrets.AZURE_CREDENTIALS != '' != 'yes'
         uses: actions/cache@v2
         id: certs-cache
         with:
           path: ./certificates
           key: certificates-2021-09-13
       - name: Create Intermediate CA certificate
-        if: |
-          secrets.AZURE_CREDENTIALS != '' && steps.certs-cache.outputs.cache-hit != 'true'
+        if: steps.certs-cache.outputs.cache-hit != 'true'
         run: |
           node cli create-ca-root
           node cli proof-ca-root-possession
           node cli create-ca-intermediate
       - name: Run End-to-End Tests
-        if: secrets.AZURE_CREDENTIALS != ''
         uses: nick-invision/retry@v2
         env:
           FORCE_COLOR: 3
@@ -162,7 +155,6 @@ jobs:
           max_attempts: 3
           command: npm run test:e2e
       - name: Delete device certificates
-        if: secrets.AZURE_CREDENTIALS != ''
         run: rm ./certificates/*/device-*
       - name: Semantic release
         if: success()
