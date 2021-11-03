@@ -46,6 +46,11 @@ jobs:
         with:
           inlineScript: |
             az account list --output table
+      - name: List Service principals
+        uses: azure/CLI@v1
+        with:
+          inlineScript: |
+            az ad sp list --show-mine
       - uses: actions/setup-node@v2
         with:
           node-version: "16.x"
