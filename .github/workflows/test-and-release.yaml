@@ -26,14 +26,24 @@ jobs:
       B2C_CLIENT_SECRET: ${{ secrets.B2C_CLIENT_SECRET }}
       B2C_TENANT_ID: ${{ secrets.B2C_TENANT_ID }}
       AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
-      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-      AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
-      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
       RESOURCE_GROUP: ${{ secrets.RESOURCE_GROUP }}
       MOCK_HTTP_API_STORAGE_ACCOUNT_NAME: mockhttpapi
 
     steps:
       - uses: actions/checkout@v2
+      - name: Extract tenant ID, client ID, and secret
+        run: |
+          echo "${{ env.AZURE_CREDENTIALS }}" > creds.json
+          AZURE_CLIENT_ID=`cat creds.json | jq -r '.clientId'`
+          AZURE_CLIENT_SECRET=`cat creds.json | jq -r '.clientSecret'`
+          AZURE_TENANT_ID=`cat creds.json | jq -r '.tenantId'`
+          rm creds.json
+          echo "::add-mask::${AZURE_CLIENT_ID}"
+          echo "::add-mask::${AZURE_CLIENT_SECRET}"
+          echo "::add-mask::${AZURE_TENANT_ID}"
+          echo AZURE_CLIENT_ID=${AZURE_CLIENT_ID} >> $GITHUB_ENV
+          echo AZURE_CLIENT_SECRET=${AZURE_CLIENT_SECRET} >> $GITHUB_ENV
+          echo AZURE_TENANT_ID=${AZURE_TENANT_ID} >> $GITHUB_ENV
       - name: Login to Azure
         if: env.AZURE_CREDENTIALS != ''
         uses: azure/CLI@v1
