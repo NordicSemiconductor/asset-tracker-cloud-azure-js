@@ -29,7 +29,6 @@ jobs:
       MOCK_HTTP_API_STORAGE_ACCOUNT_NAME: mockhttpapi
 
     steps:
-      - uses: actions/checkout@v2
       - name: Login to Azure
         uses: azure/CLI@v1
         with:
@@ -46,6 +45,23 @@ jobs:
         with:
           inlineScript: |
             az account list --output table
+      - name: Set Key Vault name
+        run: |
+          echo "keyVaultName=${APP_NAME:-nrfassettrackerci}" >> $GITHUB_ENV
+      - name: Set secrets for third party APIs
+        uses: azure/CLI@v1
+        with:
+          inlineScript: |
+            AZURE_CLIENT_ID=`jq -r '.clientId' <<< '${{ secrets.AZURE_CREDENTIALS }}'`
+            az keyvault set-policy --name ${keyVaultName} --spn ${AZURE_CLIENT_ID} --secret-permissions set
+            az keyvault secret set --vault-name ${keyVaultName} --name unwiredlabsApiKey --value my-secret
+            openssl ecparam -name secp256k1 -genkey > nrfcloudcelllocationservice.key
+            az keyvault secret set --vault-name ${keyVaultName} --name nrfCloudCellLocationServiceKey --file nrfcloudcelllocationservice.key
+            openssl ecparam -name secp256k1 -genkey > nrfcloudagpslocationservice.key
+            az keyvault secret set --vault-name ${keyVaultName} --name nrfCloudAGPSLocationServiceKey --file nrfcloudagpslocationservice.key
+            openssl ecparam -name secp256k1 -genkey > nrfcloudpgpslocationservice.key
+            az keyvault secret set --vault-name ${keyVaultName} --name nrfCloudPGPSLocationServiceKey --file nrfcloudpgpslocationservice.key
+      - uses: actions/checkout@v2
       - uses: actions/setup-node@v2
         with:
           node-version: "16.x"
@@ -82,22 +98,6 @@ jobs:
         with:
           inlineScript: |
             az functionapp deployment source config-zip -g ${RESOURCE_GROUP:-nrfassettrackerci} -n ${MOCK_HTTP_API_STORAGE_ACCOUNT_NAME:-mockhttpapi}Functions --src dist/mock-http-api.zip
-      - name: Set Key Vault name
-        run: |
-          echo "keyVaultName=${APP_NAME:-nrfassettrackerci}" >> $GITHUB_ENV
-      - name: Set secrets for third party APIs
-        uses: azure/CLI@v1
-        with:
-          inlineScript: |
-            OBJECT_ID=`az ad signed-in-user show --query 'objectId' --output tsv`
-            az keyvault set-policy --name ${keyVaultName} --object-id ${OBJECT_ID} --secret-permissions set
-            az keyvault secret set --vault-name ${keyVaultName} --name unwiredlabsApiKey --value my-secret
-            openssl ecparam -name secp256k1 -genkey > nrfcloudcelllocationservice.key
-            az keyvault secret set --vault-name ${keyVaultName} --name nrfCloudCellLocationServiceKey --file nrfcloudcelllocationservice.key
-            openssl ecparam -name secp256k1 -genkey > nrfcloudagpslocationservice.key
-            az keyvault secret set --vault-name ${keyVaultName} --name nrfCloudAGPSLocationServiceKey --file nrfcloudagpslocationservice.key
-            openssl ecparam -name secp256k1 -genkey > nrfcloudpgpslocationservice.key
-            az keyvault secret set --vault-name ${keyVaultName} --name nrfCloudPGPSLocationServiceKey --file nrfcloudpgpslocationservice.key
       - name: Set random nRF Cloud Team ID
         run: |
           echo "NRF_CLOUD_TEAM_ID=`uuidgen`" >> $GITHUB_ENV
