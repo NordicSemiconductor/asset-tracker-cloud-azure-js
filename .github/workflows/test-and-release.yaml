@@ -45,22 +45,6 @@ jobs:
         with:
           inlineScript: |
             az account list --output table
-      - name: Set Key Vault name
-        run: |
-          echo "keyVaultName=${APP_NAME:-nrfassettrackerci}" >> $GITHUB_ENV
-      - name: Set secrets for third party APIs
-        uses: azure/CLI@v1
-        with:
-          inlineScript: |
-            AZURE_CLIENT_ID=`jq -r '.clientId' <<< '${{ secrets.AZURE_CREDENTIALS }}'`
-            az keyvault set-policy --name ${keyVaultName} --spn ${AZURE_CLIENT_ID} --secret-permissions set
-            az keyvault secret set --vault-name ${keyVaultName} --name unwiredlabsApiKey --value my-secret
-            openssl ecparam -name secp256k1 -genkey > nrfcloudcelllocationservice.key
-            az keyvault secret set --vault-name ${keyVaultName} --name nrfCloudCellLocationServiceKey --file nrfcloudcelllocationservice.key
-            openssl ecparam -name secp256k1 -genkey > nrfcloudagpslocationservice.key
-            az keyvault secret set --vault-name ${keyVaultName} --name nrfCloudAGPSLocationServiceKey --file nrfcloudagpslocationservice.key
-            openssl ecparam -name secp256k1 -genkey > nrfcloudpgpslocationservice.key
-            az keyvault secret set --vault-name ${keyVaultName} --name nrfCloudPGPSLocationServiceKey --file nrfcloudpgpslocationservice.key
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2
         with:
@@ -101,6 +85,22 @@ jobs:
       - name: Set random nRF Cloud Team ID
         run: |
           echo "NRF_CLOUD_TEAM_ID=`uuidgen`" >> $GITHUB_ENV
+      - name: Set Key Vault name
+        run: |
+          echo "keyVaultName=${APP_NAME:-nrfassettrackerci}" >> $GITHUB_ENV
+      - name: Set secrets for third party APIs
+        uses: azure/CLI@v1
+        with:
+          inlineScript: |
+            AZURE_CLIENT_ID=`jq -r '.clientId' <<< '${{ secrets.AZURE_CREDENTIALS }}'`
+            az keyvault set-policy --name ${keyVaultName} --spn ${AZURE_CLIENT_ID} --secret-permissions set
+            az keyvault secret set --vault-name ${keyVaultName} --name unwiredlabsApiKey --value my-secret
+            openssl ecparam -name secp256k1 -genkey > nrfcloudcelllocationservice.key
+            az keyvault secret set --vault-name ${keyVaultName} --name nrfCloudCellLocationServiceKey --file nrfcloudcelllocationservice.key
+            openssl ecparam -name secp256k1 -genkey > nrfcloudagpslocationservice.key
+            az keyvault secret set --vault-name ${keyVaultName} --name nrfCloudAGPSLocationServiceKey --file nrfcloudagpslocationservice.key
+            openssl ecparam -name secp256k1 -genkey > nrfcloudpgpslocationservice.key
+            az keyvault secret set --vault-name ${keyVaultName} --name nrfCloudPGPSLocationServiceKey --file nrfcloudpgpslocationservice.key
       - name: Deploy solution
         uses: azure/CLI@v1
         with:
@@ -148,13 +148,11 @@ jobs:
           node cli proof-ca-root-possession
           node cli create-ca-intermediate
       - name: Run End-to-End Tests
-        uses: nick-invision/retry@v2
+        uses: azure/CLI@v1
         env:
           FORCE_COLOR: 3
         with:
-          timeout_minutes: 10
-          max_attempts: 3
-          command: npm run test:e2e
+          inlineScript: npm run test:e2e
       - name: Delete device certificates
         run: rm ./certificates/*/device-*
       - name: Semantic release
