@@ -29,6 +29,14 @@ jobs:
       MOCK_HTTP_API_STORAGE_ACCOUNT_NAME: mockhttpapi
 
     steps:
+      - name: Install Node.js in azure/CLI container
+        uses: azure/CLI@v1
+        with:
+          inlineScript: |
+            curl -fsSL https://deb.nodesource.com/setup_16.x | sudo -E bash -
+            sudo apt-get install -y nodejs
+            node -v
+            npm -v
       - name: Login to Azure
         uses: azure/CLI@v1
         with:
