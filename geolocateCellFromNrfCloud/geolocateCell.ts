@@ -13,7 +13,11 @@ import { SecretClient } from '@azure/keyvault-secrets'
 import { DefaultAzureCredential } from '@azure/identity'
 import { apiClient } from '../third-party/nrfcloud.com/apiclient.js'
 import { URL } from 'url'
-import { TObject, TProperties, Type } from '@sinclair/typebox'
+import { Static, TObject, TProperties } from '@sinclair/typebox'
+import {
+	locateRequestSchema,
+	locateResultSchema,
+} from '../third-party/nrfcloud.com/types.js'
 
 const config = () =>
 	fromEnv({
@@ -49,28 +53,6 @@ const nrfCloudCellLocationServiceKeyPromise = (async () => {
 	return latestSecret.value as string
 })()
 
-const locateRequestSchema = Type.Record(
-	Type.Union([Type.Literal('nbiot'), Type.Literal('lte')]),
-	Type.Array(
-		Type.Object(
-			{
-				eci: Type.Integer({ minimum: 1 }),
-				mcc: Type.Integer({ minimum: 100, maximum: 999 }),
-				mnc: Type.Integer({ minimum: 1, maximum: 99 }),
-				tac: Type.Integer({ minimum: 1 }),
-			},
-			{ additionalProperties: false },
-		),
-		{ minItems: 1 },
-	),
-)
-
-const locateResultSchema = Type.Object({
-	lat: Type.Number({ minimum: -90, maximum: 90 }),
-	lon: Type.Number({ minimum: -180, maximum: 180 }),
-	uncertainty: Type.Number({ minimum: 0 }),
-})
-
 const geolocateCell: AzureFunction = async (
 	context: Context,
 	req: HttpRequest,
@@ -95,6 +77,15 @@ const geolocateCell: AzureFunction = async (
 		mccmnc: string
 		nw: NetworkMode
 	}
+
+	if (nw === NetworkMode.NBIoT) {
+		context.res = result(context)(
+			{ error: 'Resolving NB-IoT cells is not yet supported.' },
+			422,
+		)
+		return
+	}
+
 	const cell = {
 		nw,
 		cell: parseInt(c, 10),
@@ -126,18 +117,21 @@ const geolocateCell: AzureFunction = async (
 			})
 
 			const mccmnc = cell.mccmnc.toFixed(0)
+			const payload: Static<typeof locateRequestSchema> = {
+				// [cell.nw === NetworkMode.NBIoT ? 'nbiot' : `lte`]: [ NB-IoT is not yet supported
+				lte: [
+					{
+						eci: cell.cell,
+						mcc: parseInt(mccmnc.substr(0, mccmnc.length - 2), 10),
+						mnc: parseInt(mccmnc.substr(-2), 10),
+						tac: cell.area,
+					},
+				],
+			}
+
 			const maybeCellGeoLocation = await c.post({
 				resource: 'location/cell',
-				payload: {
-					[cell.nw === NetworkMode.NBIoT ? 'nbiot' : `lte`]: [
-						{
-							eci: cell.cell,
-							mcc: parseInt(mccmnc.substr(0, mccmnc.length - 2), 10),
-							mnc: parseInt(mccmnc.substr(-2), 10),
-							tac: cell.area,
-						},
-					],
-				},
+				payload,
 				requestSchema: locateRequestSchema as unknown as TObject<TProperties>,
 				responseSchema: locateResultSchema,
 			})()

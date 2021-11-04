@@ -237,6 +237,62 @@
         "description": "Consumer group name for cell geolocation updates"
       },
       "defaultValue": "cellgeolocation"
+    },
+    "ncellmeasReportsDatabaseName": {
+      "type": "string",
+      "minLength": 3,
+      "metadata": {
+        "description": "Name for the database that stores neighbor cell measurement reports"
+      },
+      "defaultValue": "ncellmeasReports"
+    },
+    "ncellmeasReportsNrfCloudLocationCacheContainerName": {
+      "type": "string",
+      "minLength": 3,
+      "metadata": {
+        "description": "Name for the container that stores neighbor cell measurement report geo locations from nRF Cloud"
+      },
+      "defaultValue": "nrfcloudcache"
+    },
+    "ncellmeasReportsContainerName": {
+      "type": "string",
+      "minLength": 3,
+      "metadata": {
+        "description": "Name for the container that stores neighbor cell measurement reports"
+      },
+      "defaultValue": "report"
+    },
+    "ncellmeasReportsQueueName": {
+      "type": "string",
+      "minLength": 3,
+      "metadata": {
+        "description": "Name for the queue that stores neighbor cell measurement reports"
+      },
+      "defaultValue": "ncellmeasreports"
+    },
+    "ncellmeasReportsNrfCloudQueueName": {
+      "type": "string",
+      "minLength": 3,
+      "metadata": {
+        "description": "Name for the queue that stores neighbor cell measurement reports to be resolved using the nRF Cloud API"
+      },
+      "defaultValue": "nrfcloudncellmeasreports"
+    },
+    "ncellmeasReportsIotEventsConsumerGroupName": {
+      "type": "string",
+      "minLength": 3,
+      "metadata": {
+        "description": "Consumer group name for neighbor cell measurement reports"
+      },
+      "defaultValue": "ncellmeasReports"
+    },
+    "storeDeviceUpdatesIotEventsConsumerGroupName": {
+      "type": "string",
+      "minLength": 3,
+      "metadata": {
+        "description": "Consumer group name for storing device updates"
+      },
+      "defaultValue": "storedeviceupdate"
     }
   },
   "variables": {
@@ -302,7 +358,7 @@
     {
       "type": "Microsoft.Devices/iotHubs/eventhubEndpoints/ConsumerGroups",
       "apiVersion": "2020-03-01",
-      "name": "[concat(parameters('appName'), 'IotHub', '/events/storedeviceupdate')]",
+      "name": "[concat(parameters('appName'), 'IotHub', '/events/', parameters('storeDeviceUpdatesIotEventsConsumerGroupName'))]",
       "dependsOn": [
         "[resourceId('Microsoft.Devices/IotHubs', concat(parameters('appName'), 'IotHub'))]"
       ]
@@ -329,6 +385,15 @@
       "type": "Microsoft.Devices/iotHubs/eventhubEndpoints/ConsumerGroups",
       "apiVersion": "2020-03-01",
       "name": "[concat(parameters('appName'), 'IotHub', '/events/', parameters('cellGeoLocationIotEventsConsumerGroupName'))]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Devices/IotHubs', concat(parameters('appName'), 'IotHub'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Devices/iotHubs/eventhubEndpoints/ConsumerGroups",
+      "condition": "[parameters('enableNrfCloudCellLocationService')]",
+      "apiVersion": "2020-03-01",
+      "name": "[concat(parameters('appName'), 'IotHub', '/events/', parameters('ncellmeasReportsIotEventsConsumerGroupName'))]",
       "dependsOn": [
         "[resourceId('Microsoft.Devices/IotHubs', concat(parameters('appName'), 'IotHub'))]"
       ]
@@ -584,6 +649,34 @@
               {
                 "name": "SignalRConnectionString",
                 "value": "[listKeys(resourceId('Microsoft.SignalRService/SignalR', concat(parameters('appName'), 'SignalR')), providers('Microsoft.SignalRService','SignalR').apiVersions[0]).primaryConnectionString]"
+              },
+              {
+                "name": "NCELLMEAS_REPORTS_IOT_EVENTS_CONSUMER_GROUP_NAME",
+                "value": "[parameters('ncellmeasReportsIotEventsConsumerGroupName')]"
+              },
+              {
+                "name": "NCELLMEAS_REPORTS_DATABASE_NAME",
+                "value": "[parameters('ncellmeasReportsDatabaseName')]"
+              },
+              {
+                "name": "NCELLMEAS_REPORTS_CONTAINER_NAME",
+                "value": "[parameters('ncellmeasReportsContainerName')]"
+              },
+              {
+                "name": "NCELLMEAS_REPORTS_NRFCLOUD_LOCATION_CACHE_CONTAINER_NAME",
+                "value": "[parameters('ncellmeasReportsNrfCloudLocationCacheContainerName')]"
+              },
+              {
+                "name": "NCELLMEAS_REPORTS_QUEUE_NAME",
+                "value": "[parameters('ncellmeasReportsQueueName')]"
+              },
+              {
+                "name": "NCELLMEAS_REPORTS_NRFCLOUD_QUEUE_NAME",
+                "value": "[parameters('ncellmeasReportsNrfCloudQueueName')]"
+              },
+              {
+                "name": "STORE_DEVICE_UPDATES_IOT_EVENTS_CONSUMER_GROUP_NAME",
+                "value": "[parameters('storeDeviceUpdatesIotEventsConsumerGroupName')]"
               }
             ]
           }
@@ -1018,6 +1111,125 @@
       "type": "Microsoft.Storage/storageAccounts/queueServices/queues",
       "apiVersion": "2021-04-01",
       "name": "[concat(parameters('storageAccountName'), '/default/', parameters('pgpsRequestNrfCloudQueueName'))]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]"
+      ],
+      "properties": {}
+    },
+    {
+      "condition": "[parameters('enableNrfCloudCellLocationService')]",
+      "type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases",
+      "apiVersion": "2020-03-01",
+      "name": "[concat(parameters('appName'), '/', parameters('ncellmeasReportsDatabaseName'))]",
+      "dependsOn": [
+        "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('appName'))]"
+      ],
+      "properties": {
+        "resource": {
+          "id": "[parameters('ncellmeasReportsDatabaseName')]"
+        },
+        "options": {}
+      }
+    },
+    {
+      "condition": "[parameters('enableNrfCloudCellLocationService')]",
+      "type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers",
+      "apiVersion": "2020-03-01",
+      "name": "[concat(parameters('appName'), '/',parameters('ncellmeasReportsDatabaseName'),'/', parameters('ncellmeasReportsContainerName'))]",
+      "dependsOn": [
+        "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlDatabases', parameters('appName'), parameters('ncellmeasReportsDatabaseName'))]",
+        "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('appName'))]"
+      ],
+      "properties": {
+        "resource": {
+          "id": "[parameters('ncellmeasReportsContainerName')]",
+          "indexingPolicy": {
+            "indexingMode": "consistent",
+            "automatic": true,
+            "includedPaths": [
+              {
+                "path": "/*"
+              }
+            ],
+            "excludedPaths": [
+              {
+                "path": "/\"_etag\"/?"
+              }
+            ]
+          },
+          "conflictResolutionPolicy": {
+            "mode": "LastWriterWins",
+            "conflictResolutionPath": "/_ts"
+          },
+          "compositeIndexes": [
+            [
+              {
+                "path": "/source",
+                "order": "ascending"
+              }
+            ]
+          ],
+          "defaultTtl": 3600
+        }
+      }
+    },
+    {
+      "condition": "[parameters('enableNrfCloudCellLocationService')]",
+      "type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers",
+      "apiVersion": "2020-03-01",
+      "name": "[concat(parameters('appName'), '/',parameters('ncellmeasReportsDatabaseName'),'/', parameters('ncellmeasReportsNrfCloudLocationCacheContainerName'))]",
+      "dependsOn": [
+        "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlDatabases', parameters('appName'), parameters('ncellmeasReportsDatabaseName'))]",
+        "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('appName'))]"
+      ],
+      "properties": {
+        "resource": {
+          "id": "[parameters('ncellmeasReportsNrfCloudLocationCacheContainerName')]",
+          "indexingPolicy": {
+            "indexingMode": "consistent",
+            "automatic": true,
+            "includedPaths": [
+              {
+                "path": "/*"
+              }
+            ],
+            "excludedPaths": [
+              {
+                "path": "/\"_etag\"/?"
+              }
+            ]
+          },
+          "conflictResolutionPolicy": {
+            "mode": "LastWriterWins",
+            "conflictResolutionPath": "/_ts"
+          },
+          "compositeIndexes": [
+            [
+              {
+                "path": "/source",
+                "order": "ascending"
+              }
+            ]
+          ],
+          "defaultTtl": 3600
+        }
+      }
+    },
+    {
+      "condition": "[parameters('enableNrfCloudCellLocationService')]",
+      "type": "Microsoft.Storage/storageAccounts/queueServices/queues",
+      "apiVersion": "2021-04-01",
+      "name": "[concat(parameters('storageAccountName'), '/default/', parameters('ncellmeasReportsQueueName'))]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]"
+      ],
+      "properties": {}
+    },
+    {
+      "condition": "[parameters('enableNrfCloudCellLocationService')]",
+      "type": "Microsoft.Storage/storageAccounts/queueServices/queues",
+      "apiVersion": "2021-04-01",
+      "name": "[concat(parameters('storageAccountName'), '/default/', parameters('ncellmeasReportsNrfCloudQueueName'))]",
       "dependsOn": [
         "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]"
       ],
