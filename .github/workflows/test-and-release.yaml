@@ -35,6 +35,17 @@ jobs:
         uses: azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
+      - name: Login to Azure CLI
+        uses: azure/CLI@v1
+        with:
+          inlineScript: |
+            AZURE_CLIENT_ID=`jq -r '.clientId' <<< '${{ secrets.AZURE_CREDENTIALS }}'`
+            AZURE_CLIENT_SECRET=`jq -r '.clientSecret' <<< '${{ secrets.AZURE_CREDENTIALS }}'`
+            AZURE_TENANT_ID=`jq -r '.tenantId' <<< '${{ secrets.AZURE_CREDENTIALS }}'`
+            echo "::add-mask::${AZURE_CLIENT_ID}"
+            echo "::add-mask::${AZURE_CLIENT_SECRET}"
+            echo "::add-mask::${AZURE_TENANT_ID}"
+            az login --service-principal -u ${AZURE_CLIENT_ID} -p ${AZURE_CLIENT_SECRET} --tenant ${AZURE_TENANT_ID}
       - name: List Azure accounts
         uses: azure/CLI@v1
         with:
