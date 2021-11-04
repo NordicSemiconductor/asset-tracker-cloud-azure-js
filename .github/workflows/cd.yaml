@@ -180,7 +180,7 @@ jobs:
           inlineScript: |
             echo "${{ secrets.NRF_CLOUD_PGPS_LOCATION_SERVICE_KEY }}" > nrfcloudpgpslocationservice.key
             az keyvault secret set --vault-name ${{ env.keyVaultName }} --name nrfCloudPGPSLocationServiceKey --file nrfcloudpgpslocationservice.key
-            rm nrfcloudagpslocationservice.key
+            rm nrfcloudpgpslocationservice.key
       - name: Pack Function App
         run: node scripts/pack-app.js
       - name: Deploy Function App
