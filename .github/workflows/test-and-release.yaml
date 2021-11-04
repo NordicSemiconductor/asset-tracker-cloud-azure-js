@@ -29,17 +29,12 @@ jobs:
       MOCK_HTTP_API_STORAGE_ACCOUNT_NAME: mockhttpapi
 
     steps:
+      # We are authenticating here the non-containerized environment, so we
+      # can run the Azure JavaScript SDK with these credentials
       - name: Login to Azure
-        uses: azure/CLI@v1
+        uses: azure/login@v1
         with:
-          inlineScript: |
-            AZURE_CLIENT_ID=`jq -r '.clientId' <<< '${{ secrets.AZURE_CREDENTIALS }}'`
-            AZURE_CLIENT_SECRET=`jq -r '.clientSecret' <<< '${{ secrets.AZURE_CREDENTIALS }}'`
-            AZURE_TENANT_ID=`jq -r '.tenantId' <<< '${{ secrets.AZURE_CREDENTIALS }}'`
-            echo "::add-mask::${AZURE_CLIENT_ID}"
-            echo "::add-mask::${AZURE_CLIENT_SECRET}"
-            echo "::add-mask::${AZURE_TENANT_ID}"
-            az login --service-principal -u ${AZURE_CLIENT_ID} -p ${AZURE_CLIENT_SECRET} --tenant ${AZURE_TENANT_ID}
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
       - name: List Azure accounts
         uses: azure/CLI@v1
         with:
@@ -93,6 +88,7 @@ jobs:
         with:
           inlineScript: |
             AZURE_CLIENT_ID=`jq -r '.clientId' <<< '${{ secrets.AZURE_CREDENTIALS }}'`
+            echo "::add-mask::${AZURE_CLIENT_ID}"
             az keyvault set-policy --name ${keyVaultName} --spn ${AZURE_CLIENT_ID} --secret-permissions set
             az keyvault secret set --vault-name ${keyVaultName} --name unwiredlabsApiKey --value my-secret
             openssl ecparam -name secp256k1 -genkey > nrfcloudcelllocationservice.key
@@ -147,12 +143,6 @@ jobs:
           node cli create-ca-root
           node cli proof-ca-root-possession
           node cli create-ca-intermediate
-      # We are authenticating here the non-containerized environment, so we
-      # can run the Azure JavaScript SDK with these credentials
-      - name: Login to Azure
-        uses: azure/login@v1
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
       - name: Run End-to-End Tests
         uses: nick-invision/retry@v2
         env:
