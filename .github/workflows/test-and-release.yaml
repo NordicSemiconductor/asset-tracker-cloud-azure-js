@@ -35,7 +35,7 @@ jobs:
           inlineScript: |
             # This is alpine
             # See https://github.com/nodejs/docker-node/blob/d146f71011bc87d739c9ed3e2820726af7d75417/16/alpine3.11/Dockerfile
-            NODE_VERSION=16
+            NODE_VERSION=16.9.1
             ARCH=x64
             curl -fsSLO --compressed "https://unofficial-builds.nodejs.org/download/release/v$NODE_VERSION/node-v$NODE_VERSION-linux-$ARCH-musl.tar.xz"
             tar -xJf "node-v$NODE_VERSION-linux-$ARCH-musl.tar.xz" -C /usr/local --strip-components=1 --no-same-owner
