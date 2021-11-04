@@ -33,10 +33,15 @@ jobs:
         uses: azure/CLI@v1
         with:
           inlineScript: |
-            curl -fsSL https://deb.nodesource.com/setup_16.x | bash -
-            apt-get install -y nodejs
-            node -v
-            npm -v
+            # This is alpine
+            # See https://github.com/nodejs/docker-node/blob/d146f71011bc87d739c9ed3e2820726af7d75417/16/alpine3.11/Dockerfile
+            NODE_VERSION=16
+            ARCH=x64
+            curl -fsSLO --compressed "https://unofficial-builds.nodejs.org/download/release/v$NODE_VERSION/node-v$NODE_VERSION-linux-$ARCH-musl.tar.xz"
+            tar -xJf "node-v$NODE_VERSION-linux-$ARCH-musl.tar.xz" -C /usr/local --strip-components=1 --no-same-owner
+            ln -s /usr/local/bin/node /usr/local/bin/nodejs
+            node --version
+            npm --version
       - name: Login to Azure
         uses: azure/CLI@v1
         with:
