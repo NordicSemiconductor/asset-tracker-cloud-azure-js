@@ -18,6 +18,19 @@ const storeDeviceUpdateInCosmosDB: AzureFunction = async (
 		source: context.bindingData.systemProperties['iothub-message-source'],
 	} as const
 
+	if (
+		context.bindingData.systemProperties['iothub-message-source'] ===
+			'Telemetry' &&
+		Object.keys(context.bindingData?.properties ?? {}).length > 0
+	) {
+		log(context)(
+			`Ignoring telemetry message with property bag ${JSON.stringify(
+				context.bindingData.properties,
+			)}`,
+		)
+		return
+	}
+
 	type Document = typeof baseDoc & { deviceUpdate: DeviceUpdate }
 	let document: Document | Document[]
 
