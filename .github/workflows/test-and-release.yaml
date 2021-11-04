@@ -148,7 +148,6 @@ jobs:
           node cli proof-ca-root-possession
           node cli create-ca-intermediate
       - name: Run End-to-End Tests
-        if: env.AZURE_CREDENTIALS != ''
         uses: nick-invision/retry@v2
         env:
           FORCE_COLOR: 3
