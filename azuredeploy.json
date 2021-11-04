@@ -580,6 +580,10 @@
               {
                 "name": "CELL_GEOLOCATION_IOT_EVENTS_CONSUMER_GROUP_NAME",
                 "value": "[parameters('cellGeoLocationIotEventsConsumerGroupName')]"
+              },
+              {
+                "name": "SignalRConnectionString",
+                "value": "[listKeys(resourceId('Microsoft.SignalRService/SignalR', concat(parameters('appName'), 'SignalR')), providers('Microsoft.SignalRService','SignalR').apiVersions[0]).primaryConnectionString]"
               }
             ]
           }
