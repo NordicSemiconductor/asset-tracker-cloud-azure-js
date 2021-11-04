@@ -148,24 +148,14 @@ jobs:
           node cli proof-ca-root-possession
           node cli create-ca-intermediate
       - name: Run End-to-End Tests
-        uses: azure/CLI@v1
+        if: env.AZURE_CREDENTIALS != ''
+        uses: nick-invision/retry@v2
         env:
           FORCE_COLOR: 3
         with:
-          inlineScript: |
-            # Install node & npm
-            # This is alpine
-            # See https://github.com/nodejs/docker-node/blob/d146f71011bc87d739c9ed3e2820726af7d75417/16/alpine3.11/Dockerfile
-            NODE_VERSION=16.9.1
-            ARCH=x64
-            curl -fsSLO --compressed "https://unofficial-builds.nodejs.org/download/release/v$NODE_VERSION/node-v$NODE_VERSION-linux-$ARCH-musl.tar.xz"
-            tar -xJf "node-v$NODE_VERSION-linux-$ARCH-musl.tar.xz" -C /usr/local --strip-components=1 --no-same-owner
-            ln -s /usr/local/bin/node /usr/local/bin/nodejs
-            npm install -g npm@8
-            node --version
-            npm --version
-            # Run tests
-            npm run test:e2e
+          timeout_minutes: 10
+          max_attempts: 3
+          command: npm run test:e2e
       - name: Delete device certificates
         run: rm ./certificates/*/device-*
       - name: Semantic release
