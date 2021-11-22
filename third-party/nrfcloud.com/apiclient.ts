@@ -11,7 +11,7 @@ import * as E from 'fp-ts/lib/Either.js'
 import { request as nodeRequest, RequestOptions } from 'https'
 import { URL } from 'url'
 import { ErrorInfo, ErrorType } from '../../lib/ErrorInfo.js'
-import { Static, TSchema } from '@sinclair/typebox'
+import { Static, TObject, TProperties } from '@sinclair/typebox'
 import { pipe } from 'fp-ts/lib/function.js'
 import Ajv from 'ajv'
 import jwt from 'jsonwebtoken'
@@ -25,7 +25,7 @@ ajv.addKeyword('kind')
 ajv.addKeyword('modifier')
 
 const validate =
-	<Schema extends TSchema>({
+	<Schema extends TObject<TProperties>>({
 		schema,
 		errorType,
 		errorMessage,
@@ -137,7 +137,10 @@ const reqJSON =
 		teamId: string
 		method: 'GET' | 'POST'
 	}) =>
-	<Request extends TSchema, Response extends TSchema>({
+	<
+		Request extends TObject<TProperties>,
+		Response extends TObject<TProperties>,
+	>({
 		resource,
 		payload,
 		headers,
@@ -210,7 +213,7 @@ const head =
 		serviceKey: string
 		teamId: string
 	}) =>
-	<Request extends TSchema>({
+	<Request extends TObject<TProperties>>({
 		resource,
 		payload,
 		headers,
@@ -289,7 +292,7 @@ const reqBinary =
 		teamId: string
 		method: 'GET' | 'POST'
 	}) =>
-	<Request extends TSchema>({
+	<Request extends TObject<TProperties>>({
 		resource,
 		payload,
 		headers,
@@ -332,7 +335,10 @@ export const apiClient = ({
 	serviceKey: string
 	teamId: string
 }): {
-	post: <Request extends TSchema, Response extends TSchema>({
+	post: <
+		Request extends TObject<TProperties>,
+		Response extends TObject<TProperties>,
+	>({
 		resource,
 		payload,
 		headers,
@@ -345,7 +351,10 @@ export const apiClient = ({
 		requestSchema: Request
 		responseSchema: Response
 	}) => TaskEither<ErrorInfo, Static<typeof responseSchema>>
-	get: <Request extends TSchema, Response extends TSchema>({
+	get: <
+		Request extends TObject<TProperties>,
+		Response extends TObject<TProperties>,
+	>({
 		resource,
 		payload,
 		headers,
@@ -358,7 +367,7 @@ export const apiClient = ({
 		requestSchema: Request
 		responseSchema: Response
 	}) => TaskEither<ErrorInfo, Static<typeof responseSchema>>
-	head: <Request extends TSchema>({
+	head: <Request extends TObject<TProperties>>({
 		resource,
 		payload,
 		headers,
@@ -370,7 +379,7 @@ export const apiClient = ({
 		headers?: Record<string, string>
 		requestSchema: Request
 	}) => TaskEither<ErrorInfo, OutgoingHttpHeaders>
-	getBinary: <Request extends TSchema>({
+	getBinary: <Request extends TObject<TProperties>>({
 		resource,
 		payload,
 		headers,

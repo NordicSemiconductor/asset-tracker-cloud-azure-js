@@ -13,7 +13,7 @@ import { SecretClient } from '@azure/keyvault-secrets'
 import { DefaultAzureCredential } from '@azure/identity'
 import { apiClient } from '../third-party/nrfcloud.com/apiclient.js'
 import { URL } from 'url'
-import { Type } from '@sinclair/typebox'
+import { TObject, TProperties, Type } from '@sinclair/typebox'
 
 const config = () =>
 	fromEnv({
@@ -138,7 +138,7 @@ const geolocateCell: AzureFunction = async (
 						},
 					],
 				},
-				requestSchema: locateRequestSchema,
+				requestSchema: locateRequestSchema as unknown as TObject<TProperties>,
 				responseSchema: locateResultSchema,
 			})()
 
