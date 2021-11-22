@@ -382,6 +382,15 @@
       ]
     },
     {
+      "type": "Microsoft.Devices/iotHubs/eventhubEndpoints/ConsumerGroups",
+      "condition": "[parameters('enableNrfCloudCellLocationService')]",
+      "apiVersion": "2020-03-01",
+      "name": "[concat(parameters('appName'), 'IotHub', '/events/', parameters('ncellmeasReportsIotEventsConsumerGroupName'))]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Devices/IotHubs', concat(parameters('appName'), 'IotHub'))]"
+      ]
+    },
+    {
       "type": "Microsoft.Devices/provisioningServices",
       "sku": {
         "name": "S1",

@@ -14,7 +14,7 @@ Feature: Device: Update Shadow
         "dev": {
           "v": {
             "band": 3,
-            "nw": "NB-IoT GPS",
+            "nw": "LTE-M GPS",
             "iccid": "89882806660004909182",
             "modV": "mfw_nrf9160_1.0.0",
             "brdV": "thingy91_nrf9160"

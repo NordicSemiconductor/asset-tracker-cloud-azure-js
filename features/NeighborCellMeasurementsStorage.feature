@@ -77,45 +77,39 @@ Feature: Store neighboring cell measurement reports
         When I POST /neighborcellgeolocation/reports?deviceId={trackerId}
         Then the response status code should be 200
         And the response Content-Type should be "application/json; charset=utf-8"
-        Then I store "@id" into "ncellmeasReport"
-
-    Scenario: Get the latest report
-
-        Given the endpoint is "{apiEndpoint}"
-        And the Authorization header is "Bearer {accessToken}"
-        And the Content-Type header is "application/json; charset=utf-8"
-        When I GET {ncellmeasReport}
-        Then the response status code should be 200
-        And the response Content-Type should be "application/json; charset=utf-8"
         Then the response should match this JSON
         """
         {
-            "report": {
-                "mcc": 242,
-                "mnc": 1,
-                "cell": {ncellmeasCellId},
-                "area": {ncellmeasAreaId},
-                "earfcn": 6446,
-                "adv": 80,
-                "rsrp": -97,
-                "rsrq": -9,
-                "nmr": [
-                    {
-                        "earfcn": 262143,
-                        "cell": 501,
-                        "rsrp": -104,
-                        "rsrq": -18
+            "items": [
+                {
+                    "report": {
+                        "mcc": 242,
+                        "mnc": 1,
+                        "cell": {ncellmeasCellId},
+                        "area": {ncellmeasAreaId},
+                        "earfcn": 6446,
+                        "adv": 80,
+                        "rsrp": -97,
+                        "rsrq": -9,
+                        "nmr": [
+                            {
+                                "earfcn": 262143,
+                                "cell": 501,
+                                "rsrp": -104,
+                                "rsrq": -18
+                            },
+                            {
+                                "earfcn": 262265,
+                                "cell": 503,
+                                "rsrp": -116,
+                                "rsrq": -11
+                            }
+                        ],
+                        "ts": {ts}
                     },
-                    {
-                        "earfcn": 262265,
-                        "cell": 503,
-                        "rsrp": -116,
-                        "rsrq": -11
-                    }
-                ],
-                "ts": {ts}
-            },
-            "nw": "LTE-M GPS",
-            "deviceId": "{trackerId}"
+                    "nw": "LTE-M GPS",
+                    "deviceId": "{trackerId}"
+                }
+            ]
         }
         """
