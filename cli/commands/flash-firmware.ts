@@ -9,11 +9,9 @@ import { v4 } from 'uuid'
 import { progress, success } from '../logging.js'
 
 const getLatestFirmware = async ({
-	nbiot,
 	nodebug,
 	dk,
 }: {
-	nbiot: boolean
 	nodebug: boolean
 	dk: boolean
 }) => {
@@ -46,7 +44,6 @@ const getLatestFirmware = async ({
 		({ name }) =>
 			name.includes('.hex') &&
 			name.includes(dk ? 'nRF9160DK' : 'Thingy91') &&
-			name.includes(nbiot ? 'nbiot' : 'ltem') &&
 			(nodebug ? name.includes('nodebug') : !name.includes('nodebug')),
 	)
 
@@ -75,10 +72,6 @@ export const flashFirmwareCommand = (): CommandDefinition => ({
 			description: `Flash a 9160 DK`,
 		},
 		{
-			flags: '--nbiot',
-			description: `Flash NB-IoT firmware`,
-		},
-		{
 			flags: '--nodebug',
 			description: `Flash no-debug firmware`,
 		},
@@ -91,9 +84,8 @@ export const flashFirmwareCommand = (): CommandDefinition => ({
 			description: `Log debug messages`,
 		},
 	],
-	action: async ({ dk, nbiot, nodebug, firmware }) => {
-		const hexfile =
-			firmware ?? (await getLatestFirmware({ dk, nbiot, nodebug }))
+	action: async ({ dk, nodebug, firmware }) => {
+		const hexfile = firmware ?? (await getLatestFirmware({ dk, nodebug }))
 
 		progress(`Flashing firmware`, hexfile)
 
