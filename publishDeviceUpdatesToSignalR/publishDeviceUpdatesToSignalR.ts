@@ -12,6 +12,7 @@ const publishDeviceUpdatesToSignalR: AzureFunction = async (
 	log(context)({
 		messages: updates,
 		systemPropertiesArray: context.bindingData.systemPropertiesArray,
+		propertiesArray: context.bindingData.propertiesArray,
 	})
 
 	const signalRMessages = []
@@ -19,6 +20,7 @@ const publishDeviceUpdatesToSignalR: AzureFunction = async (
 	const addProperties = (message: DeviceUpdate, k: number) => ({
 		message,
 		systemProperties: context.bindingData.systemPropertiesArray[k],
+		propertiesArray: context.bindingData.propertiesArray[k],
 	})
 
 	const reportedUpdates = updates
@@ -58,9 +60,10 @@ const publishDeviceUpdatesToSignalR: AzureFunction = async (
 			({ systemProperties }) =>
 				systemProperties['iothub-message-source'] === 'Telemetry',
 		)
-		.map(({ message, systemProperties }) => ({
+		.map(({ message, systemProperties, propertiesArray }) => ({
 			deviceId: systemProperties['iothub-connection-device-id'],
 			message,
+			propertiesArray,
 		}))
 
 	if (messages.length) {
