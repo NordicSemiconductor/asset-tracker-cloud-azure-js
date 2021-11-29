@@ -28,13 +28,18 @@ const queryHistoricalDeviceData: AzureFunction = async (
 ): Promise<void> => {
 	log(context)({ req })
 
-	const { deviceId } = req.query as {
+	const { deviceId, limit: limitString } = req.query as {
 		deviceId: string
+		limit: string
 	}
+
+	const limit = parseInt(limitString ?? '10', 10)
 
 	try {
 		const res = await container.items
-			.query(`SELECT * FROM c WHERE c.deviceId = "${deviceId}"`)
+			.query(
+				`SELECT * FROM c WHERE c.deviceId = "${deviceId}" ORDER BY c.timestamp DESC OFFSET 0 LIMIT ${limit}`,
+			)
 			.fetchNext()
 		context.res = result(context)({
 			items: res.resources.map(({ report, id, deviceId, timestamp, nw }) => ({
