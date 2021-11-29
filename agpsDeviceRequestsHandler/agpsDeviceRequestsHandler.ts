@@ -98,7 +98,7 @@ const agpsDeviceRequestsHandler: AzureFunction = async (
 				deviceId,
 			})
 		} else {
-			console.error(JSON.stringify(valid.left))
+			logError(context)(JSON.stringify(valid.left))
 		}
 	})
 	log(context)({ deviceRequests })

@@ -88,6 +88,7 @@ const pgpsResolveRequestFromNrfCloud: AzureFunction = async (
 				teamId,
 			}),
 			log(context),
+			logError(context),
 		)
 
 		log(context)({

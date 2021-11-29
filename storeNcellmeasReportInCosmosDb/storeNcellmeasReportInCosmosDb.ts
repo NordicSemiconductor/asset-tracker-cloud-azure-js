@@ -83,7 +83,7 @@ const storeNcellmeasReportInCosmosDb: AzureFunction = async (
 		context.bindings.report = JSON.stringify(document)
 		log(context)({ document })
 	} else {
-		console.error(JSON.stringify(valid.left))
+		logError(context)(JSON.stringify(valid.left))
 	}
 }
 

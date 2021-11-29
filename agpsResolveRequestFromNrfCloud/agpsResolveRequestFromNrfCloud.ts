@@ -87,6 +87,7 @@ const agpsResolveRequestFromNrfCloud: AzureFunction = async (
 				teamId,
 			}),
 			log(context),
+			logError(context),
 		)
 
 		log(context)({

@@ -58,14 +58,18 @@ const apiResponseSchema = Type.Object(
 const validateInput = validateWithJSONSchema(pgpsRequestSchema)
 
 export const resolvePgpsRequest =
-	(client: ReturnType<typeof apiClient>, debug?: (...args: any[]) => void) =>
+	(
+		client: ReturnType<typeof apiClient>,
+		debug?: (...args: any[]) => void,
+		error?: (...args: any[]) => void,
+	) =>
 	async (
 		pgps: Static<typeof pgpsRequestSchema>,
 	): Promise<Either<ErrorInfo, URL>> => {
 		debug?.({ pgpsRequest: pgps })
 		const valid = validateInput(pgps)
 		if (isLeft(valid)) {
-			console.error(JSON.stringify(valid.left))
+			error?.(JSON.stringify(valid.left))
 			return valid
 		}
 
@@ -84,7 +88,7 @@ export const resolvePgpsRequest =
 		})()
 
 		if (isLeft(result)) {
-			console.error(JSON.stringify(result.left))
+			error?.(JSON.stringify(result.left))
 			return result
 		}
 
