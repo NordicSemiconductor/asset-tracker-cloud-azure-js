@@ -42,13 +42,15 @@ const queryHistoricalDeviceData: AzureFunction = async (
 			)
 			.fetchNext()
 		context.res = result(context)({
-			items: res.resources.map(({ report, id, deviceId, timestamp, nw }) => ({
-				id,
-				deviceId,
-				report,
-				nw,
-				timestamp,
-			})),
+			items: (res.resources ?? []).map(
+				({ report, id, deviceId, timestamp, nw }) => ({
+					id,
+					deviceId,
+					report,
+					nw,
+					timestamp,
+				}),
+			),
 			nextToken: res.hasMoreResults ? res.continuationToken : undefined, // FIXME: implement pagination
 		})
 	} catch (error) {
