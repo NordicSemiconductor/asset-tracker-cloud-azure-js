@@ -73,7 +73,7 @@
     "node-fetch": "3.1.0",
     "pem": "1.14.4",
     "semver": "7.3.5",
-    "ts-jest": "27.0.7"
+    "ts-jest": "27.1.0"
   },
   "lint-staged": {
     "*.{md,json,yaml,yml}": [
