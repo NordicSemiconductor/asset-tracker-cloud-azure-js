@@ -53,6 +53,10 @@ export const createAndProvisionDeviceCertCommand = ({
 			description: `Use this secTag, defaults to ${defaultSecTag}`,
 		},
 		{
+			flags: '-X, --delete-private-key',
+			description: `Delete the private key (needed if a private key exists with the secTag)`,
+		},
+		{
 			flags: '-a, --at-host <atHost>',
 			description: `Flash at_host from this file`,
 		},
@@ -78,6 +82,7 @@ export const createAndProvisionDeviceCertCommand = ({
 		intermediateCertId,
 		expires,
 		secTag,
+		deletePrivateKey,
 	}) => {
 		progress('Flasing certificate', port ?? defaultPort)
 
@@ -99,6 +104,7 @@ export const createAndProvisionDeviceCertCommand = ({
 		const csr = await createPrivateKeyAndCSR({
 			at: connection.connection.at,
 			secTag: secTag ?? defaultSecTag,
+			deletePrivateKey: deletePrivateKey ?? false,
 		})
 
 		const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), path.sep))
