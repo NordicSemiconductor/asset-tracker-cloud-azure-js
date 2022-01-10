@@ -13,7 +13,7 @@ Feature: Device: Batch Data
     Given the tracker "{trackerId}" publishes this message to the topic devices/{trackerId}/messages/events/batch&%24.ct=application%2Fjson&%24.ce=utf-8
       """
       {
-        "gps": [
+        "gnss": [
           {
             "v": {
               "lng": 8.669555,
@@ -40,7 +40,7 @@ Feature: Device: Batch Data
       }
       """
 
-  Scenario: Query the historical gps data
+  Scenario: Query the historical GNSS data
 
     Given the endpoint is "{apiEndpoint}"
     And the Authorization header is "Bearer {accessToken}"
@@ -48,7 +48,7 @@ Feature: Device: Batch Data
     When I POST to /history with this JSON
       """
       {
-        "query": "SELECT c.deviceUpdate.gps.v.lng AS lng FROM c WHERE c.deviceId = \"{trackerId}\" AND c.deviceUpdate.gps.v != null ORDER BY c.timestamp DESC"
+        "query": "SELECT c.deviceUpdate.gnss.v.lng AS lng FROM c WHERE c.deviceId = \"{trackerId}\" AND c.deviceUpdate.gnss.v != null ORDER BY c.timestamp DESC"
       }
       """
     Then the response status code should be 200

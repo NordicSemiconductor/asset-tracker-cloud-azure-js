@@ -13,7 +13,7 @@ Feature: Device: Update Shadow
         "dev": {
           "v": {
             "band": 3,
-            "nw": "LTE-M GPS",
+            "nw": "LTE-M GNSS",
             "iccid": "89882806660004909182",
             "modV": "mfw_nrf9160_1.0.0",
             "brdV": "thingy91_nrf9160"
@@ -29,7 +29,7 @@ Feature: Device: Update Shadow
           "actwt": 60,
           "mvres": 60,
           "mvt": 3600,
-          "gpst": 1000,
+          "gnsst": 1000,
           "acct": 0.5
         },
         "firmware": {

@@ -40,34 +40,34 @@ const queryCellGeolocation: AzureFunction = async (
 	const deviceId =
 		context.bindingData.systemProperties['iothub-connection-device-id']
 
-	type GpsUpdate = {
+	type GnssUpdate = {
 		v: { lat: number; lng: number; acc?: number }
 		ts: number
 	}
-	const gpsUpdates: GpsUpdate[] = []
+	const gnssUpdates: GnssUpdate[] = []
 
 	if (context?.bindingData?.properties?.batch !== undefined) {
 		log(context)({ batch: batchToDoc(update as BatchDeviceUpdate) })
-		gpsUpdates.push(
+		gnssUpdates.push(
 			...(batchToDoc(update as BatchDeviceUpdate)
-				.filter(({ gps }) => gps !== undefined)
-				.map(({ gps }) => gps) as GpsUpdate[]),
+				.filter(({ gnss }) => gnss !== undefined)
+				.map(({ gnss }) => gnss) as GnssUpdate[]),
 		)
 	} else {
-		if ((update as TwinChangeEvent)?.properties?.reported?.gps !== undefined) {
-			gpsUpdates.push((update as TwinChangeEvent)?.properties?.reported?.gps)
+		if ((update as TwinChangeEvent)?.properties?.reported?.gnss !== undefined) {
+			gnssUpdates.push((update as TwinChangeEvent)?.properties?.reported?.gnss)
 		}
 	}
 
-	if (gpsUpdates.length == 0) {
+	if (gnssUpdates.length == 0) {
 		return
 	}
 
-	log(context)({ gpsUpdates })
+	log(context)({ gnssUpdates })
 
 	const roamingPositions = (
 		await Promise.all(
-			gpsUpdates.map(
+			gnssUpdates.map(
 				async ({ ts, v }) =>
 					new Promise((resolve) => {
 						const sql = `SELECT 

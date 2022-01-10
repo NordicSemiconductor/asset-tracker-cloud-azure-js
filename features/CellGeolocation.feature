@@ -1,8 +1,8 @@
 Feature: Cell Geolocation API
 
-    GPS fixes will be stored with the cell id
+    GNSS fixes will be stored with the cell id
     so that the UI can show an approximate tracker location
-    based on the cell id even if a device has no current GPS fix
+    based on the cell id even if a device has no current GNSS fix
 
     Background:
 
@@ -31,12 +31,12 @@ Feature: Cell Geolocation API
             }
             """
 
-    Scenario: Device acquires a GPS fix
+    Scenario: Device acquires a GNSS fix
 
         Given the tracker "{trackerId}" updates its reported state with
             """
             {
-            "gps": {
+            "gnss": {
             "v": {
             "lng": {lng},
             "lat": {lat},

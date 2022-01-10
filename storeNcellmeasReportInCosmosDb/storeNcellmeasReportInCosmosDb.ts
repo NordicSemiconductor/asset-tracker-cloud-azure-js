@@ -77,7 +77,7 @@ const storeNcellmeasReportInCosmosDb: AzureFunction = async (
 		const document: StoredReport = {
 			report: valid.right,
 			deviceId,
-			nw: nw ?? 'LTE-M GPS',
+			nw: nw ?? 'LTE-M GNSS',
 			timestamp: context.bindingData.systemProperties['iothub-enqueuedtime'],
 		}
 		context.bindings.report = JSON.stringify(document)
