@@ -20,6 +20,8 @@ Feature: Cell Geolocation API
             {
             "roam": {
             "v": {
+            "band": 3,
+            "nw": "LTE-M",
             "rsrp": 0,
             "area": 211,
             "mccmnc": 26201,

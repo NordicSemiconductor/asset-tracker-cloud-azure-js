@@ -18,7 +18,7 @@ const registry = Registry.fromConnectionString(iotHubConnectionString)
 const validateNcellmeasReport = validateWithJSONSchema(ncellmeasReport)
 
 type ReportedUpdateWithNetwork = {
-	properties: { reported: { dev?: { v: { nw: string } } } }
+	properties: { reported: { roam?: { v: { nw: string } } } }
 }
 
 const deviceNetwork: Record<string, string> = {}
@@ -39,9 +39,9 @@ const storeNcellmeasReportInCosmosDb: AzureFunction = async (
 	if (
 		context.bindingData.systemProperties['iothub-message-source'] ===
 			'twinChangeEvents' &&
-		(event as ReportedUpdateWithNetwork).properties.reported.dev !== undefined
+		(event as ReportedUpdateWithNetwork).properties.reported.roam !== undefined
 	) {
-		const nw = (event as ReportedUpdateWithNetwork).properties.reported.dev?.v
+		const nw = (event as ReportedUpdateWithNetwork).properties.reported.roam?.v
 			.nw as string
 		deviceNetwork[deviceId] = nw
 		log(context)(`${deviceId} => ${nw}`)
@@ -67,7 +67,7 @@ const storeNcellmeasReportInCosmosDb: AzureFunction = async (
 				`SELECT * FROM devices WHERE deviceId='${deviceId}'`,
 			)
 			const res = await devices.nextAsTwin()
-			nw = res.result[0].properties.reported.dev?.v?.nw
+			nw = res.result[0].properties.reported.roam?.v?.nw
 		}
 		if (nw === undefined) {
 			logError(context)(

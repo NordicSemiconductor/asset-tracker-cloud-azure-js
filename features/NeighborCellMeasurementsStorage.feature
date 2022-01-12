@@ -17,14 +17,10 @@ Feature: Store neighboring cell measurement reports
         Then the tracker "{trackerId}" updates its reported state with
             """
             {
-                "dev": {
-                    "v": {
-                        "nw": "LTE-M"
-                    },
-                    "ts": {ts}
-                },
                 "roam": {
                     "v": {
+                        "band": 3,
+                        "nw": "LTE-M",
                         "rsrp": -97,
                         "area": {ncellmeasAreaId},
                         "mccmnc": 24201,

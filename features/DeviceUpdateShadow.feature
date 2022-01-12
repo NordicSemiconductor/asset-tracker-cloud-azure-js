@@ -12,8 +12,6 @@ Feature: Device: Update Shadow
       {
         "dev": {
           "v": {
-            "band": 3,
-            "nw": "LTE-M",
             "imei": "352656106111232",
             "iccid": "89882806660004909182",
             "modV": "mfw_nrf9160_1.0.0",
