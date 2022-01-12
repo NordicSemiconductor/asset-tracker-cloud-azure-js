@@ -68,7 +68,7 @@ Feature: nRF Cloud Neighbor Cell Geolocation
                         ],
                         "ts": {ts}
                     },
-                    "nw": "LTE-M GNSS",
+                    "nw": "LTE-M",
                     "deviceId": "{trackerId}"
                 }
             ]
