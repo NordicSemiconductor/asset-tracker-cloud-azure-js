@@ -33,7 +33,7 @@ Feature: Read Device Shadow
         "dev": {
           "v": {
             "band": 3,
-            "nw": "LTE-M GNSS",
+            "nw": "LTE-M",
             "iccid": "89882806660004909182",
             "modV": "mfw_nrf9160_1.0.0",
             "brdV": "thingy91_nrf9160"

@@ -1,13 +1,13 @@
 import { AzureFunction, Context } from '@azure/functions'
-import { log, logError } from '../lib/log.js'
+import { Static } from '@sinclair/typebox'
 import iothub from 'azure-iothub'
-const { Registry } = iothub
+import { isRight } from 'fp-ts/lib/Either.js'
+import { fromEnv } from '../lib/fromEnv.js'
+import { log, logError } from '../lib/log.js'
 import { validateWithJSONSchema } from '../lib/validateWithJSONSchema.js'
 import { ncellmeasReport } from '../ncellmeas/report.js'
-import { isRight } from 'fp-ts/lib/Either.js'
-import { Static } from '@sinclair/typebox'
-import { fromEnv } from '../lib/fromEnv.js'
 import { StoredReport } from '../ncellmeas/storedReport.js'
+const { Registry } = iothub
 
 const { iotHubConnectionString } = fromEnv({
 	iotHubConnectionString: 'IOTHUB_CONNECTION_STRING',
@@ -77,7 +77,7 @@ const storeNcellmeasReportInCosmosDb: AzureFunction = async (
 		const document: StoredReport = {
 			report: valid.right,
 			deviceId,
-			nw: nw ?? 'LTE-M GNSS',
+			nw: nw ?? 'LTE-M',
 			timestamp: context.bindingData.systemProperties['iothub-enqueuedtime'],
 		}
 		context.bindings.report = JSON.stringify(document)
