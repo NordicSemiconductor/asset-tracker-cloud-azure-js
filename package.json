@@ -69,7 +69,7 @@
     "dependency-tree": "^8.1.2",
     "jest": "27.4.7",
     "node-fetch": "3.2.0",
-    "pem": "1.14.4",
+    "pem": "1.14.6",
     "semver": "7.3.5",
     "ts-jest": "27.1.3"
   },
