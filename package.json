@@ -52,7 +52,7 @@
     "@azure/data-tables": "13.0.1",
     "@azure/logger": "1.0.3",
     "@nordicsemiconductor/asset-tracker-cloud-code-style": "11.0.19",
-    "@nordicsemiconductor/e2e-bdd-test-runner": "15.0.25",
+    "@nordicsemiconductor/e2e-bdd-test-runner": "15.0.26",
     "@nordicsemiconductor/firmware-ci-device-helpers": "13.0.26",
     "@types/backoff": "2.5.2",
     "@types/chai-subset": "1.3.3",
