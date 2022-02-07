@@ -1,7 +1,7 @@
-import { CommandDefinition } from './CommandDefinition.js'
+import { WebSiteManagementClient } from '@azure/arm-appservice'
 import { objectToEnv } from '@nordicsemiconductor/object-to-env'
 import { fromEnv } from '../../lib/fromEnv.js'
-import { WebSiteManagementClient } from '@azure/arm-appservice'
+import { CommandDefinition } from './CommandDefinition.js'
 
 export const reactConfigCommand = ({
 	websiteClient,
@@ -27,7 +27,10 @@ export const reactConfigCommand = ({
 					})(process.env),
 					azureApiEndpoint: `https://${hostNames?.[0]}/`,
 				},
-				'REACT_APP_',
+				{
+					prefix: 'REACT_APP_',
+					quote: '',
+				},
 			),
 		)
 	},
