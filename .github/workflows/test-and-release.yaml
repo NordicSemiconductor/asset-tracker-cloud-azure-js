@@ -53,7 +53,7 @@ jobs:
         with:
           inlineScript: |
             az account list --output table
-      - uses: actions/setup-node@v2
+      - uses: actions/setup-node@v3
         with:
           node-version: "16.x"
       - uses: actions/checkout@v2
