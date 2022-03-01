@@ -68,7 +68,7 @@
     "commander": "9.0.0",
     "dependency-tree": "^8.1.2",
     "jest": "27.5.1",
-    "node-fetch": "3.2.0",
+    "node-fetch": "3.2.1",
     "pem": "1.14.6",
     "semver": "7.3.5",
     "ts-jest": "27.1.3"
