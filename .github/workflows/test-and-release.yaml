@@ -139,7 +139,7 @@ jobs:
         with:
           inlineScript: |
             az functionapp deployment source config-zip -g ${RESOURCE_GROUP:-nrfassettrackerci} -n ${APP_NAME:-nrfassettrackerci}api --src dist/functionapp.zip
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         if: always()
         with:
           name: functionapp-${{ github.sha }}
