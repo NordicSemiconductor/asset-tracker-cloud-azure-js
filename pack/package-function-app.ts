@@ -11,14 +11,17 @@
  * Therefore, the scriptFiles are renamed to .mjs while packaging.
  */
 
-import { promises as fs, statSync, readFileSync } from 'fs'
-import path from 'path'
-import os from 'os'
-import { progress, debug } from '../cli/logging.js'
-import { run } from '../cli/process/run.js'
-import { copy, copyFile } from './lib/copy.js'
 import dependencyTree, { TreeInnerNode } from 'dependency-tree'
+import { promises as fs, readFileSync, statSync } from 'fs'
+import os from 'os'
+import path from 'path'
+import { debug, progress } from '../cli/logging.js'
+import { run } from '../cli/process/run.js'
 import { flattenDependencies } from './flattenDependencies.js'
+import { copy, copyFile } from './lib/copy.js'
+
+const npmCmd = process.platform === 'win32' ? 'npm.cmd' : 'npm'
+const zipCmd = process.platform === 'win32' ? 'zip.exe' : 'zip'
 
 const installDependenciesFromPackageJSON = async ({
 	targetDir,
@@ -27,7 +30,7 @@ const installDependenciesFromPackageJSON = async ({
 }): Promise<void> => {
 	// Install production dependencies
 	await run({
-		command: 'npm',
+		command: npmCmd,
 		args: ['ci', '--ignore-scripts', '--only=prod', '--no-audit'],
 		cwd: targetDir,
 		log: (info) => progress('Installing dependencies', info),
@@ -40,7 +43,7 @@ export const installPackagesFromList =
 	async ({ targetDir }: { targetDir: string }): Promise<void> => {
 		// Install production dependencies
 		await run({
-			command: 'npm',
+			command: npmCmd,
 			args: ['i', '--ignore-scripts', '--no-audit', ...packageList],
 			cwd: targetDir,
 			log: (info) => progress('Installing dependencies', info),
@@ -157,18 +160,14 @@ export const packageFunctionApp = async ({
 
 	// ZIP everything
 	await run({
-		command: 'zip',
+		command: zipCmd,
 		args: ['-r', outFile, './'],
 		cwd: tempDir,
 		log: (info) => progress('[ZIP]', info),
 	})
 
 	// Remove the temp folder
-	await run({
-		command: 'rm',
-		args: ['-rf', tempDir],
-		log: (info) => progress('Cleanup', info),
-	})
+	await fs.rm(tempDir, { recursive: true, force: true })
 
 	return outFile
 }
