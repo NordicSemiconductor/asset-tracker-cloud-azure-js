@@ -728,21 +728,16 @@
     },
     {
       "type": "Microsoft.DocumentDB/databaseAccounts",
-      "apiVersion": "2020-06-01-preview",
+      "apiVersion": "2021-11-15-preview",
       "name": "[parameters('appName')]",
       "location": "[parameters('location')]",
       "properties": {
-        "publicNetworkAccess": "Enabled",
-        "createMode": "Default",
         "databaseAccountOfferType": "Standard",
-        "consistencyPolicy": {
-          "defaultConsistencyLevel": "Session",
-          "maxIntervalInSeconds": 5,
-          "maxStalenessPrefix": 100
-        },
-        "capabilities": [
+        "locations": [
           {
-            "name": "EnableServerless"
+            "id": "[concat(parameters('appName'), '-', parameters('location'))]",
+            "failoverPriority": 0,
+            "locationName": "[parameters('location')]"
           }
         ],
         "backupPolicy": {
@@ -751,6 +746,19 @@
             "backupIntervalInMinutes": 1440,
             "backupRetentionIntervalInHours": 168
           }
+        },
+        "isVirtualNetworkFilterEnabled": false,
+        "virtualNetworkRules": [],
+        "ipRules": [],
+        "dependsOn": [],
+        "capabilities": [
+          {
+            "name": "EnableServerless"
+          }
+        ],
+        "enableFreeTier": false,
+        "capacity": {
+          "totalThroughputLimit": 4000
         }
       }
     },
