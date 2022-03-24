@@ -147,7 +147,6 @@ export const createAndProvisionDeviceCertCommand = ({
 			log: logFn,
 			debug: debugFn,
 			intermediateCertId,
-			resourceGroup,
 			daysValid: expires !== undefined ? parseInt(expires, 10) : undefined,
 		})
 		success(`Certificate for device generated.`)

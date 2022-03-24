@@ -1,34 +1,34 @@
+import { WebSiteManagementClient } from '@azure/arm-appservice'
+import { AzureNamedKeyCredential } from '@azure/core-auth'
+import { TableClient } from '@azure/data-tables'
+import { AzureCliCredentials } from '@azure/ms-rest-nodeauth'
 import {
-	FeatureRunner,
 	ConsoleReporter,
+	FeatureRunner,
 	randomStepRunners,
 	restStepRunners,
 	storageStepRunners,
 } from '@nordicsemiconductor/e2e-bdd-test-runner'
-import { program } from 'commander'
 import chalk from 'chalk'
+import { program } from 'commander'
 import * as path from 'path'
-import { randomEmail } from './lib/randomEmail.js'
-import { randomPassword } from './lib/randomPassword.js'
-import { b2cSteps } from './steps/b2c.js'
-import { fromEnv } from '../lib/fromEnv.js'
-import { deviceStepRunners } from './steps/device.js'
 import { v4 } from 'uuid'
-import { list } from '../cli/iot/intermediateRegistry.js'
-import { ioTHubDPSInfo } from '../cli/iot/ioTHubDPSInfo.js'
-import { WebSiteManagementClient } from '@azure/arm-appservice'
-import { settings, error, heading, debug } from '../cli/logging.js'
-import { AzureCliCredentials } from '@azure/ms-rest-nodeauth'
 import {
 	CAIntermediateFileLocations,
 	CARootFileLocations,
 } from '../cli/iot/caFileLocations.js'
 import { fingerprint } from '../cli/iot/fingerprint.js'
+import { list } from '../cli/iot/intermediateRegistry.js'
+import { ioTHubDPSInfo } from '../cli/iot/ioTHubDPSInfo.js'
+import { debug, error, heading, settings } from '../cli/logging.js'
 import { run } from '../cli/process/run.js'
-import { httpApiMockStepRunners } from './steps/httpApiMock.js'
-import { TableClient } from '@azure/data-tables'
-import { AzureNamedKeyCredential } from '@azure/core-auth'
+import { fromEnv } from '../lib/fromEnv.js'
 import { gpsDay } from '../pgps/gpsTime.js'
+import { randomEmail } from './lib/randomEmail.js'
+import { randomPassword } from './lib/randomPassword.js'
+import { b2cSteps } from './steps/b2c.js'
+import { deviceStepRunners } from './steps/device.js'
+import { httpApiMockStepRunners } from './steps/httpApiMock.js'
 
 let ran = false
 
@@ -155,10 +155,10 @@ program
 				'AD B2C Tenant': b2cTenant,
 				'AD B2C Tenant ID': b2cTenantId,
 				'AD B2C Client ID': clientId,
-				'AD B2C Client Secret': `${clientSecret.substr(
+				'AD B2C Client Secret': `${clientSecret.slice(
 					0,
 					5,
-				)}***${clientSecret.substr(-5)}`,
+				)}***${clientSecret.slice(-5)}`,
 				'Certificate dir': certsDir,
 				'Root CA fingerprint': await fingerprint(rootCaFiles.cert),
 				'Intermediate CA ID': intermediateCertId,
@@ -210,9 +210,7 @@ program
 					}),
 				)
 				.addStepRunners(restStepRunners())
-				.addStepRunners(
-					deviceStepRunners({ certsDir, resourceGroup, intermediateCertId }),
-				)
+				.addStepRunners(deviceStepRunners({ certsDir, intermediateCertId }))
 				.addStepRunners(storageStepRunners())
 				.addStepRunners(
 					(() => {

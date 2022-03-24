@@ -1,29 +1,27 @@
 import {
-	regexGroupMatcher,
-	StepRunnerFunc,
 	InterpolatedStep,
+	regexGroupMatcher,
 	regexMatcher,
+	StepRunnerFunc,
 } from '@nordicsemiconductor/e2e-bdd-test-runner'
-import { generateDeviceCertificate } from '../../cli/iot/generateDeviceCertificate.js'
-import { connectDevice } from '../../cli/iot/connectDevice.js'
-import { MqttClient } from 'mqtt'
-import { deviceTopics } from '../../cli/iot/deviceTopics.js'
-import { v4 } from 'uuid'
 import * as chai from 'chai'
 import { expect } from 'chai'
 import chaiSubset from 'chai-subset'
-chai.use(chaiSubset)
+import { MqttClient } from 'mqtt'
 import fetch from 'node-fetch'
+import { v4 } from 'uuid'
+import { connectDevice } from '../../cli/iot/connectDevice.js'
 import { createSimulatorKeyAndCSR } from '../../cli/iot/createSimulatorKeyAndCSR.js'
+import { deviceTopics } from '../../cli/iot/deviceTopics.js'
+import { generateDeviceCertificate } from '../../cli/iot/generateDeviceCertificate.js'
 import { matchDeviceBoundTopic } from './device/matchDeviceBoundTopic.js'
+chai.use(chaiSubset)
 
 export const deviceStepRunners = ({
 	certsDir,
-	resourceGroup,
 	intermediateCertId,
 }: {
 	certsDir: string
-	resourceGroup: string
 	intermediateCertId: string
 }): ((step: InterpolatedStep) => StepRunnerFunc<any> | false)[] => {
 	const connections = {} as Record<string, MqttClient>
@@ -37,7 +35,6 @@ export const deviceStepRunners = ({
 				deviceId,
 				certsDir,
 				intermediateCertId,
-				resourceGroup,
 			})
 
 			return deviceId

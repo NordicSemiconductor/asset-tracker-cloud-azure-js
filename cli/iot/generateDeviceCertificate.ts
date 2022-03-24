@@ -1,11 +1,11 @@
 import { promises as fs } from 'fs'
+import * as os from 'os'
+import { CertificateCreationResult, createCertificate } from 'pem'
 import {
-	CARootFileLocations,
 	CAIntermediateFileLocations,
+	CARootFileLocations,
 } from './caFileLocations.js'
 import { deviceFileLocations } from './deviceFileLocations.js'
-import * as os from 'os'
-import { createCertificate, CertificateCreationResult } from 'pem'
 import { leafCertConfig } from './pemConfig.js'
 
 export const defaultDeviceCertificateValidityInDays = 10950
@@ -19,13 +19,11 @@ export const generateDeviceCertificate = async ({
 	debug,
 	deviceId,
 	intermediateCertId,
-	resourceGroup,
 	daysValid,
 }: {
 	certsDir: string
 	deviceId: string
 	intermediateCertId: string
-	resourceGroup: string
 	log?: (...message: any[]) => void
 	debug?: (...message: any[]) => void
 	daysValid?: number
@@ -85,24 +83,6 @@ export const generateDeviceCertificate = async ({
 			.writeFile(deviceFiles.intermediateCertId, intermediateCertId, 'utf-8')
 			.then(() => {
 				debug?.(`${deviceFiles.intermediateCertId} written`)
-			}),
-		fs
-			.writeFile(
-				deviceFiles.json,
-				JSON.stringify(
-					{
-						resourceGroup,
-						privateKey: await fs.readFile(deviceFiles.privateKey, 'utf-8'),
-						clientCert: certWithChain,
-						clientId: deviceId,
-					},
-					null,
-					2,
-				),
-				'utf-8',
-			)
-			.then(() => {
-				debug?.(`${deviceFiles.json} written`)
 			}),
 	])
 
