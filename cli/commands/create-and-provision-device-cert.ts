@@ -1,13 +1,4 @@
-import { CommandDefinition } from './CommandDefinition.js'
-import {
-	generateDeviceCertificate,
-	defaultDeviceCertificateValidityInDays,
-} from '../iot/generateDeviceCertificate.js'
-import { log, success, progress } from '../logging.js'
-import { list as listIntermediateCerts } from '../iot/intermediateRegistry.js'
-import { setting, heading } from '../logging.js'
 import { IotDpsClient } from '@azure/arm-deviceprovisioningservices'
-import { globalIotHubDPSHostname } from '../iot/ioTHubDPSInfo.js'
 import {
 	atHostHexfile,
 	connect,
@@ -17,8 +8,16 @@ import {
 import { promises as fs } from 'fs'
 import * as os from 'os'
 import * as path from 'path'
-import { run } from '../process/run.js'
 import { deviceFileLocations } from '../iot/deviceFileLocations.js'
+import {
+	defaultDeviceCertificateValidityInDays,
+	generateDeviceCertificate,
+} from '../iot/generateDeviceCertificate.js'
+import { list as listIntermediateCerts } from '../iot/intermediateRegistry.js'
+import { globalIotHubDPSHostname } from '../iot/ioTHubDPSInfo.js'
+import { heading, progress, setting, success } from '../logging.js'
+import { run } from '../process/run.js'
+import { CommandDefinition } from './CommandDefinition.js'
 
 export const defaultPort = '/dev/ttyACM0'
 export const defaultSecTag = 42
@@ -86,14 +85,17 @@ export const createAndProvisionDeviceCertCommand = ({
 	}) => {
 		progress('Flasing certificate', port ?? defaultPort)
 
+		const logFn = debug === true ? console.log : undefined
+		const debugFn = debug === true ? console.debug : undefined
+
 		const connection = await connect({
 			atHostHexfile:
 				atHost ??
 				(dk === true ? atHostHexfile['9160dk'] : atHostHexfile['thingy91']),
 			device: port ?? defaultPort,
 			warn: console.error,
-			debug: debug === true ? console.debug : undefined,
-			progress: debug === true ? console.log : undefined,
+			debug: debugFn,
+			progress: logFn,
 			inactivityTimeoutInSeconds: 10,
 		})
 
@@ -142,8 +144,8 @@ export const createAndProvisionDeviceCertCommand = ({
 		await generateDeviceCertificate({
 			deviceId,
 			certsDir,
-			log,
-			debug,
+			log: logFn,
+			debug: debugFn,
 			intermediateCertId,
 			daysValid: expires !== undefined ? parseInt(expires, 10) : undefined,
 		})
