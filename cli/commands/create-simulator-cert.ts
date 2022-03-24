@@ -1,16 +1,24 @@
-import { CommandDefinition } from './CommandDefinition.js'
-import { randomWords } from '@nordicsemiconductor/random-words'
-import {
-	generateDeviceCertificate,
-	defaultDeviceCertificateValidityInDays,
-} from '../iot/generateDeviceCertificate.js'
-import { log, debug, success, newline, next } from '../logging.js'
-import { list as listIntermediateCerts } from '../iot/intermediateRegistry.js'
-import { deviceFileLocations } from '../iot/deviceFileLocations.js'
-import { setting, heading } from '../logging.js'
 import { IotDpsClient } from '@azure/arm-deviceprovisioningservices'
-import { globalIotHubDPSHostname } from '../iot/ioTHubDPSInfo.js'
+import { randomWords } from '@nordicsemiconductor/random-words'
+import { readFile, writeFile } from 'fs/promises'
 import { createSimulatorKeyAndCSR } from '../iot/createSimulatorKeyAndCSR.js'
+import { deviceFileLocations } from '../iot/deviceFileLocations.js'
+import {
+	defaultDeviceCertificateValidityInDays,
+	generateDeviceCertificate,
+} from '../iot/generateDeviceCertificate.js'
+import { list as listIntermediateCerts } from '../iot/intermediateRegistry.js'
+import { globalIotHubDPSHostname } from '../iot/ioTHubDPSInfo.js'
+import {
+	debug,
+	heading,
+	log,
+	newline,
+	next,
+	setting,
+	success,
+} from '../logging.js'
+import { CommandDefinition } from './CommandDefinition.js'
 
 export const createSimulatorCertCommand = ({
 	certsDir: certsDirPromise,
@@ -72,13 +80,32 @@ export const createSimulatorCertCommand = ({
 			log,
 			debug,
 			intermediateCertId,
-			resourceGroup,
 			daysValid: expires !== undefined ? parseInt(expires, 10) : undefined,
 		})
 		success(`Certificate for device generated.`)
 		setting('Certificate ID', id)
 
-		const certJSON = deviceFileLocations({ certsDir, deviceId: id }).json
+		const {
+			json: certJSON,
+			privateKey,
+			certWithChain,
+		} = deviceFileLocations({ certsDir, deviceId: id })
+
+		await writeFile(
+			certJSON,
+			JSON.stringify(
+				{
+					resourceGroup,
+					privateKey: await readFile(privateKey, 'utf-8'),
+					clientCert: await readFile(certWithChain, 'utf-8'),
+					clientId: deviceId,
+				},
+				null,
+				2,
+			),
+			'utf-8',
+		)
+		success(`${certJSON} written`)
 		newline()
 		next(
 			'You can now connect to the broker using',
