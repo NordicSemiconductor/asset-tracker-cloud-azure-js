@@ -58,7 +58,7 @@ jobs:
           node-version: "16.x"
       - uses: actions/checkout@v3
       - name: Keep npm cache around to speed up installs
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ~/.npm
           key: ${{ runner.OS }}-build-${{ hashFiles('**/package-lock.json') }}
@@ -145,7 +145,7 @@ jobs:
           name: functionapp-${{ github.sha }}
           path: dist/functionapp.zip
       - name: Cache certificates
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         id: certs-cache
         with:
           path: ./certificates
