@@ -50,6 +50,7 @@ jobs:
       - name: Login to Azure CLI
         uses: azure/CLI@v1
         with:
+          # azcliversion: 2.34.1
           inlineScript: |
             AZURE_CLIENT_ID=`jq -r '.clientId' <<< '${{ secrets.AZURE_CREDENTIALS }}'`
             AZURE_CLIENT_SECRET=`jq -r '.clientSecret' <<< '${{ secrets.AZURE_CREDENTIALS }}'`
@@ -61,6 +62,7 @@ jobs:
       - name: List Azure Accounts
         uses: azure/CLI@v1
         with:
+          # azcliversion: 2.34.1
           inlineScript: |
             az account list --output table
       - uses: actions/checkout@v3
@@ -125,6 +127,7 @@ jobs:
       - name: Deploy solution
         uses: azure/CLI@v1
         with:
+          # azcliversion: 2.34.1
           inlineScript: |
             az deployment group create \
               --resource-group ${{ env.RESOURCE_GROUP }} \
@@ -144,23 +147,27 @@ jobs:
       - name: Get Azure object ID for current user
         uses: azure/CLI@v1
         with:
+          # azcliversion: 2.34.1
           inlineScript: |
             echo "USER_OBJECT_ID=`az ad sp list --spn 'https://nrfassettracker.invalid/cd' --query '[0].objectId' -o tsv | tr -d '\n'`" >> $GITHUB_ENV
       - name: Grant user write access to key vault
         uses: azure/CLI@v1
         with:
+          # azcliversion: 2.34.1
           inlineScript: |
             az keyvault set-policy --name ${{ env.keyVaultName }} --object-id ${USER_OBJECT_ID} --secret-permissions set
       - name: Set Unwired Labs API key
         if: env.enableUnwiredLabsCellLocation == 'true'
         uses: azure/CLI@v1
         with:
+          # azcliversion: 2.34.1
           inlineScript: |
             az keyvault secret set --vault-name ${{ env.keyVaultName }} --name unwiredlabsApiKey --value ${{ secrets.UNWIRED_LABS_API_KEY }}
       - name: Set nRF Cloud Cell Location service key
         if: env.enableNrfCloudCellLocationService == 'true'
         uses: azure/CLI@v1
         with:
+          # azcliversion: 2.34.1
           inlineScript: |
             echo "${{ secrets.NRF_CLOUD_CELL_LOCATION_SERVICE_KEY }}" > nrfcloudcelllocationservice.key
             az keyvault secret set --vault-name ${{ env.keyVaultName }} --name nrfCloudCellLocationServiceKey --file nrfcloudcelllocationservice.key
@@ -169,6 +176,7 @@ jobs:
         if: env.enableNrfCloudAGPSLocationService == 'true'
         uses: azure/CLI@v1
         with:
+          # azcliversion: 2.34.1
           inlineScript: |
             echo "${{ secrets.NRF_CLOUD_AGPS_LOCATION_SERVICE_KEY }}" > nrfcloudagpslocationservice.key
             az keyvault secret set --vault-name ${{ env.keyVaultName }} --name nrfCloudAGPSLocationServiceKey --file nrfcloudagpslocationservice.key
@@ -177,6 +185,7 @@ jobs:
         if: env.enableNrfCloudPGPSLocationService == 'true'
         uses: azure/CLI@v1
         with:
+          # azcliversion: 2.34.1
           inlineScript: |
             echo "${{ secrets.NRF_CLOUD_PGPS_LOCATION_SERVICE_KEY }}" > nrfcloudpgpslocationservice.key
             az keyvault secret set --vault-name ${{ env.keyVaultName }} --name nrfCloudPGPSLocationServiceKey --file nrfcloudpgpslocationservice.key
@@ -186,6 +195,7 @@ jobs:
       - name: Deploy Function App
         uses: azure/CLI@v1
         with:
+          # azcliversion: 2.34.1
           inlineScript: |
             az functionapp deployment source config-zip -g ${{ env.RESOURCE_GROUP }} -n ${APP_NAME:-nrfassettracker}api --src dist/functionapp.zip
       - uses: actions/upload-artifact@v3
@@ -195,6 +205,7 @@ jobs:
       - name: Enable static site hosting for the app
         uses: azure/CLI@v1
         with:
+          # azcliversion: 2.34.1
           inlineScript: |
             az storage blob service-properties update --account-name ${{ env.STORAGE_ACCOUNT_NAME }} --static-website --404-document index.html --index-document index.html
       - name: Determine Web App settings
@@ -203,6 +214,7 @@ jobs:
         id: web-app-url
         uses: azure/CLI@v1
         with:
+          # azcliversion: 2.34.1
           inlineScript: |
             PUBLIC_URL=`az storage account show -g ${{ env.RESOURCE_GROUP }} -n ${{ env.STORAGE_ACCOUNT_NAME }} --query 'primaryEndpoints.web' --output tsv | tr -d '\n'`
             echo "::set-output name=web_app_url::${PUBLIC_URL}"
@@ -222,5 +234,6 @@ jobs:
       - name: Deploy Web App
         uses: azure/CLI@v1
         with:
+          # azcliversion: 2.34.1
           inlineScript: |
             az storage blob upload-batch --account-name ${{ env.STORAGE_ACCOUNT_NAME }} -s ./app/build -d '$web'
