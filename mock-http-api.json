@@ -90,10 +90,6 @@
               "value": "1"
             },
             {
-              "name": "SCM_DO_BUILD_DURING_DEPLOYMENT",
-              "value": "0"
-            },
-            {
               "name": "STORAGE_ACCESS_KEY",
               "value": "[listKeys(variables('mockHttpApiStorageAccountId'), '2019-04-01').keys[0].value]"
             },
