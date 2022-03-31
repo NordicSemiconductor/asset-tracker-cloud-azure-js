@@ -44,7 +44,6 @@ jobs:
       - name: Login to Azure CLI
         uses: azure/CLI@v1
         with:
-          # azcliversion: 2.34.1
           inlineScript: |
             AZURE_CLIENT_ID=`jq -r '.clientId' <<< '${{ secrets.AZURE_CREDENTIALS }}'`
             AZURE_CLIENT_SECRET=`jq -r '.clientSecret' <<< '${{ secrets.AZURE_CREDENTIALS }}'`
@@ -56,7 +55,6 @@ jobs:
       - name: List Azure accounts
         uses: azure/CLI@v1
         with:
-          # azcliversion: 2.34.1
           inlineScript: |
             az account list --output table
       - uses: actions/setup-node@v3
@@ -76,7 +74,6 @@ jobs:
       - name: Deploy Mock HTTP API
         uses: azure/CLI@v1
         with:
-          # azcliversion: 2.34.1
           inlineScript: |
             az deployment group create \
               --resource-group ${RESOURCE_GROUP:-nrfassettrackerci} \
@@ -88,7 +85,6 @@ jobs:
       - name: Determine Mock API endpoint
         uses: azure/CLI@v1
         with:
-          # azcliversion: 2.34.1
           inlineScript: |
             echo "MOCK_HTTP_API_ENDPOINT=`az functionapp show -g ${RESOURCE_GROUP:-nrfassettrackerci} -n ${MOCK_HTTP_API_STORAGE_ACCOUNT_NAME:-mockhttpapi}Functions | jq -r '.defaultHostName'`" >> $GITHUB_ENV
       - name: Pack mock functions
@@ -96,7 +92,6 @@ jobs:
       - name: Deploy mock functions
         uses: azure/CLI@v1
         with:
-          # azcliversion: 2.34.1
           inlineScript: |
             az functionapp deployment source config-zip -g ${RESOURCE_GROUP:-nrfassettrackerci} -n ${MOCK_HTTP_API_STORAGE_ACCOUNT_NAME:-mockhttpapi}Functions --src dist/mock-http-api.zip
       - name: Set random nRF Cloud Team ID
@@ -108,7 +103,6 @@ jobs:
       - name: Set secrets for third party APIs
         uses: azure/CLI@v1
         with:
-          # azcliversion: 2.34.1
           inlineScript: |
             AZURE_CLIENT_ID=`jq -r '.clientId' <<< '${{ secrets.AZURE_CREDENTIALS }}'`
             echo "::add-mask::${AZURE_CLIENT_ID}"
@@ -123,7 +117,6 @@ jobs:
       - name: Deploy solution
         uses: azure/CLI@v1
         with:
-          # azcliversion: 2.34.1
           inlineScript: |
             az deployment group create \
               --resource-group ${RESOURCE_GROUP:-nrfassettrackerci} \
@@ -148,7 +141,6 @@ jobs:
       - name: Deploy Function App
         uses: azure/CLI@v1
         with:
-          # azcliversion: 2.34.1
           inlineScript: |
             az functionapp deployment source config-zip -g ${RESOURCE_GROUP:-nrfassettrackerci} -n ${APP_NAME:-nrfassettrackerci}api --src dist/functionapp.zip
       - uses: actions/upload-artifact@v3
