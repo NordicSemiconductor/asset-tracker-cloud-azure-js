@@ -1,8 +1,8 @@
+import { DeviceRegistrationState } from 'azure-iot-provisioning-service/dist/interfaces'
 import { promises as fs } from 'fs'
 import { connect } from 'mqtt'
-import { DeviceRegistrationState } from 'azure-iot-provisioning-service/dist/interfaces'
-import { dpsTopics } from './dpsTopics.js'
 import { deviceFileLocations } from './deviceFileLocations.js'
+import { dpsTopics } from './dpsTopics.js'
 import { globalIotHubDPSHostname } from './ioTHubDPSInfo.js'
 
 /**
@@ -49,7 +49,7 @@ export const provisionDevice = async ({
 			clientId: deviceId,
 			username: `${idScope}/registrations/${deviceId}/api-version=2019-03-31`,
 			protocol: 'mqtts',
-			version: 4,
+			protocolVersion: 4,
 			clean: true,
 		})
 		client.on('error', (err) => {

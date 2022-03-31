@@ -1,7 +1,7 @@
 import { promises as fs } from 'fs'
 import { connect, MqttClient } from 'mqtt'
-import { deviceFileLocations } from './deviceFileLocations.js'
 import { run } from '../process/run.js'
+import { deviceFileLocations } from './deviceFileLocations.js'
 
 /**
  * Connect the device to the Azure IoT Hub.
@@ -58,7 +58,7 @@ export const connectDevice = async ({
 			clientId: deviceId,
 			protocol: 'mqtts',
 			username: `${iotHub}/${deviceId}/?api-version=2020-09-30`,
-			version: 4,
+			protocolVersion: 4,
 			clean: true,
 		})
 		client.on('connect', async () => {
