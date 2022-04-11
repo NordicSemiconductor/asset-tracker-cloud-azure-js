@@ -42,7 +42,7 @@
     "@octokit/rest": "18.12.0",
     "@sinclair/typebox": "0.23.4",
     "ajv": "8.11.0",
-    "azure-iot-provisioning-service": "1.9.0",
+    "azure-iot-provisioning-service": "1.9.1",
     "azure-iothub": "1.14.7",
     "backoff": "2.5.0",
     "mqtt": "4.3.7",
