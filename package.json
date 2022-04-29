@@ -67,7 +67,7 @@
     "check-node-version": "4.2.1",
     "commander": "9.2.0",
     "dependency-tree": "^8.1.2",
-    "jest": "27.5.1",
+    "jest": "28.0.3",
     "node-fetch": "3.2.4",
     "pem": "1.14.6",
     "semver": "7.3.7",
