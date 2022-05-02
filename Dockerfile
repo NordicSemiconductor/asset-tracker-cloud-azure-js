@@ -2,12 +2,13 @@ FROM ubuntu:22.04 as base
 WORKDIR /workdir
 
 RUN \
+    export DEBIAN_FRONTEND=noninteractive && \
     # Update system
     apt-get -y update && \
     apt-get -y upgrade && \
     # Install Node.js
     apt -y install curl dirmngr apt-transport-https lsb-release ca-certificates && \
-    /bin/bash -c 'curl -sL https://deb.nodesource.com/setup_14.x | bash -' && \
+    /bin/bash -c 'curl -sL https://deb.nodesource.com/setup_16.x | bash -' && \
     apt-get install -y nodejs && \
     node -v && \
     # Azure CLI
@@ -24,6 +25,7 @@ RUN \
     func
 
 RUN \
+    export DEBIAN_FRONTEND=noninteractive && \
     # download extension bundle ("func start" will do this otherwise)
     apt-get install -y unzip && \
     wget -q https://functionscdn.azureedge.net/public/ExtensionBundles/Microsoft.Azure.Functions.ExtensionBundle/1.8.1/Microsoft.Azure.Functions.ExtensionBundle.1.8.1_any-any.zip && \
