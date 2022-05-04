@@ -1,15 +1,14 @@
-import { AzureFunction, Context, HttpRequest } from '@azure/functions'
-import { result } from '../lib/http.js'
-import { log } from '../lib/log.js'
-import { fromEnv } from '../lib/fromEnv.js'
-import { parseConnectionString } from '../lib/parseConnectionString.js'
 import { CosmosClient } from '@azure/cosmos'
+import { AzureFunction, Context, HttpRequest } from '@azure/functions'
 import {
-	cellId,
 	cellFromGeolocations,
+	cellId,
 	NetworkMode,
 } from '@nordicsemiconductor/cell-geolocation-helpers'
-import { isSome } from 'fp-ts/lib/Option.js'
+import { fromEnv } from '../lib/fromEnv.js'
+import { result } from '../lib/http.js'
+import { log } from '../lib/log.js'
+import { parseConnectionString } from '../lib/parseConnectionString.js'
 
 const { connectionString } = fromEnv({
 	connectionString: 'COSMOSDB_CONNECTION_STRING',
@@ -57,9 +56,9 @@ const geolocateCell: AzureFunction = async (
 
 		const location = fromDeviceLocations(locations)
 
-		if (isSome(location)) {
-			context.res = result(context)(location.value)
-			log(context)({ location: location.value })
+		if (location !== undefined) {
+			context.res = result(context)(location)
+			log(context)({ location })
 		} else {
 			context.res = result(context)(
 				{ error: `Could not resolve cell ${c}` },

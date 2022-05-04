@@ -1,13 +1,13 @@
+import { AzureNamedKeyCredential, TableClient } from '@azure/data-tables'
 import { AzureFunction, Context, HttpRequest } from '@azure/functions'
-import { log, logError } from '../lib/log.js'
-import { fromEnv } from '../lib/fromEnv.js'
-import { TableClient, AzureNamedKeyCredential } from '@azure/data-tables'
-import { v4 } from 'uuid'
-import { URL } from 'url'
-import { encodeQuery } from './encodeQuery.js'
 import { setLogLevel } from '@azure/logger'
-import { sortQueryString } from './sortQueryString.js'
+import { URL } from 'url'
+import { v4 } from 'uuid'
+import { fromEnv } from '../lib/fromEnv.js'
 import { result } from '../lib/http.js'
+import { log, logError } from '../lib/log.js'
+import { encodeQuery } from './encodeQuery.js'
+import { sortQueryString } from './sortQueryString.js'
 
 setLogLevel('verbose')
 
@@ -55,7 +55,7 @@ const mockHTTPAPI: AzureFunction = async (
 		// Check if response exists
 		log(context)(`Checking if response exists for ${methodPathQuery}...`)
 
-		const res = responsesClient.listEntities<{
+		const entities = responsesClient.listEntities<{
 			partitionKey: string
 			rowKey: string
 			methodPathQuery: string
@@ -71,7 +71,7 @@ const mockHTTPAPI: AzureFunction = async (
 			},
 		})
 
-		for await (const response of res) {
+		for await (const response of entities) {
 			log(context)({ response })
 			await responsesClient.deleteEntity(response.partitionKey, response.rowKey)
 			const isBinary = /^[0-9a-f]+$/.test(response.body ?? '')
