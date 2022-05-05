@@ -145,7 +145,7 @@ jobs:
         uses: azure/CLI@v1
         with:
           inlineScript: |
-            echo "USER_OBJECT_ID=`az ad sp list --spn 'https://nrfassettracker.invalid/cd' --query '[0].objectId' -o tsv | tr -d '\n'`" >> $GITHUB_ENV
+            echo "USER_OBJECT_ID=`az ad sp show --id ${{ env.AZURE_CLIENT_ID }} --query objectId --out tsv | tr -d '\n'`" >> $GITHUB_ENV
       - name: Grant user write access to key vault
         uses: azure/CLI@v1
         with:
