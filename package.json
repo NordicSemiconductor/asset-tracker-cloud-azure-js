@@ -52,7 +52,7 @@
   "devDependencies": {
     "@azure/data-tables": "13.1.1",
     "@azure/logger": "1.0.3",
-    "@nordicsemiconductor/asset-tracker-cloud-code-style": "11.0.62",
+    "@nordicsemiconductor/asset-tracker-cloud-code-style": "11.0.63",
     "@nordicsemiconductor/e2e-bdd-test-runner": "15.0.110",
     "@nordicsemiconductor/firmware-ci-device-helpers": "13.0.126",
     "@swc/jest": "0.2.20",
