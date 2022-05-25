@@ -11,7 +11,8 @@ export const cliCredentials = async (): Promise<{
 	let subscriptionId: string | undefined = undefined
 
 	for await (const subscription of subscriptionClient.subscriptions.list()) {
-		if (subscription.id !== undefined) subscriptionId = subscription.id
+		if (subscription.id !== undefined)
+			subscriptionId = subscription.subscriptionId
 	}
 
 	if (subscriptionId === undefined)
