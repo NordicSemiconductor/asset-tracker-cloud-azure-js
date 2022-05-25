@@ -53,7 +53,10 @@ const main = async () => {
 
 	const getIotDpsClient = async () =>
 		getCurrentCreds().then(
-			(creds) => new IotDpsClient(creds.credentials, creds.subscriptionId),
+			(creds) =>
+				new IotDpsClient(creds.credentials, creds.subscriptionId, {
+					apiVersion: '2021-10-15',
+				}),
 		)
 	const getWebsiteClient = async () =>
 		getCurrentCreds().then(
