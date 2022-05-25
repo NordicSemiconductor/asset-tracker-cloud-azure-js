@@ -1,8 +1,8 @@
-import { CommandDefinition } from './CommandDefinition.js'
 import { IotDpsClient } from '@azure/arm-deviceprovisioningservices'
 import { promises as fs } from 'fs'
 import { CARootFileLocations } from '../iot/caFileLocations.js'
 import { newline, next, setting, success } from '../logging.js'
+import { CommandDefinition } from './CommandDefinition.js'
 
 export const proofCARootPossessionCommand = ({
 	certsDir,
@@ -41,11 +41,11 @@ export const proofCARootPossessionCommand = ({
 		await armDpsClient.dpsCertificate.verifyCertificate(
 			certificateName,
 			etag as string,
+			resourceGroup,
+			dpsName,
 			{
 				certificate: verificationCert,
 			},
-			resourceGroup,
-			dpsName,
 		)
 
 		success('Verified root CA certificate.')

@@ -1,7 +1,6 @@
 import { WebSiteManagementClient } from '@azure/arm-appservice'
 import { AzureNamedKeyCredential } from '@azure/core-auth'
 import { TableClient } from '@azure/data-tables'
-import { AzureCliCredentials } from '@azure/ms-rest-nodeauth'
 import {
 	ConsoleReporter,
 	FeatureRunner,
@@ -13,6 +12,7 @@ import chalk from 'chalk'
 import { program } from 'commander'
 import * as path from 'path'
 import { v4 } from 'uuid'
+import { cliCredentials } from '../cli/cliCredentials.js'
 import {
 	CAIntermediateFileLocations,
 	CARootFileLocations,
@@ -77,12 +77,9 @@ program
 				mockHTTPStorageAccountName: 'MOCK_HTTP_API_STORAGE_ACCOUNT_NAME',
 			})(process.env)
 
-			const credentials = await AzureCliCredentials.create()
+			const { credentials, subscriptionId } = await cliCredentials()
 
-			const wsClient = new WebSiteManagementClient(
-				credentials,
-				credentials.tokenInfo.subscription,
-			)
+			const wsClient = new WebSiteManagementClient(credentials, subscriptionId)
 			const [apiEndpoint, mockHTTPApiEndpoint, mockHTTPApiSettings] =
 				await Promise.all([
 					wsClient.webApps
@@ -130,7 +127,10 @@ program
 
 			const certsDir = await ioTHubDPSInfo({
 				resourceGroupName: resourceGroup,
-				credentials,
+				credentials: {
+					credentials,
+					subscriptionId,
+				},
 			})().then(({ hostname }) =>
 				path.join(process.cwd(), 'certificates', hostname),
 			)
@@ -148,7 +148,7 @@ program
 			const rootCaFiles = CARootFileLocations(certsDir)
 
 			settings({
-				Subscription: credentials.tokenInfo.subscription,
+				Subscription: subscriptionId,
 				'Resource Group': resourceGroup,
 				'Application Name': appName,
 				'API endpoint': apiEndpointUrl,
