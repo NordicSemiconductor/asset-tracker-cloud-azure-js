@@ -1,15 +1,15 @@
-import { CommandDefinition } from './CommandDefinition.js'
 import { IotDpsClient } from '@azure/arm-deviceprovisioningservices'
-import { generateProofOfPosession } from '../iot/generateProofOfPosession.js'
 import { v4 } from 'uuid'
-import {
-	generateCARoot,
-	defaultCAValidityInDays,
-} from '../iot/generateCARoot.js'
-import { log, debug, success, setting, newline, next } from '../logging.js'
+import { CARootFileLocations } from '../iot/caFileLocations.js'
 import { certificateName as cn } from '../iot/certificateName.js'
 import { fingerprint } from '../iot/fingerprint.js'
-import { CARootFileLocations } from '../iot/caFileLocations.js'
+import {
+	defaultCAValidityInDays,
+	generateCARoot,
+} from '../iot/generateCARoot.js'
+import { generateProofOfPosession } from '../iot/generateProofOfPosession.js'
+import { debug, log, newline, next, setting, success } from '../logging.js'
+import { CommandDefinition } from './CommandDefinition.js'
 
 export const createCARootCommand = ({
 	certsDir: certsDirPromise,
@@ -54,7 +54,9 @@ export const createCARootCommand = ({
 			dpsName,
 			certificateName,
 			{
-				certificate: root.certificate,
+				properties: {
+					certificate: root.certificate,
+				},
 			},
 		)
 

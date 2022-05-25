@@ -1,35 +1,39 @@
-import { program } from 'commander'
-import * as path from 'path'
-import * as fs from 'fs'
-import { createCARootCommand } from './commands/create-ca-root.js'
-import { IotDpsClient } from '@azure/arm-deviceprovisioningservices'
-import { AzureCliCredentials } from '@azure/ms-rest-nodeauth'
 import { WebSiteManagementClient } from '@azure/arm-appservice'
-import { createSimulatorCertCommand } from './commands/create-simulator-cert.js'
-import { proofCARootPossessionCommand } from './commands/proof-ca-possession.js'
-import { createCAIntermediateCommand } from './commands/create-ca-intermediate.js'
+import { IotDpsClient } from '@azure/arm-deviceprovisioningservices'
+import { AzureCliCredential } from '@azure/identity'
+import { program } from 'commander'
+import * as fs from 'fs'
+import * as path from 'path'
 import {
+	appName,
 	iotDeviceProvisioningServiceName,
 	resourceGroupName,
-	appName,
 } from '../arm/resources.js'
-import { reactConfigCommand } from './commands/react-config.js'
-import { flashFirmwareCommand } from './commands/flash-firmware.js'
-import { ioTHubDPSInfo } from './iot/ioTHubDPSInfo.js'
-import { functionsSettingsCommand } from './commands/functions-settings.js'
-import { error, help } from './logging.js'
-import { infoCommand } from './commands/info.js'
+import { cliCredentials } from './cliCredentials.js'
 import { createAndProvisionDeviceCertCommand } from './commands/create-and-provision-device-cert.js'
+import { createCAIntermediateCommand } from './commands/create-ca-intermediate.js'
+import { createCARootCommand } from './commands/create-ca-root.js'
+import { createSimulatorCertCommand } from './commands/create-simulator-cert.js'
+import { flashFirmwareCommand } from './commands/flash-firmware.js'
+import { functionsSettingsCommand } from './commands/functions-settings.js'
+import { infoCommand } from './commands/info.js'
+import { proofCARootPossessionCommand } from './commands/proof-ca-possession.js'
 import { provisionSimulatorDevice } from './commands/provision-simulator-device.js'
+import { reactConfigCommand } from './commands/react-config.js'
+import { ioTHubDPSInfo } from './iot/ioTHubDPSInfo.js'
+import { error, help } from './logging.js'
 
 const version = JSON.parse(
 	fs.readFileSync(path.join(process.cwd(), 'package.json'), 'utf-8'),
 ).version
 
-let currentCreds: Promise<AzureCliCredentials>
+let currentCreds: Promise<{
+	credentials: AzureCliCredential
+	subscriptionId: string
+}>
 
 const getCurrentCreds = async () => {
-	if (currentCreds === undefined) currentCreds = AzureCliCredentials.create()
+	if (currentCreds === undefined) currentCreds = cliCredentials()
 	return currentCreds
 }
 
@@ -49,12 +53,12 @@ const main = async () => {
 
 	const getIotDpsClient = async () =>
 		getCurrentCreds().then(
-			(creds) => new IotDpsClient(creds as any, creds.tokenInfo.subscription), // FIXME: This removes a TypeScript incompatibility error
+			(creds) => new IotDpsClient(creds.credentials, creds.subscriptionId),
 		)
 	const getWebsiteClient = async () =>
 		getCurrentCreds().then(
 			(creds) =>
-				new WebSiteManagementClient(creds, creds.tokenInfo.subscription),
+				new WebSiteManagementClient(creds.credentials, creds.subscriptionId),
 		)
 
 	program.description('Asset Tracker Command Line Interface')
