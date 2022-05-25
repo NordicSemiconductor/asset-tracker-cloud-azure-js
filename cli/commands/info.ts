@@ -1,8 +1,8 @@
-import { CommandDefinition } from './CommandDefinition.js'
+import { IotDpsClient } from '@azure/arm-deviceprovisioningservices'
+import { AzureCliCredential } from '@azure/identity'
 import { globalIotHubDPSHostname, ioTHubDPSInfo } from '../iot/ioTHubDPSInfo.js'
 import { setting } from '../logging.js'
-import { IotDpsClient } from '@azure/arm-deviceprovisioningservices'
-import { AzureCliCredentials } from '@azure/ms-rest-nodeauth'
+import { CommandDefinition } from './CommandDefinition.js'
 
 export const infoCommand = ({
 	dpsName,
@@ -15,7 +15,10 @@ export const infoCommand = ({
 	resourceGroup: string
 	getIotHubInfo: ReturnType<typeof ioTHubDPSInfo>
 	iotDpsClient: () => Promise<IotDpsClient>
-	credentials: () => Promise<AzureCliCredentials>
+	credentials: () => Promise<{
+		credentials: AzureCliCredential
+		subscriptionId: string
+	}>
 }): CommandDefinition => ({
 	command: 'info',
 	options: [
@@ -30,7 +33,7 @@ export const infoCommand = ({
 		} = await (await iotDpsClient()).iotDpsResource.get(dpsName, resourceGroup)
 
 		const info: Record<string, string> = {
-			subscription: (await credentials()).tokenInfo.subscription,
+			subscription: (await credentials()).subscriptionId,
 			resourceGroup,
 			iotHubHostname: (await getIotHubInfo()).hostname,
 			iotHubDpsHostname: globalIotHubDPSHostname,
