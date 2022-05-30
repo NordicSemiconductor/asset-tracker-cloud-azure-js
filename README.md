@@ -12,7 +12,7 @@ A reference implementation of a serverless backend for an IoT product developed
 in [TypeScript](https://www.typescriptlang.org/).
 
 > :construction: **The nRF Asset Tracker for Azure
-> [is incomplete](https://github.com/NordicSemiconductor/asset-tracker-cloud-docs/discussions/12)!**
+> [is incomplete](https://github.com/NordicSemiconductor/asset-tracker-cloud-docs/issues/339)!**
 
 > :information_source:
 > [Read the complete nRF Asset Tracker documentation](https://nordicsemiconductor.github.io/asset-tracker-cloud-docs/).
