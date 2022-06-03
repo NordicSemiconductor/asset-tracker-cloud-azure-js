@@ -144,7 +144,7 @@ jobs:
         with:
           inlineScript: |
             AZURE_CLIENT_ID=`jq -r '.clientId' <<< '${{ secrets.AZURE_CREDENTIALS }}'`
-            echo "USER_OBJECT_ID=`az ad sp show --id ${AZURE_CLIENT_ID} --query objectId --out tsv | tr -d '\n'`" >> $GITHUB_ENV
+            echo "USER_OBJECT_ID=`az ad sp show --id ${AZURE_CLIENT_ID} --query id --out tsv | tr -d '\n'`" >> $GITHUB_ENV
       - name: Grant user write access to key vault
         uses: azure/CLI@v1
         with:
