@@ -134,11 +134,6 @@ jobs:
                 enableNrfCloudAGPSLocationService=${enableNrfCloudAGPSLocationService} \
                 nrfCloudTeamId=${{ env.NRF_CLOUD_TEAM_ID }} \
                 keyVaultName=${{ env.keyVaultName }}
-      - name: Grant user write access to key vault
-        uses: azure/CLI@v1
-        with:
-          inlineScript: |
-            az keyvault set-policy --name ${{ env.keyVaultName }} --object-id ${{ secrets.AZURE_OBJECT_ID }} --secret-permissions set
       - name: Set Unwired Labs API key
         if: env.enableUnwiredLabsCellLocation == 'true'
         uses: azure/CLI@v1
