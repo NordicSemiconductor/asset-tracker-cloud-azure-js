@@ -5,11 +5,17 @@ on:
   push:
     branches:
       - saga
+      - OIDC
     paths-ignore:
       - Dockerfile
       - .github/workflows/test-docker.yaml
       - .github/workflows/publish-docker.yaml
       - .github/workflows/test-and-release.yaml
+
+permissions:
+  id-token: write
+  contents: write
+  issues: write
 
 jobs:
   deploy:
@@ -39,23 +45,12 @@ jobs:
       web_app_url: ${{ steps.web-app-url.outputs.web_app_url }}
 
     steps:
-      # We are authenticating here the non-containerized environment, so we
-      # can run the Azure JavaScript SDK with these credentials
-      # Needs to be done before the in-container auth in the next step
       - name: Login to Azure
         uses: azure/login@v1
         with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
-      # In-container auth in the next step
-      - name: Login to Azure CLI
-        uses: azure/CLI@v1
-        with:
-          inlineScript: |
-            AZURE_CLIENT_ID=`jq -r '.clientId' <<< '${{ secrets.AZURE_CREDENTIALS }}'`
-            AZURE_TENANT_ID=`jq -r '.tenantId' <<< '${{ secrets.AZURE_CREDENTIALS }}'`
-            AZURE_CLIENT_SECRET=`jq -r '.clientSecret' <<< '${{ secrets.AZURE_CREDENTIALS }}'`
-            echo "::add-mask::${AZURE_CLIENT_SECRET}"
-            az login --service-principal -u ${AZURE_CLIENT_ID} -p ${AZURE_CLIENT_SECRET} --tenant ${AZURE_TENANT_ID}
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
       - name: List Azure Accounts
         uses: azure/CLI@v1
         with:
@@ -139,17 +134,11 @@ jobs:
                 enableNrfCloudAGPSLocationService=${enableNrfCloudAGPSLocationService} \
                 nrfCloudTeamId=${{ env.NRF_CLOUD_TEAM_ID }} \
                 keyVaultName=${{ env.keyVaultName }}
-      - name: Get Azure object ID for current user
-        uses: azure/CLI@v1
-        with:
-          inlineScript: |
-            AZURE_CLIENT_ID=`jq -r '.clientId' <<< '${{ secrets.AZURE_CREDENTIALS }}'`
-            echo "USER_OBJECT_ID=`az ad sp show --id ${AZURE_CLIENT_ID} --query id --out tsv | tr -d '\n'`" >> $GITHUB_ENV
       - name: Grant user write access to key vault
         uses: azure/CLI@v1
         with:
           inlineScript: |
-            az keyvault set-policy --name ${{ env.keyVaultName }} --object-id ${USER_OBJECT_ID} --secret-permissions set
+            az keyvault set-policy --name ${{ env.keyVaultName }} --object-id ${{ secrets.AZURE_OBJECT_ID }} --secret-permissions set
       - name: Set Unwired Labs API key
         if: env.enableUnwiredLabsCellLocation == 'true'
         uses: azure/CLI@v1
