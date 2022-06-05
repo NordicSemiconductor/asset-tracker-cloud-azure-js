@@ -51,30 +51,50 @@ jobs:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
       - name: List Azure Accounts
         uses: azure/CLI@v1
         with:
           inlineScript: |
             az account list --output table
+
       - uses: actions/checkout@v3
+
       - uses: actions/setup-node@v3
         with:
           node-version: "16.x"
+
       - name: Keep npm cache around to speed up installs
         uses: actions/cache@v3
         with:
           path: ~/.npm
           key: ${{ runner.OS }}-build-${{ hashFiles('**/package-lock.json') }}
+
       - name: Install dependencies
         run: npm ci --no-audit
+
       - name: Compile source
         run: npx tsc
+
+      - name: Set Key Vault name
+        run: |
+          echo "keyVaultName=${APP_NAME:-nrfassettracker}" >> $GITHUB_ENV
+
+      # Unwired Labs API
       - name: Enable Unwired Labs API
         if: env.UNWIRED_LABS_API_KEY != ''
         run: echo "enableUnwiredLabsCellLocation=true" >> $GITHUB_ENV
       - name: Disable Unwired Labs API
         if: env.UNWIRED_LABS_API_KEY == ''
         run: echo "enableUnwiredLabsCellLocation=false" >> $GITHUB_ENV
+      - name: Set Unwired Labs API key
+        if: env.enableUnwiredLabsCellLocation == 'true'
+        uses: azure/CLI@v1
+        with:
+          inlineScript: |
+            az keyvault secret set --vault-name ${{ env.keyVaultName }} --name unwiredlabsApiKey --value ${{ secrets.UNWIRED_LABS_API_KEY }}
+
+      # nRF Cloud Cell Location API
       - name: Enable nRF Cloud Cell Location API
         if:
           env.NRF_CLOUD_TEAM_ID != '' && env.NRF_CLOUD_CELL_LOCATION_SERVICE_KEY
@@ -85,6 +105,16 @@ jobs:
           env.NRF_CLOUD_TEAM_ID == '' || env.NRF_CLOUD_CELL_LOCATION_SERVICE_KEY
           == ''
         run: echo "enableNrfCloudCellLocationService=false" >> $GITHUB_ENV
+      - name: Set nRF Cloud Cell Location service key
+        if: env.enableNrfCloudCellLocationService == 'true'
+        uses: azure/CLI@v1
+        with:
+          inlineScript: |
+            echo "${{ secrets.NRF_CLOUD_CELL_LOCATION_SERVICE_KEY }}" > nrfcloudcelllocationservice.key
+            az keyvault secret set --vault-name ${{ env.keyVaultName }} --name nrfCloudCellLocationServiceKey --file nrfcloudcelllocationservice.key
+            rm nrfcloudcelllocationservice.key
+
+      # nRF Cloud Assisted GPS Location API
       - name: Enable nRF Cloud Assisted GPS Location API
         if:
           env.NRF_CLOUD_TEAM_ID != '' && env.NRF_CLOUD_AGPS_LOCATION_SERVICE_KEY
@@ -95,6 +125,16 @@ jobs:
           env.NRF_CLOUD_TEAM_ID == '' || env.NRF_CLOUD_AGPS_LOCATION_SERVICE_KEY
           == ''
         run: echo "enableNrfCloudAGPSLocationService=false" >> $GITHUB_ENV
+      - name: Set nRF Cloud Assisted GPS Location service key
+        if: env.enableNrfCloudAGPSLocationService == 'true'
+        uses: azure/CLI@v1
+        with:
+          inlineScript: |
+            echo "${{ secrets.NRF_CLOUD_AGPS_LOCATION_SERVICE_KEY }}" > nrfcloudagpslocationservice.key
+            az keyvault secret set --vault-name ${{ env.keyVaultName }} --name nrfCloudAGPSLocationServiceKey --file nrfcloudagpslocationservice.key
+            rm nrfcloudagpslocationservice.key
+
+      # nRF Cloud Predicted GPS Location API
       - name: Enable nRF Cloud Predicted GPS Location API
         if:
           env.NRF_CLOUD_TEAM_ID != '' && env.NRF_CLOUD_PGPS_LOCATION_SERVICE_KEY
@@ -105,9 +145,15 @@ jobs:
           env.NRF_CLOUD_TEAM_ID == '' || env.NRF_CLOUD_PGPS_LOCATION_SERVICE_KEY
           == ''
         run: echo "enableNrfCloudPGPSLocationService=false" >> $GITHUB_ENV
-      - name: Set Key Vault name
-        run: |
-          echo "keyVaultName=${APP_NAME:-nrfassettracker}" >> $GITHUB_ENV
+      - name: Set nRF Cloud Predicted GPS Location service key
+        if: env.enableNrfCloudPGPSLocationService == 'true'
+        uses: azure/CLI@v1
+        with:
+          inlineScript: |
+            echo "${{ secrets.NRF_CLOUD_PGPS_LOCATION_SERVICE_KEY }}" > nrfcloudpgpslocationservice.key
+            az keyvault secret set --vault-name ${{ env.keyVaultName }} --name nrfCloudPGPSLocationServiceKey --file nrfcloudpgpslocationservice.key
+            rm nrfcloudpgpslocationservice.key
+
       - name: Determine Version
         run: |
           git fetch --depth=1 origin +refs/tags/*:refs/tags/*
@@ -115,6 +161,7 @@ jobs:
           VERSION=${TAG:-${{ github.sha }}}
           echo Version: ${VERSION}
           echo "VERSION=${VERSION}" >> $GITHUB_ENV
+
       - name: Deploy solution
         uses: azure/CLI@v1
         with:
@@ -134,54 +181,30 @@ jobs:
                 enableNrfCloudAGPSLocationService=${enableNrfCloudAGPSLocationService} \
                 nrfCloudTeamId=${{ env.NRF_CLOUD_TEAM_ID }} \
                 keyVaultName=${{ env.keyVaultName }}
-      - name: Set Unwired Labs API key
-        if: env.enableUnwiredLabsCellLocation == 'true'
-        uses: azure/CLI@v1
-        with:
-          inlineScript: |
-            az keyvault secret set --vault-name ${{ env.keyVaultName }} --name unwiredlabsApiKey --value ${{ secrets.UNWIRED_LABS_API_KEY }}
-      - name: Set nRF Cloud Cell Location service key
-        if: env.enableNrfCloudCellLocationService == 'true'
-        uses: azure/CLI@v1
-        with:
-          inlineScript: |
-            echo "${{ secrets.NRF_CLOUD_CELL_LOCATION_SERVICE_KEY }}" > nrfcloudcelllocationservice.key
-            az keyvault secret set --vault-name ${{ env.keyVaultName }} --name nrfCloudCellLocationServiceKey --file nrfcloudcelllocationservice.key
-            rm nrfcloudcelllocationservice.key
-      - name: Set nRF Cloud Assisted GPS Location service key
-        if: env.enableNrfCloudAGPSLocationService == 'true'
-        uses: azure/CLI@v1
-        with:
-          inlineScript: |
-            echo "${{ secrets.NRF_CLOUD_AGPS_LOCATION_SERVICE_KEY }}" > nrfcloudagpslocationservice.key
-            az keyvault secret set --vault-name ${{ env.keyVaultName }} --name nrfCloudAGPSLocationServiceKey --file nrfcloudagpslocationservice.key
-            rm nrfcloudagpslocationservice.key
-      - name: Set nRF Cloud Predicted GPS Location service key
-        if: env.enableNrfCloudPGPSLocationService == 'true'
-        uses: azure/CLI@v1
-        with:
-          inlineScript: |
-            echo "${{ secrets.NRF_CLOUD_PGPS_LOCATION_SERVICE_KEY }}" > nrfcloudpgpslocationservice.key
-            az keyvault secret set --vault-name ${{ env.keyVaultName }} --name nrfCloudPGPSLocationServiceKey --file nrfcloudpgpslocationservice.key
-            rm nrfcloudpgpslocationservice.key
+
       - name: Pack Function App
         run: node scripts/pack-app.js
+
       - name: Deploy Function App
         uses: azure/CLI@v1
         with:
           inlineScript: |
             az functionapp deployment source config-zip -g ${{ env.RESOURCE_GROUP }} -n ${APP_NAME:-nrfassettracker}api --src dist/functionapp.zip
+
       - uses: actions/upload-artifact@v3
         with:
           name: functionapp-${{ github.sha }}
           path: dist/functionapp.zip
+
       - name: Enable static site hosting for the app
         uses: azure/CLI@v1
         with:
           inlineScript: |
             az storage blob service-properties update --account-name ${{ env.STORAGE_ACCOUNT_NAME }} --static-website --404-document index.html --index-document index.html
+
       - name: Determine Web App settings
         run: node cli react-config >> $GITHUB_ENV
+
       - name: Determine public URL
         id: web-app-url
         uses: azure/CLI@v1
@@ -190,6 +213,7 @@ jobs:
             PUBLIC_URL=`az storage account show -g ${{ env.RESOURCE_GROUP }} -n ${{ env.STORAGE_ACCOUNT_NAME }} --query 'primaryEndpoints.web' --output tsv | tr -d '\n'`
             echo "::set-output name=web_app_url::${PUBLIC_URL}"
             echo "PUBLIC_URL=${PUBLIC_URL}" >> $GITHUB_ENV
+
       - name: Build app
         run: |
           export EXTEND_ESLINT=true
@@ -202,6 +226,7 @@ jobs:
           git checkout $REACT_APP_VERSION
           npm ci --no-audit
           npm run build
+
       - name: Deploy Web App
         uses: azure/CLI@v1
         with:
