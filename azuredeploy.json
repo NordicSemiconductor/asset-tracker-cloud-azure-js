@@ -299,10 +299,9 @@
     "iotHubResourceId": "[resourceId('Microsoft.Devices/Iothubs', concat(parameters('appName'), 'IotHub'))]",
     "iotHubKeyResource": "[resourceId('Microsoft.Devices/Iothubs/Iothubkeys', concat(parameters('appName'), 'IotHub'), 'iothubowner')]",
     "storageAccountId": "[concat(resourceGroup().id,'/providers/','Microsoft.Storage/storageAccounts/', parameters('storageAccountName'))]",
-    "apiResourceId": "[concat(resourceId('Microsoft.Web/sites', concat(parameters('appName'), 'API')), '/providers/Microsoft.ManagedIdentity/Identities/default')]",
-    "keyVaultSecretsOfficer": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'b86a8fe4-44ce-4948-aee5-eccb2c155cd7')]",
-    "uniqueRoleGuidKeyVaultSecretsOfficer": "[guid(resourceId('Microsoft.KeyVault/vaults',  parameters('keyVaultName')), variables('keyVaultSecretsOfficer'), resourceId('Microsoft.KeyVault/vaults', parameters('keyVaultName')))]",
-    "managedIdentity": "[concat('mi-', parameters('appName'), '-', '001')]"
+    "keyVaultSecretsUser": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '4633458b-17de-408a-b874-0445c86b69e6')]",
+    "uniqueRoleGuidKeyVaultSecretsUser": "[guid(resourceId('Microsoft.KeyVault/vaults',  parameters('keyVaultName')), variables('keyVaultSecretsUser'), resourceId('Microsoft.KeyVault/vaults', parameters('keyVaultName')))]",
+    "managedIdentity": "[concat(parameters('appName'), '-', 'functionapp-identity')]"
   },
   "resources": [
     {
@@ -472,7 +471,10 @@
       "location": "[parameters('location')]",
       "kind": "functionapp",
       "identity": {
-        "type": "SystemAssigned"
+        "type": "SystemAssigned,UserAssigned",
+        "userAssignedIdentities": {
+          "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('managedIdentity'))]": {}
+        }
       },
       "dependsOn": [
         "[resourceId('Microsoft.Web/serverfarms', concat(parameters('appName'), 'ServerFarm'))]",
@@ -1271,12 +1273,12 @@
     {
       "type": "Microsoft.KeyVault/vaults/providers/roleAssignments",
       "apiVersion": "2018-01-01-preview",
-      "name": "[concat(parameters('keyVaultName'), '/Microsoft.Authorization/', variables('uniqueRoleGuidKeyVaultSecretsOfficer'))]",
+      "name": "[concat(parameters('keyVaultName'), '/Microsoft.Authorization/', variables('uniqueRoleGuidKeyVaultSecretsUser'))]",
       "dependsOn": [
         "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('managedIdentity'))]"
       ],
       "properties": {
-        "roleDefinitionId": "[variables('keyVaultSecretsOfficer')]",
+        "roleDefinitionId": "[variables('keyVaultSecretsUser')]",
         "principalId": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities/', variables('managedIdentity')), '2018-11-30').principalId]",
         "scope": "[resourceId('Microsoft.KeyVault/vaults', parameters('keyVaultName'))]",
         "principalType": "ServicePrincipal"
