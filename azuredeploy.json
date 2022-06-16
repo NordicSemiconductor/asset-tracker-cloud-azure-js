@@ -299,7 +299,9 @@
     "iotHubResourceId": "[resourceId('Microsoft.Devices/Iothubs', concat(parameters('appName'), 'IotHub'))]",
     "iotHubKeyResource": "[resourceId('Microsoft.Devices/Iothubs/Iothubkeys', concat(parameters('appName'), 'IotHub'), 'iothubowner')]",
     "storageAccountId": "[concat(resourceGroup().id,'/providers/','Microsoft.Storage/storageAccounts/', parameters('storageAccountName'))]",
-    "apiResourceId": "[concat(resourceId('Microsoft.Web/sites', concat(parameters('appName'), 'API')), '/providers/Microsoft.ManagedIdentity/Identities/default')]"
+    "keyVaultSecretsUser": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '4633458b-17de-408a-b874-0445c86b69e6')]",
+    "uniqueRoleGuidKeyVaultSecretsUser": "[guid(resourceId('Microsoft.KeyVault/vaults',  parameters('keyVaultName')), variables('keyVaultSecretsUser'), resourceId('Microsoft.KeyVault/vaults', parameters('keyVaultName')))]",
+    "managedIdentity": "[concat(parameters('appName'), '-', 'functionapp-identity')]"
   },
   "resources": [
     {
@@ -457,13 +459,22 @@
       }
     },
     {
+      "type": "Microsoft.ManagedIdentity/userAssignedIdentities",
+      "name": "[variables('managedIdentity')]",
+      "apiVersion": "2018-11-30",
+      "location": "[parameters('location')]"
+    },
+    {
       "type": "Microsoft.Web/sites",
       "apiVersion": "2019-08-01",
       "name": "[concat(parameters('appName'), 'API')]",
       "location": "[parameters('location')]",
       "kind": "functionapp",
       "identity": {
-        "type": "SystemAssigned"
+        "type": "SystemAssigned,UserAssigned",
+        "userAssignedIdentities": {
+          "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('managedIdentity'))]": {}
+        }
       },
       "dependsOn": [
         "[resourceId('Microsoft.Web/serverfarms', concat(parameters('appName'), 'ServerFarm'))]",
@@ -515,6 +526,10 @@
               "aadClaimsAuthorization": "{\"allowed_groups\":null,\"allowed_client_applications\":null}"
             },
             "appSettings": [
+              {
+                "name": "AZURE_CLIENT_ID",
+                "value": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('managedIdentity'))).clientId]"
+              },
               {
                 "name": "AzureWebJobsStorage",
                 "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', parameters('storageAccountName'), ';AccountKey=', listKeys(variables('storageAccountId'),'2015-05-01-preview').key1)]"
@@ -1242,12 +1257,13 @@
     {
       "type": "Microsoft.KeyVault/vaults",
       "name": "[parameters('keyVaultName')]",
-      "apiVersion": "2018-02-14",
+      "apiVersion": "2021-11-01-preview",
       "location": "[parameters('location')]",
       "dependsOn": [
         "[concat('Microsoft.Web/Sites/', concat(parameters('appName'), 'API'))]"
       ],
       "properties": {
+        "enableRbacAuthorization": true,
         "enabledForDeployment": false,
         "enabledForDiskEncryption": false,
         "enabledForTemplateDeployment": false,
@@ -1255,16 +1271,21 @@
         "sku": {
           "name": "Standard",
           "family": "A"
-        },
-        "accessPolicies": [
-          {
-            "tenantId": "[reference(variables('apiResourceId'), '2018-11-30').tenantId]",
-            "objectId": "[reference(variables('apiResourceId'), '2018-11-30').principalId]",
-            "permissions": {
-              "secrets": ["get"]
-            }
-          }
-        ]
+        }
+      }
+    },
+    {
+      "type": "Microsoft.KeyVault/vaults/providers/roleAssignments",
+      "apiVersion": "2018-01-01-preview",
+      "name": "[concat(parameters('keyVaultName'), '/Microsoft.Authorization/', variables('uniqueRoleGuidKeyVaultSecretsUser'))]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('managedIdentity'))]"
+      ],
+      "properties": {
+        "roleDefinitionId": "[variables('keyVaultSecretsUser')]",
+        "principalId": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities/', variables('managedIdentity')), '2018-11-30').principalId]",
+        "scope": "[resourceId('Microsoft.KeyVault/vaults', parameters('keyVaultName'))]",
+        "principalType": "ServicePrincipal"
       }
     }
   ],
