@@ -1,4 +1,5 @@
 import { IotDpsClient } from '@azure/arm-deviceprovisioningservices'
+import { TextEncoder } from 'util'
 import { v4 } from 'uuid'
 import { CARootFileLocations } from '../iot/caFileLocations.js'
 import { certificateName as cn } from '../iot/certificateName.js'
@@ -55,7 +56,7 @@ export const createCARootCommand = ({
 			certificateName,
 			{
 				properties: {
-					certificate: root.certificate,
+					certificate: new TextEncoder().encode(root.certificate),
 				},
 			},
 		)

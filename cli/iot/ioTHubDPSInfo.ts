@@ -30,9 +30,6 @@ export const ioTHubDPSInfo =
 		const armIotDpsClient = new IotDpsClient(
 			creds.credentials,
 			creds.subscriptionId,
-			{
-				apiVersion: '2021-10-15',
-			},
 		)
 		const armIotHubClient = new IotHubClient(
 			creds.credentials,
