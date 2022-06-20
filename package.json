@@ -50,7 +50,7 @@
     "uuid": "8.3.2"
   },
   "devDependencies": {
-    "@azure/arm-iothub": "6.1.1",
+    "@azure/arm-iothub": "6.1.2",
     "@azure/arm-resources-subscriptions": "2.0.1",
     "@azure/data-tables": "13.1.2",
     "@azure/logger": "1.0.3",
