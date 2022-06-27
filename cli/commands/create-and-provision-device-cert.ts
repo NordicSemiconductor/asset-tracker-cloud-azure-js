@@ -83,7 +83,7 @@ export const createAndProvisionDeviceCertCommand = ({
 		secTag,
 		deletePrivateKey,
 	}) => {
-		progress('Flasing certificate', port ?? defaultPort)
+		progress('Flashing certificate', port ?? defaultPort)
 
 		const logFn = debug === true ? console.log : undefined
 		const debugFn = debug === true ? console.debug : undefined
