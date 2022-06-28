@@ -1,5 +1,5 @@
-import { CommandDefinition } from './CommandDefinition.js'
 import { WebSiteManagementClient } from '@azure/arm-appservice'
+import { CommandDefinition } from './CommandDefinition.js'
 
 export const functionsSettingsCommand = ({
 	websiteClient,

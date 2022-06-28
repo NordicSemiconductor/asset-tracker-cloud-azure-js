@@ -1,20 +1,20 @@
-import { AzureFunction, Context } from '@azure/functions'
-import { log, logError } from '../lib/log.js'
-import { pgpsRequestSchema } from '../pgps/types.js'
-import { cacheKey } from '../pgps/cacheKey.js'
-import { Static } from '@sinclair/typebox'
-import { fromEnv } from '../lib/fromEnv.js'
-import iothub from 'azure-iothub'
-import { parseConnectionString } from '../lib/parseConnectionString.js'
 import { Container, CosmosClient } from '@azure/cosmos'
-import iothubCommon from 'azure-iot-common'
+import { AzureFunction, Context } from '@azure/functions'
 import {
-	QueueServiceClient,
 	QueueClient,
+	QueueServiceClient,
 	StorageSharedKeyCredential,
 } from '@azure/storage-queue'
-import { gpsDay } from '../pgps/gpsTime.js'
+import { Static } from '@sinclair/typebox'
+import iothubCommon from 'azure-iot-common'
+import iothub from 'azure-iothub'
 import { URL } from 'url'
+import { fromEnv } from '../lib/fromEnv.js'
+import { log, logError } from '../lib/log.js'
+import { parseConnectionString } from '../lib/parseConnectionString.js'
+import { cacheKey } from '../pgps/cacheKey.js'
+import { gpsDay } from '../pgps/gpsTime.js'
+import { pgpsRequestSchema } from '../pgps/types.js'
 
 const config = () =>
 	fromEnv({
@@ -186,7 +186,7 @@ const pgpsQueuedDeviceRequestsHandler: AzureFunction = async (
 		const url = new URL(resolvedRequests[requestCacheKey].url as string)
 		const m = new iothubCommon.Message(
 			JSON.stringify({
-				path: url.pathname.substr(1), // remove leading slash
+				path: url.pathname.slice(1), // remove leading slash
 				host: url.hostname,
 			}),
 		)

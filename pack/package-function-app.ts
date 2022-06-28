@@ -11,14 +11,14 @@
  * Therefore, the scriptFiles are renamed to .mjs while packaging.
  */
 
-import { promises as fs, statSync, readFileSync } from 'fs'
-import path from 'path'
-import os from 'os'
-import { progress, debug } from '../cli/logging.js'
-import { run } from '../cli/process/run.js'
-import { copy, copyFile } from './lib/copy.js'
 import dependencyTree, { TreeInnerNode } from 'dependency-tree'
+import { promises as fs, readFileSync, statSync } from 'fs'
+import os from 'os'
+import path from 'path'
+import { debug, progress } from '../cli/logging.js'
+import { run } from '../cli/process/run.js'
 import { flattenDependencies } from './flattenDependencies.js'
+import { copy, copyFile } from './lib/copy.js'
 
 const installDependenciesFromPackageJSON = async ({
 	targetDir,

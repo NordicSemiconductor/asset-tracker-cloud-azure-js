@@ -1,2 +1,2 @@
-import handler from '../dist/queryHistoricalDeviceData/queryHistoricalDeviceData.js'
-export default handler
+import handler from "../dist/queryHistoricalDeviceData/queryHistoricalDeviceData.js";
+export default handler;

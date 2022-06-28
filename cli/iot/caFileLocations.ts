@@ -1,6 +1,14 @@
 import * as path from 'path'
 
-export const CARootFileLocations = (certsDir: string) => ({
+export const CARootFileLocations = (
+	certsDir: string,
+): {
+	name: string
+	cert: string
+	privateKey: string
+	verificationKey: string
+	verificationCert: string
+} => ({
 	name: path.resolve(certsDir, 'CA.root.name'),
 	cert: path.resolve(certsDir, 'CA.root.pem'),
 	privateKey: path.resolve(certsDir, 'CA.root.key'),
@@ -14,7 +22,10 @@ export const CAIntermediateFileLocations = ({
 }: {
 	certsDir: string
 	id: string
-}) => ({
+}): {
+	privateKey: string
+	cert: string
+} => ({
 	privateKey: path.resolve(certsDir, `CA.intermediate.${id}.key`),
 	cert: path.resolve(certsDir, `CA.intermediate.${id}.pem`),
 })

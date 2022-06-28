@@ -1,15 +1,15 @@
+import { TableClient } from '@azure/data-tables'
 import {
-	StepRunnerFunc,
 	InterpolatedStep,
 	regexGroupMatcher,
+	StepRunnerFunc,
 } from '@nordicsemiconductor/e2e-bdd-test-runner'
 import * as chai from 'chai'
 import { expect } from 'chai'
 import chaiSubset from 'chai-subset'
-import { splitMockResponse } from '../../mock-http-api/splitMockResponse.js'
-import { TableClient } from '@azure/data-tables'
 import { v4 } from 'uuid'
 import { sortQueryString } from '../../mock-http-api/sortQueryString.js'
+import { splitMockResponse } from '../../mock-http-api/splitMockResponse.js'
 chai.use(chaiSubset)
 
 export const httpApiMockStepRunners = ({

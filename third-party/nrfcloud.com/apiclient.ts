@@ -1,22 +1,22 @@
+import { Static, TObject, TProperties } from '@sinclair/typebox'
+import Ajv from 'ajv'
+import * as E from 'fp-ts/lib/Either.js'
+import { pipe } from 'fp-ts/lib/function.js'
+import J from 'fp-ts/lib/Json.js'
 import {
 	chain,
+	fromEither,
 	left,
+	map,
 	right,
 	TaskEither,
 	tryCatch,
-	fromEither,
-	map,
 } from 'fp-ts/lib/TaskEither.js'
-import * as E from 'fp-ts/lib/Either.js'
+import { IncomingHttpHeaders, OutgoingHttpHeaders } from 'http'
 import { request as nodeRequest, RequestOptions } from 'https'
+import jwt from 'jsonwebtoken'
 import { URL } from 'url'
 import { ErrorInfo, ErrorType } from '../../lib/ErrorInfo.js'
-import { Static, TObject, TProperties } from '@sinclair/typebox'
-import { pipe } from 'fp-ts/lib/function.js'
-import Ajv from 'ajv'
-import jwt from 'jsonwebtoken'
-import { IncomingHttpHeaders, OutgoingHttpHeaders } from 'http'
-import J from 'fp-ts/lib/Json.js'
 import { toQueryString } from './toQueryString.js'
 
 const ajv = new Ajv()

@@ -1,6 +1,6 @@
 import { promises as fs } from 'fs'
+import { CertificateCreationResult, createCertificate } from 'pem'
 import { CARootFileLocations } from './caFileLocations.js'
-import { createCertificate, CertificateCreationResult } from 'pem'
 import { leafCertConfig } from './pemConfig.js'
 
 /**
@@ -33,8 +33,8 @@ export const generateProofOfPosession = async (args: {
 					serviceKey: rootKey,
 					serviceCertificate: rootCert,
 				},
-				(err, cert) => {
-					if (err) return reject(err)
+				(err: Error | undefined | null, cert) => {
+					if (err !== null || err !== undefined) return reject(err)
 					resolve(cert)
 				},
 			),

@@ -1,10 +1,10 @@
 import { AzureFunction, Context, HttpRequest } from '@azure/functions'
 import iothub from 'azure-iothub'
-const { Registry } = iothub
-import { result } from '../lib/http.js'
 import { ErrorInfo, ErrorType, toStatusCode } from '../lib/ErrorInfo.js'
-import { log } from '../lib/log.js'
 import { fromEnv } from '../lib/fromEnv.js'
+import { result } from '../lib/http.js'
+import { log } from '../lib/log.js'
+const { Registry } = iothub
 
 const { iotHubConnectionString } = fromEnv({
 	iotHubConnectionString: 'IOTHUB_CONNECTION_STRING',
@@ -31,7 +31,7 @@ const deleteDevice: AzureFunction = async (
 				toStatusCode[ErrorType.EntityNotFound],
 			)
 		}
-		await registry.delete(req.params.id as string)
+		await registry.delete(req.params.id)
 		context.res = result(context)({ success: true }, 202)
 	} catch (error) {
 		context.log.error({ error })

@@ -1,12 +1,12 @@
+import { verify } from '@nordicsemiconductor/nrfcloud-location-services-tests'
 import { Static, Type } from '@sinclair/typebox'
-import { agpsRequestSchema, AGPSType } from '../agps/types.js'
+import { Either, isLeft, isRight, left } from 'fp-ts/lib/Either.js'
 import { pipe } from 'fp-ts/lib/function.js'
 import * as TE from 'fp-ts/lib/TaskEither.js'
-import { verify } from '@nordicsemiconductor/nrfcloud-location-services-tests'
-import { validateWithJSONSchema } from '../lib/validateWithJSONSchema.js'
+import { agpsRequestSchema, AGPSType } from '../agps/types.js'
 import { ErrorInfo, ErrorType } from '../lib/ErrorInfo.js'
+import { validateWithJSONSchema } from '../lib/validateWithJSONSchema.js'
 import { apiClient } from '../third-party/nrfcloud.com/apiclient.js'
-import { isLeft, Either, left, isRight } from 'fp-ts/lib/Either.js'
 
 const PositiveInteger = Type.Integer({ minimum: 1, title: 'positive integer' })
 

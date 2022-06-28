@@ -1,2 +1,2 @@
-import handler from '../dist/storeDeviceUpdateInCosmosDB/storeDeviceUpdateInCosmosDB.js'
-export default handler
+import handler from "../dist/storeDeviceUpdateInCosmosDB/storeDeviceUpdateInCosmosDB.js";
+export default handler;

@@ -1,5 +1,5 @@
-import { SecretClient } from '@azure/keyvault-secrets'
 import { DefaultAzureCredential } from '@azure/identity'
+import { SecretClient } from '@azure/keyvault-secrets'
 
 export const nrfCloudCellLocationServiceKeyPromise = (
 	keyVaultName: string,

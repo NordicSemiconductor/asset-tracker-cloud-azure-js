@@ -1,6 +1,6 @@
-import { CommandDefinition } from './CommandDefinition.js'
 import { IotDpsClient } from '@azure/arm-deviceprovisioningservices'
 import { provisionDevice } from '../iot/provisionDevice.js'
+import { CommandDefinition } from './CommandDefinition.js'
 
 export const provisionSimulatorDevice = ({
 	certsDir: certsDirPromise,

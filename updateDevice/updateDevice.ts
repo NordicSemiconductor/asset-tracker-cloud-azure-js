@@ -1,12 +1,12 @@
 import { AzureFunction, Context, HttpRequest } from '@azure/functions'
 import iothub from 'azure-iothub'
-const { Registry } = iothub
-import { result } from '../lib/http.js'
-import { ErrorInfo, ErrorType, toStatusCode } from '../lib/ErrorInfo.js'
-import { log } from '../lib/log.js'
-import { fromEnv } from '../lib/fromEnv.js'
 import * as url from 'url'
 import { v4 } from 'uuid'
+import { ErrorInfo, ErrorType, toStatusCode } from '../lib/ErrorInfo.js'
+import { fromEnv } from '../lib/fromEnv.js'
+import { result } from '../lib/http.js'
+import { log } from '../lib/log.js'
+const { Registry } = iothub
 
 const { iotHubConnectionString } = fromEnv({
 	iotHubConnectionString: 'IOTHUB_CONNECTION_STRING',
@@ -50,7 +50,7 @@ const updateDevice: AzureFunction = async (
 				const parsed = url.parse(fwPackageURI)
 				firmware.fwLocation = {
 					...parsed,
-					path: parsed.path?.substr(1), // Remove leading slash
+					path: parsed.path?.slice(1), // Remove leading slash
 				}
 				// See https://developer.nordicsemi.com/nRF_Connect_SDK/doc/latest/nrf/include/net/azure_fota.html
 				firmware.fwFragmentSize = firmware.fwFragmentSize ?? 1800
@@ -58,7 +58,7 @@ const updateDevice: AzureFunction = async (
 			}
 
 			await registry.updateTwin(
-				req.params.id as string,
+				req.params.id,
 				{
 					tags: rest,
 					properties: {

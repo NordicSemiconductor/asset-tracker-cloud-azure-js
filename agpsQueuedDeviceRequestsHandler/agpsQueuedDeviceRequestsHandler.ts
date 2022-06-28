@@ -1,18 +1,18 @@
-import { AzureFunction, Context } from '@azure/functions'
-import { log, logError } from '../lib/log.js'
-import { agpsRequestSchema } from '../agps/types.js'
-import { cacheKey } from '../agps/cacheKey.js'
-import { Static } from '@sinclair/typebox'
-import { fromEnv } from '../lib/fromEnv.js'
-import iothub from 'azure-iothub'
-import { parseConnectionString } from '../lib/parseConnectionString.js'
 import { Container, CosmosClient } from '@azure/cosmos'
-import iothubCommon from 'azure-iot-common'
+import { AzureFunction, Context } from '@azure/functions'
 import {
-	QueueServiceClient,
 	QueueClient,
+	QueueServiceClient,
 	StorageSharedKeyCredential,
 } from '@azure/storage-queue'
+import { Static } from '@sinclair/typebox'
+import iothubCommon from 'azure-iot-common'
+import iothub from 'azure-iothub'
+import { cacheKey } from '../agps/cacheKey.js'
+import { agpsRequestSchema } from '../agps/types.js'
+import { fromEnv } from '../lib/fromEnv.js'
+import { log, logError } from '../lib/log.js'
+import { parseConnectionString } from '../lib/parseConnectionString.js'
 
 const config = () =>
 	fromEnv({
