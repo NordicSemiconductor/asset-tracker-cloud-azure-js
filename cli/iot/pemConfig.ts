@@ -1,4 +1,4 @@
-export const caCertConfig = (commonName: string) =>
+export const caCertConfig = (commonName: string): string =>
 	[
 		'[req]',
 		'req_extensions = v3_req',
@@ -10,7 +10,7 @@ export const caCertConfig = (commonName: string) =>
 		'basicConstraints = critical,CA:true',
 	].join('\n')
 
-export const leafCertConfig = (commonName: string) =>
+export const leafCertConfig = (commonName: string): string =>
 	[
 		'[req]',
 		'req_extensions = v3_req',

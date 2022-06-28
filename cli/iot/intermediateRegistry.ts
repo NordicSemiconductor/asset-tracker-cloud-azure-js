@@ -1,7 +1,9 @@
 import { promises as fs } from 'fs'
 import * as path from 'path'
 
-export const CAIntermediateRegistryLocation = (certsDir: string) => ({
+export const CAIntermediateRegistryLocation = (
+	certsDir: string,
+): { registry: string } => ({
 	registry: path.resolve(certsDir, 'intermediate.json'),
 })
 
@@ -24,7 +26,7 @@ export const add = async ({
 }: {
 	certsDir: string
 	id: string
-}) => {
+}): Promise<void> => {
 	const intermediateRegistry = CAIntermediateRegistryLocation(certsDir).registry
 	let registry = [] as string[]
 
