@@ -1,15 +1,15 @@
 import { AzureFunction, Context } from '@azure/functions'
+import {
+	QueueClient,
+	QueueServiceClient,
+	StorageSharedKeyCredential,
+} from '@azure/storage-queue'
+import { Static } from '@sinclair/typebox'
+import { isRight } from 'fp-ts/lib/Either.js'
+import { fromEnv } from '../lib/fromEnv.js'
 import { log, logError } from '../lib/log.js'
 import { validateWithJSONSchema } from '../lib/validateWithJSONSchema.js'
 import { pgpsRequestSchema } from '../pgps/types.js'
-import { isRight } from 'fp-ts/lib/Either.js'
-import { Static } from '@sinclair/typebox'
-import { fromEnv } from '../lib/fromEnv.js'
-import {
-	QueueServiceClient,
-	QueueClient,
-	StorageSharedKeyCredential,
-} from '@azure/storage-queue'
 
 const validatePgpsRequest = validateWithJSONSchema(pgpsRequestSchema)
 

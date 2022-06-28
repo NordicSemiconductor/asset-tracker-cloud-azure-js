@@ -1,19 +1,19 @@
-import { AzureFunction, Context, HttpRequest } from '@azure/functions'
-import { result } from '../lib/http.js'
-import { log, logError } from '../lib/log.js'
-import { fromEnv } from '../lib/fromEnv.js'
-import { parseConnectionString } from '../lib/parseConnectionString.js'
 import { CosmosClient } from '@azure/cosmos'
+import { AzureFunction, Context, HttpRequest } from '@azure/functions'
+import { DefaultAzureCredential } from '@azure/identity'
+import { SecretClient } from '@azure/keyvault-secrets'
 import {
 	cellId,
 	NetworkMode,
 } from '@nordicsemiconductor/cell-geolocation-helpers'
-import { isLeft } from 'fp-ts/lib/Either.js'
-import { SecretClient } from '@azure/keyvault-secrets'
-import { DefaultAzureCredential } from '@azure/identity'
-import { apiClient } from '../third-party/nrfcloud.com/apiclient.js'
-import { URL } from 'url'
 import { Static, TObject, TProperties } from '@sinclair/typebox'
+import { isLeft } from 'fp-ts/lib/Either.js'
+import { URL } from 'url'
+import { fromEnv } from '../lib/fromEnv.js'
+import { result } from '../lib/http.js'
+import { log, logError } from '../lib/log.js'
+import { parseConnectionString } from '../lib/parseConnectionString.js'
+import { apiClient } from '../third-party/nrfcloud.com/apiclient.js'
 import {
 	locateRequestSchema,
 	locateResultSchema,
@@ -122,8 +122,8 @@ const geolocateCell: AzureFunction = async (
 				lte: [
 					{
 						eci: cell.cell,
-						mcc: parseInt(mccmnc.substr(0, mccmnc.length - 2), 10),
-						mnc: parseInt(mccmnc.substr(-2), 10),
+						mcc: parseInt(mccmnc.slice(0, Math.max(0, mccmnc.length - 2)), 10),
+						mnc: parseInt(mccmnc.slice(-2), 10),
 						tac: cell.area,
 					},
 				],

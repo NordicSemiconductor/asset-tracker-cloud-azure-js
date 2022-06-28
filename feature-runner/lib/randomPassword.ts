@@ -8,6 +8,6 @@ const s = () =>
  */
 export const randomPassword = (): string =>
 	((pw) =>
-		`${pw[0].toUpperCase()}${pw.substr(1)}${Math.round(Math.random() * 1000)}`)(
+		`${pw[0].toUpperCase()}${pw.slice(1)}${Math.round(Math.random() * 1000)}`)(
 		`${s()}${s()}`,
 	)

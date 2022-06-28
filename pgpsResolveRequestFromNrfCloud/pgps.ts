@@ -1,15 +1,15 @@
 import { Static, Type } from '@sinclair/typebox'
-import { validateWithJSONSchema } from '../lib/validateWithJSONSchema.js'
+import { Either, isLeft, right } from 'fp-ts/lib/Either.js'
 import { ErrorInfo } from '../lib/ErrorInfo.js'
-import { apiClient } from '../third-party/nrfcloud.com/apiclient.js'
-import { isLeft, Either, right } from 'fp-ts/lib/Either.js'
-import { gpsDay, minimumGpsDay } from '../pgps/gpsTime.js'
-import { pgpsRequestSchema } from '../pgps/types.js'
+import { validateWithJSONSchema } from '../lib/validateWithJSONSchema.js'
 import {
 	defaultInterval,
 	defaultNumberOfPredictions,
 	defaultTimeOfDay,
 } from '../pgps/cacheKey.js'
+import { gpsDay, minimumGpsDay } from '../pgps/gpsTime.js'
+import { pgpsRequestSchema } from '../pgps/types.js'
+import { apiClient } from '../third-party/nrfcloud.com/apiclient.js'
 
 enum Interval {
 	twoHours = 120,

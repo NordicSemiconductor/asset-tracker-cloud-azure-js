@@ -1,14 +1,14 @@
-import { CommandDefinition } from './CommandDefinition.js'
-import {
-	generateCAIntermediate,
-	defaultIntermediateCAValidityInDays,
-} from '../iot/generateCAIntermediate.js'
 import { ProvisioningServiceClient } from 'azure-iot-provisioning-service'
-import { add as addToIntermediateRegistry } from '../iot/intermediateRegistry.js'
 import { v4 } from 'uuid'
-import { log, debug, setting, next, newline } from '../logging.js'
 import { CAIntermediateFileLocations } from '../iot/caFileLocations.js'
 import { fingerprint } from '../iot/fingerprint.js'
+import {
+	defaultIntermediateCAValidityInDays,
+	generateCAIntermediate,
+} from '../iot/generateCAIntermediate.js'
+import { add as addToIntermediateRegistry } from '../iot/intermediateRegistry.js'
+import { debug, log, newline, next, setting } from '../logging.js'
+import { CommandDefinition } from './CommandDefinition.js'
 
 export const createCAIntermediateCommand = ({
 	certsDir: certsDirPromise,

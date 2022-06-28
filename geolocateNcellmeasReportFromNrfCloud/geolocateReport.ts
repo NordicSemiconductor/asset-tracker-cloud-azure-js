@@ -1,20 +1,20 @@
+import { CosmosClient, ItemResponse } from '@azure/cosmos'
 import { AzureFunction, Context, HttpRequest } from '@azure/functions'
+import { NetworkMode } from '@nordicsemiconductor/cell-geolocation-helpers'
+import { Static, TObject, TProperties } from '@sinclair/typebox'
+import { isLeft } from 'fp-ts/lib/Either.js'
+import { URL } from 'url'
+import { fromEnv } from '../lib/fromEnv.js'
 import { result } from '../lib/http.js'
 import { log, logError } from '../lib/log.js'
-import { fromEnv } from '../lib/fromEnv.js'
 import { parseConnectionString } from '../lib/parseConnectionString.js'
-import { CosmosClient, ItemResponse } from '@azure/cosmos'
-import { NetworkMode } from '@nordicsemiconductor/cell-geolocation-helpers'
-import { isLeft } from 'fp-ts/lib/Either.js'
+import { StoredReport } from '../ncellmeas/storedReport.js'
 import { apiClient } from '../third-party/nrfcloud.com/apiclient.js'
-import { URL } from 'url'
-import { Static, TObject, TProperties } from '@sinclair/typebox'
 import { nrfCloudCellLocationServiceKeyPromise } from '../third-party/nrfcloud.com/config.js'
 import {
 	locateRequestSchema,
 	locateResultSchema,
 } from '../third-party/nrfcloud.com/types.js'
-import { StoredReport } from '../ncellmeas/storedReport.js'
 
 const config = () =>
 	fromEnv({

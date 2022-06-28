@@ -1,9 +1,9 @@
-import { AzureFunction, Context, HttpRequest } from '@azure/functions'
-import { log } from '../lib/log.js'
-import { result } from '../lib/http.js'
 import { CosmosClient } from '@azure/cosmos'
-import { parseConnectionString } from '../lib/parseConnectionString.js'
+import { AzureFunction, Context, HttpRequest } from '@azure/functions'
 import { fromEnv } from '../lib/fromEnv.js'
+import { result } from '../lib/http.js'
+import { log } from '../lib/log.js'
+import { parseConnectionString } from '../lib/parseConnectionString.js'
 
 const { connectionString, databaseName, containerName } = fromEnv({
 	connectionString: 'COSMOSDB_CONNECTION_STRING',

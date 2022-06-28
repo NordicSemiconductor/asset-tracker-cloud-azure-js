@@ -1,6 +1,6 @@
 import {
-	packageFunctionApp,
 	installPackagesFromList,
+	packageFunctionApp,
 } from '../dist/pack/package-function-app.js'
 
 void packageFunctionApp({

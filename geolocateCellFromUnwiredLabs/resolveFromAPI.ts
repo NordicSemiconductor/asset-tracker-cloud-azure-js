@@ -1,5 +1,5 @@
+import { Either, left, right } from 'fp-ts/lib/Either.js'
 import { request as nodeRequest, RequestOptions } from 'https'
-import { left, right, Either } from 'fp-ts/lib/Either.js'
 import { URL } from 'url'
 
 export const resolveFromAPI =

@@ -1,6 +1,6 @@
 import { AzureFunction, Context } from '@azure/functions'
-import { log } from '../lib/log.js'
 import { DeviceUpdate, TwinChangeEvent } from '../lib/iotMessages.js'
+import { log } from '../lib/log.js'
 
 /**
  * Publishes Device Twin Update to SignalR so the web application can receive real-time notifications

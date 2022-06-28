@@ -1,17 +1,17 @@
-import { AzureFunction, Context, HttpRequest } from '@azure/functions'
-import { result } from '../lib/http.js'
-import { log, logError } from '../lib/log.js'
-import { fromEnv } from '../lib/fromEnv.js'
-import { parseConnectionString } from '../lib/parseConnectionString.js'
 import { CosmosClient } from '@azure/cosmos'
+import { AzureFunction, Context, HttpRequest } from '@azure/functions'
+import { DefaultAzureCredential } from '@azure/identity'
+import { SecretClient } from '@azure/keyvault-secrets'
 import {
 	cellId,
 	NetworkMode,
 } from '@nordicsemiconductor/cell-geolocation-helpers'
-import { resolveFromAPI } from './resolveFromAPI.js'
 import { isLeft } from 'fp-ts/lib/Either.js'
-import { SecretClient } from '@azure/keyvault-secrets'
-import { DefaultAzureCredential } from '@azure/identity'
+import { fromEnv } from '../lib/fromEnv.js'
+import { result } from '../lib/http.js'
+import { log, logError } from '../lib/log.js'
+import { parseConnectionString } from '../lib/parseConnectionString.js'
+import { resolveFromAPI } from './resolveFromAPI.js'
 
 const config = () =>
 	fromEnv({

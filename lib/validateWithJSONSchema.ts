@@ -1,6 +1,6 @@
-import * as E from 'fp-ts/lib/Either.js'
-import Ajv from 'ajv'
 import { Static, TObject, TProperties } from '@sinclair/typebox'
+import Ajv from 'ajv'
+import * as E from 'fp-ts/lib/Either.js'
 import { ErrorInfo, ErrorType } from './ErrorInfo.js'
 
 export const validateWithJSONSchema = <T extends TObject<TProperties>>(

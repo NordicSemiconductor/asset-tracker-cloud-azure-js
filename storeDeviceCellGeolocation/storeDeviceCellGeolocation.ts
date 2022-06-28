@@ -1,19 +1,19 @@
-import { AzureFunction, Context } from '@azure/functions'
-import { log } from '../lib/log.js'
 import { CosmosClient } from '@azure/cosmos'
-import { parseConnectionString } from '../lib/parseConnectionString.js'
+import { AzureFunction, Context } from '@azure/functions'
+import {
+	cellId,
+	NetworkMode,
+} from '@nordicsemiconductor/cell-geolocation-helpers'
+import { exponential } from 'backoff'
+import { batchToDoc } from '../lib/batchToDoc.js'
 import { fromEnv } from '../lib/fromEnv.js'
 import {
 	BatchDeviceUpdate,
 	DeviceUpdate,
 	TwinChangeEvent,
 } from '../lib/iotMessages.js'
-import { batchToDoc } from '../lib/batchToDoc.js'
-import {
-	cellId,
-	NetworkMode,
-} from '@nordicsemiconductor/cell-geolocation-helpers'
-import { exponential } from 'backoff'
+import { log } from '../lib/log.js'
+import { parseConnectionString } from '../lib/parseConnectionString.js'
 
 const { cosmosDbConnectionString } = fromEnv({
 	cosmosDbConnectionString: 'COSMOSDB_CONNECTION_STRING',
