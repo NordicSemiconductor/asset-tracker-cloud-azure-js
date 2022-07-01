@@ -3,9 +3,11 @@ import {
 	atHostHexfile,
 	connect,
 	createPrivateKeyAndCSR,
+	flashCertificate,
 	getIMEI,
 } from '@nordicsemiconductor/firmware-ci-device-helpers'
 import { promises as fs } from 'fs'
+import { readFile } from 'fs/promises'
 import * as os from 'os'
 import * as path from 'path'
 import { deviceFileLocations } from '../iot/deviceFileLocations.js'
@@ -83,6 +85,7 @@ export const createAndProvisionDeviceCertCommand = ({
 		secTag,
 		deletePrivateKey,
 	}) => {
+		const effectiveSecTag = secTag ?? defaultSecTag
 		progress('Flashing certificate', port ?? defaultPort)
 
 		const logFn = debug === true ? console.log : undefined
@@ -105,7 +108,7 @@ export const createAndProvisionDeviceCertCommand = ({
 
 		const csr = await createPrivateKeyAndCSR({
 			at: connection.connection.at,
-			secTag: secTag ?? defaultSecTag,
+			secTag: effectiveSecTag,
 			deletePrivateKey: deletePrivateKey ?? false,
 		})
 
@@ -140,7 +143,6 @@ export const createAndProvisionDeviceCertCommand = ({
 		}
 
 		setting('Intermediate certificate', intermediateCertId)
-
 		await generateDeviceCertificate({
 			deviceId,
 			certsDir,
@@ -159,6 +161,22 @@ export const createAndProvisionDeviceCertCommand = ({
 		heading('Firmware configuration')
 		setting('DPS hostname', globalIotHubDPSHostname)
 		setting('ID scope', properties.idScope as string)
+
+		heading('Provisioning certificate')
+		const { cert, caCertificateChain: caCertificate } = deviceFileLocations({
+			certsDir,
+			deviceId,
+		})
+		await flashCertificate({
+			at: connection.connection.at,
+			caCert: await readFile(caCertificate, 'utf-8'),
+			secTag: effectiveSecTag,
+			clientCert: await readFile(cert, 'utf-8'),
+		})
+		success('Certificate written to device')
+
+		heading('Closing connection')
+		await connection.connection.end()
 	},
 	help: 'Generate a certificate for the connected device using device-generated keys, signed with the CA, and flash it to the device.',
 })
