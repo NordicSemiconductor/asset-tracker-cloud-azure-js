@@ -85,6 +85,10 @@ export const createSimulatorCertCommand = ({
 		success(`Certificate for device generated.`)
 		setting('Certificate ID', id)
 
+		const { properties } = await (
+			await iotDpsClient()
+		).iotDpsResource.get(dpsName, resourceGroup)
+
 		const {
 			json: certJSON,
 			privateKey,
@@ -98,7 +102,8 @@ export const createSimulatorCertCommand = ({
 					resourceGroup,
 					privateKey: await readFile(privateKey, 'utf-8'),
 					clientCert: await readFile(certWithChain, 'utf-8'),
-					clientId: deviceId,
+					clientId: id,
+					idScope: properties.idScope as string,
 				},
 				null,
 				2,
@@ -111,10 +116,6 @@ export const createSimulatorCertCommand = ({
 			'You can now connect to the broker using',
 			`npm exec -- @nordicsemiconductor/asset-tracker-cloud-device-simulator-azure ${certJSON}`,
 		)
-
-		const { properties } = await (
-			await iotDpsClient()
-		).iotDpsResource.get(dpsName, resourceGroup)
 
 		heading('Firmware configuration')
 		setting('DPS hostname', globalIotHubDPSHostname)
