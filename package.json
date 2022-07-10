@@ -40,7 +40,7 @@
     "@nordicsemiconductor/object-to-env": "4.1.1",
     "@nordicsemiconductor/random-words": "6.0.0",
     "@octokit/rest": "19.0.3",
-    "@sinclair/typebox": "0.24.14",
+    "@sinclair/typebox": "0.24.16",
     "ajv": "8.11.0",
     "azure-iot-provisioning-service": "1.10.0",
     "azure-iothub": "1.15.0",
