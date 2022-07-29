@@ -65,12 +65,13 @@ export const createCARootCommand = ({
 		setting('DPS name', dpsName)
 
 		// Create verification cert
-
 		const { etag } = await armDpsClient.dpsCertificate.get(
 			certificateName,
 			resourceGroup,
 			dpsName,
 		)
+		setting('Etag', etag as string)
+
 		const { properties } =
 			await armDpsClient.dpsCertificate.generateVerificationCode(
 				certificateName,
