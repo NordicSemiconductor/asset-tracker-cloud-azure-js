@@ -34,7 +34,7 @@ export const generateProofOfPosession = async (args: {
 					serviceCertificate: rootCert,
 				},
 				(err: Error | undefined | null, cert) => {
-					if (err !== null || err !== undefined) return reject(err)
+					if (err !== null && err !== undefined) return reject(err)
 					resolve(cert)
 				},
 			),

@@ -52,7 +52,7 @@ export const generateCAIntermediate = async (args: {
 					serviceCertificate: rootCert,
 				},
 				(err, cert) => {
-					if (err !== undefined && err !== null) return reject(err)
+					if (err !== null && err !== undefined) return reject(err)
 					resolve(cert)
 				},
 			),

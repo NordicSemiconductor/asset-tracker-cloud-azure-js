@@ -83,6 +83,7 @@ export const createCARootCommand = ({
 		if (properties?.verificationCode === undefined) {
 			throw new Error(`Failed to generate verification code`)
 		}
+		setting('verificationCode', properties.verificationCode)
 
 		await generateProofOfPosession({
 			certsDir,
