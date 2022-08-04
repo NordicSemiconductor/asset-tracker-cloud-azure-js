@@ -22,7 +22,7 @@ import { run } from '../process/run.js'
 import { CommandDefinition } from './CommandDefinition.js'
 
 export const defaultPort = '/dev/ttyACM0'
-export const defaultSecTag = 42
+export const defaultSecTag = 11
 
 export const createAndProvisionDeviceCertCommand = ({
 	certsDir: certsDirPromise,
