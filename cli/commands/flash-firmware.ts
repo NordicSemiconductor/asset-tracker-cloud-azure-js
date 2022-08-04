@@ -43,6 +43,7 @@ const getLatestFirmware = async ({
 	const hexfile = assets.find(
 		({ name }) =>
 			name.includes('.hex') &&
+			!name.includes('-signed') &&
 			name.includes(dk ? 'nRF9160DK' : 'Thingy91') &&
 			(nodebug ? name.includes('nodebug') : !name.includes('nodebug')),
 	)
