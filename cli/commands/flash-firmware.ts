@@ -8,6 +8,11 @@ import { v4 } from 'uuid'
 import { progress, success } from '../logging.js'
 import { CommandDefinition } from './CommandDefinition.js'
 
+export const defaultFirmwareRepository = {
+	owner: 'NordicSemiconductor',
+	repo: 'asset-tracker-cloud-firmware-azure',
+} as const
+
 const getLatestFirmware = async ({
 	nodebug,
 	dk,
@@ -27,15 +32,13 @@ const getLatestFirmware = async ({
 	})
 	const latestRelease = (
 		await octokit.repos.listReleases({
-			owner: 'NordicSemiconductor',
-			repo: 'asset-tracker-cloud-firmware-azure',
+			...defaultFirmwareRepository,
 			per_page: 1,
 		})
 	).data[0]
 	const assets = (
 		await octokit.repos.listReleaseAssets({
-			owner: 'NordicSemiconductor',
-			repo: 'asset-tracker-cloud-firmware-azure',
+			...defaultFirmwareRepository,
 			release_id: latestRelease.id,
 		})
 	).data
