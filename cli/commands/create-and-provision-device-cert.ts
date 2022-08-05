@@ -163,15 +163,21 @@ export const createAndProvisionDeviceCertCommand = ({
 		setting('ID scope', properties.idScope as string)
 
 		heading('Provisioning certificate')
-		const { cert, caCertificateChain: caCertificate } = deviceFileLocations({
+		const { cert, caCertificateChain } = deviceFileLocations({
 			certsDir,
 			deviceId,
 		})
 		await flashCertificate({
-			at: connection.connection.at,
-			caCert: await readFile(caCertificate, 'utf-8'),
+			at: connection.at,
+			caCert: await readFile(
+				path.resolve(process.cwd(), 'data', 'BaltimoreCyberTrustRoot.pem'),
+				'utf-8',
+			),
 			secTag: effectiveSecTag,
-			clientCert: await readFile(cert, 'utf-8'),
+			clientCert: [
+				await readFile(caCertificateChain, 'utf-8'),
+				await readFile(cert, 'utf-8'),
+			].join('\n'),
 		})
 		success('Certificate written to device')
 
