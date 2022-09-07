@@ -20,7 +20,6 @@ export const reactConfigCommand = ({
 		process.stdout.write(
 			objectToEnv(
 				{
-					cloudFlavour: 'Azure',
 					...fromEnv({
 						azureB2cTenant: 'B2C_TENANT',
 						azureClientId: 'APP_REG_CLIENT_ID',
