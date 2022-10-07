@@ -61,6 +61,7 @@ const main = async () => {
 				new WebSiteManagementClient(creds.credentials, creds.subscriptionId),
 		)
 
+	program.name('./cli.sh')
 	program.description('Asset Tracker Command Line Interface')
 
 	const commands = [
