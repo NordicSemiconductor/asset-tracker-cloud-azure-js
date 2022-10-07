@@ -22,7 +22,7 @@
       "type": "string",
       "minLength": 3,
       "metadata": {
-        "description": "Specifies the name of the keyVaultName."
+        "description": "Specifies the name of the key vault."
       },
       "defaultValue": "assetTracker"
     },
