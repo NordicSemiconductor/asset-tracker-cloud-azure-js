@@ -10,6 +10,7 @@ import {
 	resourceGroupName,
 } from '../arm/resources.js'
 import { cliCredentials } from './cliCredentials.js'
+import { cliConfigCommand } from './commands/cli-config.js'
 import { createAndProvisionDeviceCertCommand } from './commands/create-and-provision-device-cert.js'
 import { createCAIntermediateCommand } from './commands/create-ca-intermediate.js'
 import { createCARootCommand } from './commands/create-ca-root.js'
@@ -117,6 +118,10 @@ const main = async () => {
 			certsDir,
 			dpsName,
 			resourceGroup,
+		}),
+		cliConfigCommand({
+			resourceGroup,
+			appName: appName(),
 		}),
 	]
 
