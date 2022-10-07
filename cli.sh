@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
 
-node cli "$@"
+npx tsx ./cli/cli.ts "$@"
