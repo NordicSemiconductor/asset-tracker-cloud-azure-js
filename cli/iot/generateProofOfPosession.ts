@@ -1,7 +1,8 @@
-import { promises as fs } from 'fs'
-import { CertificateCreationResult, createCertificate } from 'pem'
-import { CARootFileLocations } from './caFileLocations.js'
-import { leafCertConfig } from './pemConfig.js'
+import {
+	CARootFileLocations,
+	CARootVerificationFileLocations,
+} from './caFileLocations.js'
+import { intermediateCA } from './certificates/intermediateCA.js'
 
 /**
  * Verifies the CA posessions
@@ -13,40 +14,19 @@ export const generateProofOfPosession = async (args: {
 	verificationCode: string
 	log: (...message: any[]) => void
 	debug: (...message: any[]) => void
-}): Promise<{ verification: CertificateCreationResult }> => {
-	const { certsDir, log, debug, verificationCode } = args
-	const caFiles = CARootFileLocations(certsDir)
+}): Promise<void> => {
+	const { certsDir, log, verificationCode } = args
+	const caRootFiles = CARootFileLocations(certsDir)
+	const caRootVerificationFiles = CARootVerificationFileLocations(certsDir)
 
-	const [rootKey, rootCert] = await Promise.all([
-		fs.readFile(caFiles.privateKey, 'utf-8'),
-		fs.readFile(caFiles.cert, 'utf-8'),
-	])
+	await intermediateCA({
+		commonName: verificationCode,
+		daysValid: 1,
+		signkeyFile: caRootFiles.privateKey,
+		outFile: caRootVerificationFiles.verificationCert,
+		privateKeyFile: caRootVerificationFiles.verificationKey,
+		csrFile: caRootVerificationFiles.verificationCSR,
+	})
 
-	const verificationCert = await new Promise<CertificateCreationResult>(
-		(resolve, reject) =>
-			createCertificate(
-				{
-					commonName: verificationCode,
-					serial: Math.floor(Math.random() * 1000000000),
-					days: 1,
-					config: leafCertConfig(verificationCode),
-					serviceKey: rootKey,
-					serviceCertificate: rootCert,
-				},
-				(err: Error | undefined | null, cert) => {
-					if (err !== null && err !== undefined) return reject(err)
-					resolve(cert)
-				},
-			),
-	)
-
-	log('Verification cert', caFiles.verificationCert)
-	debug(verificationCert.certificate)
-
-	await fs.writeFile(caFiles.verificationCert, verificationCert.certificate)
-	await fs.writeFile(caFiles.verificationKey, verificationCert.clientKey)
-
-	return {
-		verification: verificationCert,
-	}
+	log('Verification cert', caRootVerificationFiles.verificationCert)
 }

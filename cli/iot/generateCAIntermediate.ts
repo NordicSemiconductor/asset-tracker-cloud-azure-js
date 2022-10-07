@@ -1,11 +1,9 @@
-import { promises as fs } from 'fs'
-import { CertificateCreationResult, createCertificate } from 'pem'
 import {
 	CAIntermediateFileLocations,
 	CARootFileLocations,
 } from './caFileLocations.js'
 import { certificateName } from './certificateName.js'
-import { caCertConfig } from './pemConfig.js'
+import { intermediateCA } from './certificates/intermediateCA.js'
 
 export const defaultIntermediateCAValidityInDays = 365
 
@@ -20,8 +18,8 @@ export const generateCAIntermediate = async (args: {
 	log: (...message: any[]) => void
 	debug: (...message: any[]) => void
 	daysValid?: number
-}): Promise<CertificateCreationResult> => {
-	const { certsDir, log, debug, id } = args
+}): Promise<void> => {
+	const { certsDir, log, id } = args
 	const caRootFiles = CARootFileLocations(certsDir)
 
 	// Create the intermediate CA cert (signed by the root)
@@ -31,38 +29,19 @@ export const generateCAIntermediate = async (args: {
 		id,
 	})
 
-	const [rootPrivateKey, rootCert] = await Promise.all([
-		fs.readFile(caRootFiles.privateKey, 'utf-8'),
-		fs.readFile(caRootFiles.cert, 'utf-8'),
-	])
-
 	const intermediateName = certificateName(
 		`Asset Tracker Intermediate CA ${id}`,
 	)
 
-	const intermediateCert = await new Promise<CertificateCreationResult>(
-		(resolve, reject) =>
-			createCertificate(
-				{
-					commonName: intermediateName,
-					serial: Math.floor(Math.random() * 1000000000),
-					days: args.daysValid ?? defaultIntermediateCAValidityInDays,
-					config: caCertConfig(intermediateName),
-					serviceKey: rootPrivateKey,
-					serviceCertificate: rootCert,
-				},
-				(err, cert) => {
-					if (err !== null && err !== undefined) return reject(err)
-					resolve(cert)
-				},
-			),
-	)
+	await intermediateCA({
+		commonName: intermediateName,
+		daysValid: args.daysValid ?? defaultIntermediateCAValidityInDays,
+		signkeyFile: caRootFiles.privateKey,
+		signCertificateFile: caRootFiles.cert,
+		outFile: caIntermediateFiles.cert,
+		privateKeyFile: caIntermediateFiles.privateKey,
+		csrFile: caIntermediateFiles.csr,
+	})
 
 	log('Intermediate CA Certificate', caIntermediateFiles.cert)
-	debug(intermediateCert.certificate)
-
-	await fs.writeFile(caIntermediateFiles.cert, intermediateCert.certificate)
-	await fs.writeFile(caIntermediateFiles.privateKey, intermediateCert.clientKey)
-
-	return intermediateCert
 }

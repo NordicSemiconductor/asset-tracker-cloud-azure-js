@@ -1,7 +1,6 @@
 import { promises as fs } from 'fs'
-import { CertificateCreationResult, createCertificate } from 'pem'
 import { CARootFileLocations } from './caFileLocations.js'
-import { caCertConfig } from './pemConfig.js'
+import { rootCA } from './certificates/rootCA.js'
 
 export const defaultCAValidityInDays = 365
 
@@ -23,7 +22,7 @@ export const generateCARoot = async ({
 	log: (...message: any[]) => void
 	debug: (...message: any[]) => void
 	daysValid?: number
-}): Promise<CertificateCreationResult> => {
+}): Promise<void> => {
 	const caFiles = CARootFileLocations(certsDir)
 	try {
 		await fs.stat(certsDir)
@@ -44,32 +43,13 @@ export const generateCARoot = async ({
 	}
 
 	// Create the Root CA Cert
-
-	const rootCert = await new Promise<CertificateCreationResult>(
-		(resolve, reject) =>
-			createCertificate(
-				{
-					commonName: name,
-					serial: Math.floor(Math.random() * 1000000000),
-					days: daysValid ?? defaultCAValidityInDays,
-					selfSigned: true,
-					config: caCertConfig(name),
-				},
-				(err, cert) => {
-					if (err !== null && err !== undefined) return reject(err)
-					resolve(cert)
-				},
-			),
-	)
-
-	await Promise.all([
-		fs.writeFile(caFiles.cert, rootCert.certificate, 'utf-8'),
-		fs.writeFile(caFiles.privateKey, rootCert.clientKey, 'utf-8'),
-		fs.writeFile(caFiles.name, name, 'utf-8'),
-	])
+	await rootCA({
+		commonName: name,
+		daysValid: daysValid ?? defaultCAValidityInDays,
+		outFile: caFiles.cert,
+		privateKeyFile: caFiles.privateKey,
+		csrFile: caFiles.csr,
+	})
 
 	log('Root CA Certificate', caFiles.cert)
-	debug(rootCert.certificate)
-
-	return rootCert
 }

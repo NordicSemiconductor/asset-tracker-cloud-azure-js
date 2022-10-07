@@ -1,6 +1,9 @@
 import { IotDpsClient } from '@azure/arm-deviceprovisioningservices'
 import { promises as fs } from 'fs'
-import { CARootFileLocations } from '../iot/caFileLocations.js'
+import {
+	CARootFileLocations,
+	CARootVerificationFileLocations,
+} from '../iot/caFileLocations.js'
 import { newline, next, setting, success } from '../logging.js'
 import { CommandDefinition } from './CommandDefinition.js'
 
@@ -17,10 +20,12 @@ export const proofCARootPossessionCommand = ({
 }): CommandDefinition => ({
 	command: 'proof-ca-root-possession',
 	action: async () => {
-		const certLocations = CARootFileLocations(await certsDir())
+		const certDir = await certsDir()
+		const caRootLocations = CARootFileLocations(certDir)
+		const caRootVerificationLocations = CARootVerificationFileLocations(certDir)
 
 		const certificateName = (
-			await fs.readFile(certLocations.name, 'utf-8')
+			await fs.readFile(caRootLocations.name, 'utf-8')
 		).trim()
 
 		const armDpsClient = await iotDpsClient()
@@ -32,7 +37,7 @@ export const proofCARootPossessionCommand = ({
 		)
 
 		const verificationCert = await fs.readFile(
-			certLocations.verificationCert,
+			caRootVerificationLocations.verificationCert,
 			'utf-8',
 		)
 
@@ -52,7 +57,7 @@ export const proofCARootPossessionCommand = ({
 		newline()
 		next(
 			'You can now create a CA intermediate certificate using',
-			'node cli create-ca-intermediate',
+			'./cli.sh create-ca-intermediate',
 		)
 	},
 	help: 'Verifies the root CA certificate which is registered with the Device Provisioning System',

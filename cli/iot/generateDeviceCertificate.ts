@@ -1,14 +1,13 @@
 import { promises as fs } from 'fs'
 import { writeFile } from 'fs/promises'
 import * as os from 'os'
-import { CertificateCreationResult, createCertificate } from 'pem'
 import {
 	CAIntermediateFileLocations,
 	CARootFileLocations,
 } from './caFileLocations.js'
+import { deviceCertificate } from './certificates/deviceCertificate.js'
 import { deviceFileLocations } from './deviceFileLocations.js'
 import { fingerprint } from './fingerprint.js'
-import { leafCertConfig } from './pemConfig.js'
 
 export const defaultDeviceCertificateValidityInDays = 10950
 
@@ -29,7 +28,7 @@ export const generateDeviceCertificate = async ({
 	log?: (...message: any[]) => void
 	debug?: (...message: any[]) => void
 	daysValid?: number
-}): Promise<{ deviceId: string }> => {
+}): Promise<void> => {
 	log?.(`Generating certificate for device ${deviceId}`)
 	const caRootFiles = CARootFileLocations(certsDir)
 	const caIntermediateFiles = CAIntermediateFileLocations({
@@ -45,59 +44,35 @@ export const generateDeviceCertificate = async ({
 		`Intermediate certificate fingerprint`,
 		await fingerprint(caIntermediateFiles.cert),
 	)
-	const [intermediatePrivateKey, intermediateCert, rootCert, csr] =
-		await Promise.all([
-			fs.readFile(caIntermediateFiles.privateKey, 'utf-8'),
-			fs.readFile(caIntermediateFiles.cert, 'utf-8'),
-			fs.readFile(caRootFiles.cert, 'utf-8'),
-			fs.readFile(deviceFiles.csr, 'utf-8'),
-		])
 
-	const deviceCert = await new Promise<CertificateCreationResult>(
-		(resolve, reject) =>
-			createCertificate(
-				{
-					commonName: deviceId,
-					serial: Math.floor(Math.random() * 1000000000),
-					days: daysValid ?? defaultDeviceCertificateValidityInDays,
-					config: leafCertConfig(deviceId),
-					serviceKey: intermediatePrivateKey,
-					serviceCertificate: intermediateCert,
-					csr,
-				},
-				(err, cert) => {
-					if (err !== null && err !== undefined) return reject(err)
-					resolve(cert)
-				},
-			),
-	)
+	await deviceCertificate({
+		commonName: deviceId,
+		daysValid: daysValid ?? defaultDeviceCertificateValidityInDays,
+		certificateFile: deviceFiles.cert,
+		signkeyFile: caIntermediateFiles.privateKey,
+		csrFile: deviceFiles.csr,
+	})
 
-	debug?.(deviceCert.certificate)
-
-	await Promise.all([
-		writeFile(deviceFiles.cert, deviceCert.certificate, 'utf-8').then(() => {
-			debug?.(`${deviceFiles.cert} written`)
-		}),
-		writeFile(
-			deviceFiles.caCertificateChain,
-			[intermediateCert, rootCert].join(os.EOL),
-			'utf-8',
-		).then(() => {
-			debug?.(`${deviceFiles.caCertificateChain} written`)
-		}),
-		writeFile(
-			deviceFiles.certWithChain,
-			[deviceCert.certificate, intermediateCert, rootCert].join(os.EOL),
-			'utf-8',
-		).then(() => {
-			debug?.(`${deviceFiles.certWithChain} written`)
-		}),
-		fs
-			.writeFile(deviceFiles.intermediateCertId, intermediateCertId, 'utf-8')
-			.then(() => {
-				debug?.(`${deviceFiles.intermediateCertId} written`)
-			}),
+	const [certificate, intermediateCert, rootCert] = await Promise.all([
+		fs.readFile(deviceFiles.cert, 'utf-8'),
+		fs.readFile(caIntermediateFiles.cert, 'utf-8'),
+		fs.readFile(caRootFiles.cert, 'utf-8'),
 	])
 
-	return { deviceId }
+	await writeFile(
+		deviceFiles.caCertificateChain,
+		[intermediateCert, rootCert].join(os.EOL),
+		'utf-8',
+	)
+	debug?.(`${deviceFiles.caCertificateChain} written`)
+
+	await writeFile(
+		deviceFiles.certWithChain,
+		[certificate, intermediateCert, rootCert].join(os.EOL),
+		'utf-8',
+	)
+	debug?.(`${deviceFiles.certWithChain} written`)
+
+	await writeFile(deviceFiles.intermediateCertId, intermediateCertId, 'utf-8')
+	debug?.(`${deviceFiles.intermediateCertId} written`)
 }

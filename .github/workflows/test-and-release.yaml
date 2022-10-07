@@ -163,9 +163,9 @@ jobs:
       - name: Create Intermediate CA certificate
         if: steps.certs-cache.outputs.cache-hit != 'true'
         run: |
-          node cli create-ca-root
-          node cli proof-ca-root-possession
-          node cli create-ca-intermediate
+          ./cli.sh create-ca-root
+          ./cli.sh proof-ca-root-possession
+          ./cli.sh create-ca-intermediate
 
       - name: Run End-to-End Tests
         uses: nick-invision/retry@v2

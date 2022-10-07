@@ -1,6 +1,4 @@
-import { promises as fs } from 'fs'
-import { createCSR } from 'pem'
-import { run } from '../process/run.js'
+import { createKey, openssl } from './certificates/openssl.js'
 import { deviceFileLocations } from './deviceFileLocations.js'
 
 export const defaultDeviceCertificateValidityInDays = 10950
@@ -25,39 +23,20 @@ export const createSimulatorKeyAndCSR = async ({
 		deviceId,
 	})
 
-	await run({
-		command: 'openssl',
-		args: [
-			'ecparam',
-			'-out',
-			deviceFiles.privateKey,
-			'-name',
-			'prime256v1',
-			'-genkey',
-		],
-		log: debug,
-	})
+	await createKey(deviceFiles.privateKey)
 
 	debug?.(`${deviceFiles.privateKey} written`)
-	const clientKey = await fs.readFile(deviceFiles.privateKey, 'utf-8')
 
-	const { csr } = await new Promise<{ csr: string; clientKey: string }>(
-		(resolve, reject) =>
-			createCSR(
-				{
-					commonName: deviceId,
-					clientKey,
-				},
-				(err, cert) => {
-					if (err !== null && err !== undefined) return reject(err)
-					resolve(cert)
-				},
-			),
+	await openssl(
+		'req',
+		'-new',
+		'-key',
+		deviceFiles.privateKey,
+		'-out',
+		deviceFiles.csr,
 	)
 
-	debug?.(csr)
-
-	await fs.writeFile(deviceFiles.csr, csr, 'utf-8')
+	debug?.(deviceFiles.csr)
 
 	return { deviceId }
 }

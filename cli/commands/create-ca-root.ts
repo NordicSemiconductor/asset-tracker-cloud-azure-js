@@ -1,4 +1,5 @@
 import { IotDpsClient } from '@azure/arm-deviceprovisioningservices'
+import { readFile, writeFile } from 'fs/promises'
 import { TextEncoder } from 'util'
 import { v4 } from 'uuid'
 import { CARootFileLocations } from '../iot/caFileLocations.js'
@@ -35,7 +36,7 @@ export const createCARootCommand = ({
 
 		const certsDir = await certsDirPromise()
 
-		const root = await generateCARoot({
+		await generateCARoot({
 			certsDir,
 			name: certificateName,
 			log,
@@ -43,7 +44,10 @@ export const createCARootCommand = ({
 			daysValid: expires !== undefined ? parseInt(expires, 10) : undefined,
 		})
 		success(`CA root certificate generated.`)
+
 		const caFiles = CARootFileLocations(certsDir)
+		await writeFile(caFiles.name, certificateName, 'utf-8')
+
 		setting('Fingerprint', await fingerprint(caFiles.cert))
 
 		// Register root CA certificate on DPS
@@ -56,7 +60,9 @@ export const createCARootCommand = ({
 			certificateName,
 			{
 				properties: {
-					certificate: new TextEncoder().encode(root.certificate),
+					certificate: new TextEncoder().encode(
+						await readFile(caFiles.cert, 'utf-8'),
+					),
 				},
 			},
 		)
@@ -99,7 +105,7 @@ export const createCARootCommand = ({
 
 		next(
 			'You can now verify the proof of posession using',
-			'node cli proof-ca-root-possession',
+			'./cli.sh proof-ca-root-possession',
 		)
 	},
 	help: 'Creates a CA root certificate and registers it with the IoT Device Provisioning Service',

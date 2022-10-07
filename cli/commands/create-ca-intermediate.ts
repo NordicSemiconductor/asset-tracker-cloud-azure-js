@@ -1,4 +1,5 @@
 import { ProvisioningServiceClient } from 'azure-iot-provisioning-service'
+import { readFile } from 'fs/promises'
 import { v4 } from 'uuid'
 import { CAIntermediateFileLocations } from '../iot/caFileLocations.js'
 import { fingerprint } from '../iot/fingerprint.js'
@@ -29,7 +30,7 @@ export const createCAIntermediateCommand = ({
 
 		const certsDir = await certsDirPromise()
 
-		const intermediate = await generateCAIntermediate({
+		await generateCAIntermediate({
 			id,
 			certsDir,
 			log,
@@ -37,8 +38,8 @@ export const createCAIntermediateCommand = ({
 			daysValid: expires !== undefined ? parseInt(expires, 10) : undefined,
 		})
 		debug(`CA intermediate certificate generated.`)
-		const caFiles = CAIntermediateFileLocations({ certsDir, id })
-		setting('Fingerprint', await fingerprint(caFiles.cert))
+		const caIntermediateFiles = CAIntermediateFileLocations({ certsDir, id })
+		setting('Fingerprint', await fingerprint(caIntermediateFiles.cert))
 
 		await addToIntermediateRegistry({ certsDir, id })
 
@@ -59,7 +60,7 @@ export const createCAIntermediateCommand = ({
 				x509: {
 					signingCertificates: {
 						primary: {
-							certificate: intermediate.certificate,
+							certificate: await readFile(caIntermediateFiles.cert, 'utf-8'),
 							info: undefined as any,
 						},
 						secondary: undefined as any,
@@ -92,7 +93,7 @@ export const createCAIntermediateCommand = ({
 
 		next(
 			'You can now generate device certificates using',
-			'node cli create-and-provision-device-cert',
+			'./cli.sh create-and-provision-device-cert',
 		)
 	},
 	help: 'Creates a CA intermediate certificate registers it with an IoT Device Provisioning Service enrollment group',
