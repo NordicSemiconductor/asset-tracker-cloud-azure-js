@@ -2,12 +2,10 @@ import { IotDpsClient } from '@azure/arm-deviceprovisioningservices'
 import {
 	atHostHexfile,
 	connect,
-	Connection,
 	createPrivateKeyAndCSR,
 	flashCertificate,
 	getIMEI,
 } from '@nordicsemiconductor/firmware-ci-device-helpers'
-import chalk from 'chalk'
 import { promises as fs } from 'fs'
 import { readFile } from 'fs/promises'
 import * as os from 'os'
@@ -23,7 +21,6 @@ import {
 } from '../iot/generateDeviceCertificate.js'
 import { list as listIntermediateCerts } from '../iot/intermediateRegistry.js'
 import { globalIotHubDPSHostname } from '../iot/ioTHubDPSInfo.js'
-import { readlineDevice } from '../iot/readlineDevice.js'
 import { heading, progress, setting, success } from '../logging.js'
 import { run } from '../process/run.js'
 import { CommandDefinition } from './CommandDefinition.js'
@@ -81,10 +78,6 @@ export const createAndProvisionDeviceCertCommand = ({
 			flags: '-e, --expires <expires>',
 			description: `Validity of device certificate in days. Defaults to ${defaultDeviceCertificateValidityInDays} days.`,
 		},
-		{
-			flags: '-S, --simulated-device',
-			description: `Use a simulated (soft) device. Useful if you do not have physical access to the device. Will print the AT commands sent to the device allows to provide responses on the command line.`,
-		},
 	],
 	action: async ({
 		port,
@@ -95,34 +88,23 @@ export const createAndProvisionDeviceCertCommand = ({
 		expires,
 		secTag,
 		deletePrivateKey,
-		simulatedDevice,
 	}) => {
 		const logFn = debug === true ? console.log : undefined
 		const debugFn = debug === true ? console.debug : undefined
 
-		let connection: Connection
-
-		if (simulatedDevice === true) {
-			console.log(
-				chalk.magenta(`Flashing certificate`),
-				chalk.blue('(simulated device)'),
-			)
-			connection = await readlineDevice()
-		} else {
-			progress('Flashing certificate', port ?? defaultPort)
-			connection = (
-				await connect({
-					atHostHexfile:
-						atHost ??
-						(dk === true ? atHostHexfile['9160dk'] : atHostHexfile['thingy91']),
-					device: port ?? defaultPort,
-					warn: console.error,
-					debug: debugFn,
-					progress: logFn,
-					inactivityTimeoutInSeconds: 60,
-				})
-			).connection
-		}
+		progress('Flashing certificate', port ?? defaultPort)
+		const connection = (
+			await connect({
+				atHostHexfile:
+					atHost ??
+					(dk === true ? atHostHexfile['9160dk'] : atHostHexfile['thingy91']),
+				device: port ?? defaultPort,
+				warn: console.error,
+				debug: debugFn,
+				progress: logFn,
+				inactivityTimeoutInSeconds: 60,
+			})
+		).connection
 
 		const deviceId = await getIMEI({ at: connection.at })
 		setting('IMEI', deviceId)
