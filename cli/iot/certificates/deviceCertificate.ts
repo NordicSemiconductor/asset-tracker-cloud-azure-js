@@ -1,31 +1,38 @@
-import { checkVersion, leafCertConfig, openssl } from './openssl.js'
+import { leafCertConfig, openssl } from './openssl.js'
 
 export const deviceCertificate = async ({
 	commonName,
-	signkeyFile,
 	certificateFile,
 	csrFile,
 	daysValid,
+	ca,
+	debug,
 }: {
 	commonName: string
-	signkeyFile: string
 	certificateFile: string
 	csrFile: string
 	daysValid?: number
+	ca: {
+		keyFile: string
+		certificateFile: string
+	}
+	debug?: (...message: any[]) => void
 }) => {
-	await checkVersion()
-
-	await openssl(
+	await openssl({ debug }).command(
 		'x509',
 		'-req',
-		'-config',
+		'-extensions',
+		'v3_req',
+		'-extfile',
 		await leafCertConfig(commonName),
 		'-days',
 		`${daysValid ?? 90}`,
 		'-in',
 		csrFile,
-		'-signkey',
-		signkeyFile,
+		'-CA',
+		ca.certificateFile,
+		'-CAkey',
+		ca.keyFile,
 		'-out',
 		certificateFile,
 	)

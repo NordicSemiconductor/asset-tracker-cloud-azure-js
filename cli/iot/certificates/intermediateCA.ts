@@ -1,27 +1,32 @@
-import { caCertConfig, checkVersion, createKey, openssl } from './openssl.js'
+import { caCertConfig, openssl } from './openssl.js'
 
 export const intermediateCA = async ({
 	commonName,
-	signkeyFile,
 	privateKeyFile,
 	outFile: outFile,
 	csrFile,
 	daysValid,
+	ca,
+	debug,
 }: {
 	commonName: string
 	privateKeyFile: string
-	signkeyFile?: string
 	outFile: string
 	csrFile: string
 	daysValid?: number
+	ca?: {
+		keyFile: string
+		certificateFile: string
+	}
+	debug?: (...message: any[]) => void
 }) => {
-	await checkVersion()
+	const opensslV3 = openssl({ debug })
 
 	// Key
-	await createKey(privateKeyFile)
+	await opensslV3.createKey(privateKeyFile)
 
 	// CSR
-	await openssl(
+	await opensslV3.command(
 		'req',
 		'-new',
 		'-config',
@@ -32,17 +37,21 @@ export const intermediateCA = async ({
 		csrFile,
 	)
 
-	// Cert
-	await openssl(
+	const args: string[] = [
 		'x509',
 		'-req',
 		'-days',
 		`${daysValid ?? 90}`,
 		'-in',
 		csrFile,
-		'-signkey',
-		signkeyFile ?? privateKeyFile,
-		'-out',
-		outFile,
-	)
+	]
+
+	if (ca !== undefined) {
+		args.push('-CA', ca.certificateFile, '-CAkey', ca.keyFile)
+	} else {
+		args.push('-signkey', privateKeyFile)
+	}
+
+	// Cert
+	await opensslV3.command(...args, '-out', outFile)
 }

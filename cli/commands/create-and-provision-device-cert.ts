@@ -10,10 +10,7 @@ import { promises as fs } from 'fs'
 import { readFile } from 'fs/promises'
 import * as os from 'os'
 import * as path from 'path'
-import {
-	CAIntermediateFileLocations,
-	CARootFileLocations,
-} from '../iot/caFileLocations.js'
+import { CARootFileLocations } from '../iot/caFileLocations.js'
 import { deviceFileLocations } from '../iot/deviceFileLocations.js'
 import {
 	defaultDeviceCertificateValidityInDays,
@@ -21,7 +18,14 @@ import {
 } from '../iot/generateDeviceCertificate.js'
 import { list as listIntermediateCerts } from '../iot/intermediateRegistry.js'
 import { globalIotHubDPSHostname } from '../iot/ioTHubDPSInfo.js'
-import { heading, progress, setting, success } from '../logging.js'
+import {
+	debug as dbg,
+	heading,
+	log,
+	progress,
+	setting,
+	success,
+} from '../logging.js'
 import { run } from '../process/run.js'
 import { CommandDefinition } from './CommandDefinition.js'
 
@@ -89,8 +93,8 @@ export const createAndProvisionDeviceCertCommand = ({
 		secTag,
 		deletePrivateKey,
 	}) => {
-		const logFn = debug === true ? console.log : undefined
-		const debugFn = debug === true ? console.debug : undefined
+		const logFn = debug === true ? log : undefined
+		const debugFn = debug === true ? dbg : undefined
 
 		progress('Flashing certificate', port ?? defaultPort)
 		const connection = (
@@ -173,23 +177,22 @@ export const createAndProvisionDeviceCertCommand = ({
 			deviceId,
 		})
 		const caRootFiles = CARootFileLocations(certsDir)
-		const caIntermediateFiles = CAIntermediateFileLocations({
-			certsDir,
-			id: intermediateCertId,
-		})
 
 		await flashCertificate({
 			at: connection.at,
-			caCert: await readFile(
-				path.resolve(process.cwd(), 'data', 'BaltimoreCyberTrustRoot.pem'),
-				'utf-8',
-			),
-			secTag: effectiveSecTag,
-			clientCert: [
-				await readFile(cert, 'utf-8'),
-				await readFile(caIntermediateFiles.cert, 'utf-8'),
+			caCert: [
 				await readFile(caRootFiles.cert, 'utf-8'),
+				await readFile(
+					path.resolve(
+						process.cwd(),
+						'data',
+						'DigiCertTLSECCP384RootG5.crt.pem',
+					),
+					'utf-8',
+				),
 			].join(os.EOL),
+			secTag: effectiveSecTag,
+			clientCert: await readFile(cert, 'utf-8'),
 		})
 		success('Certificate written to device')
 

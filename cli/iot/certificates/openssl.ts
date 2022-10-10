@@ -5,12 +5,9 @@ import os from 'node:os'
 import path from 'node:path'
 import { v4 } from 'uuid'
 
-export const openssl = async (...args: string[]): Promise<string> =>
-	new Promise((resolve, reject) => {
-		console.debug(
-			chalk.gray.bold('[OpenSSL]'),
-			...args.map((s) => chalk.gray(s)),
-		)
+const command = (args: string[], debug?: (...message: any[]) => void) =>
+	new Promise<string>((resolve, reject) => {
+		debug?.('[OpenSSL] »', ...args.map((s) => chalk.gray(s)))
 		execFile(
 			'openssl',
 			args,
@@ -19,25 +16,41 @@ export const openssl = async (...args: string[]): Promise<string> =>
 			},
 			(err, stdout, stderr) => {
 				if (err !== null) {
-					console.error(chalk.red.dim('[OpenSSL]', chalk.red(stderr)))
+					debug?.('[OpenSSL] «', stderr)
 					return reject(stderr)
 				}
+				debug?.('[OpenSSL] «', stdout)
 				return resolve(stdout)
 			},
 		)
 	})
 
-export const checkVersion = async (expectedVersion = 3) => {
-	const version = await openssl('version')
-	if (!version.includes(`OpenSSL ${expectedVersion}`)) {
-		throw new Error(
-			`Expected OpenSSL version ${expectedVersion}.x, got ${version}!`,
-		)
-	}
-}
-
-export const createKey = async (outFileLocation: string) =>
-	openssl('ecparam', '-out', outFileLocation, '-name', 'prime256v1', '-genkey')
+export const openssl = ({
+	debug,
+	expectedVersion,
+}: {
+	debug?: (...message: any[]) => void
+	expectedVersion?: number
+}) => ({
+	command: async (...args: string[]): Promise<string> => {
+		const version = await command(['version'])
+		if (!version.includes(`OpenSSL ${expectedVersion ?? 3}`)) {
+			throw new Error(
+				`Expected OpenSSL version ${expectedVersion ?? 3}.x, got ${version}!`,
+			)
+		}
+		return command(args, debug)
+	},
+	createKey: async (outFileLocation: string) =>
+		openssl({ debug }).command(
+			'ecparam',
+			'-out',
+			outFileLocation,
+			'-name',
+			'prime256v1',
+			'-genkey',
+		),
+})
 
 export const caCertConfig = async (commonName: string): Promise<string> => {
 	const tempDir = await mkdtemp(

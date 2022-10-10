@@ -1,10 +1,5 @@
-import { promises as fs } from 'fs'
 import { writeFile } from 'fs/promises'
-import * as os from 'os'
-import {
-	CAIntermediateFileLocations,
-	CARootFileLocations,
-} from './caFileLocations.js'
+import { CAIntermediateFileLocations } from './caFileLocations.js'
 import { deviceCertificate } from './certificates/deviceCertificate.js'
 import { deviceFileLocations } from './deviceFileLocations.js'
 import { fingerprint } from './fingerprint.js'
@@ -30,7 +25,6 @@ export const generateDeviceCertificate = async ({
 	daysValid?: number
 }): Promise<void> => {
 	log?.(`Generating certificate for device ${deviceId}`)
-	const caRootFiles = CARootFileLocations(certsDir)
 	const caIntermediateFiles = CAIntermediateFileLocations({
 		certsDir,
 		id: intermediateCertId,
@@ -49,29 +43,13 @@ export const generateDeviceCertificate = async ({
 		commonName: deviceId,
 		daysValid: daysValid ?? defaultDeviceCertificateValidityInDays,
 		certificateFile: deviceFiles.cert,
-		signkeyFile: caIntermediateFiles.privateKey,
+		ca: {
+			keyFile: caIntermediateFiles.privateKey,
+			certificateFile: caIntermediateFiles.cert,
+		},
 		csrFile: deviceFiles.csr,
+		debug,
 	})
-
-	const [certificate, intermediateCert, rootCert] = await Promise.all([
-		fs.readFile(deviceFiles.cert, 'utf-8'),
-		fs.readFile(caIntermediateFiles.cert, 'utf-8'),
-		fs.readFile(caRootFiles.cert, 'utf-8'),
-	])
-
-	await writeFile(
-		deviceFiles.caCertificateChain,
-		[intermediateCert, rootCert].join(os.EOL),
-		'utf-8',
-	)
-	debug?.(`${deviceFiles.caCertificateChain} written`)
-
-	await writeFile(
-		deviceFiles.certWithChain,
-		[certificate, intermediateCert, rootCert].join(os.EOL),
-		'utf-8',
-	)
-	debug?.(`${deviceFiles.certWithChain} written`)
 
 	await writeFile(deviceFiles.intermediateCertId, intermediateCertId, 'utf-8')
 	debug?.(`${deviceFiles.intermediateCertId} written`)

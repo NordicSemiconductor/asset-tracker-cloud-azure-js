@@ -20,7 +20,7 @@ export const generateCARoot = async ({
 	certsDir: string
 	name: string
 	log: (...message: any[]) => void
-	debug: (...message: any[]) => void
+	debug?: (...message: any[]) => void
 	daysValid?: number
 }): Promise<void> => {
 	const caFiles = CARootFileLocations(certsDir)
@@ -28,7 +28,7 @@ export const generateCARoot = async ({
 		await fs.stat(certsDir)
 	} catch {
 		await fs.mkdir(certsDir, { recursive: true })
-		debug(`Created ${certsDir}`)
+		debug?.(`Created ${certsDir}`)
 	}
 
 	let certExists = false
@@ -49,6 +49,7 @@ export const generateCARoot = async ({
 		outFile: caFiles.cert,
 		privateKeyFile: caFiles.privateKey,
 		csrFile: caFiles.csr,
+		debug
 	})
 
 	log('Root CA Certificate', caFiles.cert)

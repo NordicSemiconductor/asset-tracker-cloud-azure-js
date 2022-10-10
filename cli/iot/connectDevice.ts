@@ -1,6 +1,9 @@
 import { promises as fs } from 'fs'
 import { connect, MqttClient } from 'mqtt'
+import os from 'node:os'
+import path from 'path'
 import { run } from '../process/run.js'
+import { CARootFileLocations } from './caFileLocations.js'
 import { deviceFileLocations } from './deviceFileLocations.js'
 
 /**
@@ -20,9 +23,16 @@ export const connectDevice = async ({
 		certsDir,
 		deviceId,
 	})
-	const [deviceCert, deviceKey] = await Promise.all([
-		fs.readFile(deviceFiles.certWithChain, 'utf-8'),
+	const rootCAFiles = CARootFileLocations(certsDir)
+	const [deviceCert, deviceKey, rootCA, digiCert] = await Promise.all([
+		fs.readFile(deviceFiles.cert, 'utf-8'),
 		fs.readFile(deviceFiles.privateKey, 'utf-8'),
+		fs.readFile(rootCAFiles.cert, 'utf-8'),
+		fs.readFile(rootCAFiles.cert, 'utf-8'),
+		fs.readFile(
+			path.join(process.cwd(), 'data', 'DigiCertTLSECCP384RootG5.crt.pem'),
+			'utf-8',
+		),
 	])
 
 	let iotHub: string
@@ -60,6 +70,7 @@ export const connectDevice = async ({
 			username: `${iotHub}/${deviceId}/?api-version=2020-09-30`,
 			protocolVersion: 4,
 			clean: true,
+			ca: [rootCA, digiCert].join(os.EOL),
 		})
 		client.on('connect', async () => {
 			log?.('Connected', deviceId)

@@ -5,11 +5,11 @@ import {
 import { intermediateCA } from './certificates/intermediateCA.js'
 
 /**
- * Verifies the CA posessions
+ * Verifies the CA possessions
  * @see https://github.com/Azure/azure-iot-sdk-node/blob/5a7cd40145575175b4a100bbc84758f8a87c6d37/provisioning/tools/create_test_cert.js
  * @see http://busbyland.com/azure-iot-device-provisioning-service-via-rest-part-1/
  */
-export const generateProofOfPosession = async (args: {
+export const generateProofOfPossession = async (args: {
 	certsDir: string
 	verificationCode: string
 	log: (...message: any[]) => void
@@ -22,10 +22,13 @@ export const generateProofOfPosession = async (args: {
 	await intermediateCA({
 		commonName: verificationCode,
 		daysValid: 1,
-		signkeyFile: caRootFiles.privateKey,
 		outFile: caRootVerificationFiles.verificationCert,
 		privateKeyFile: caRootVerificationFiles.verificationKey,
 		csrFile: caRootVerificationFiles.verificationCSR,
+		ca: {
+			keyFile: caRootFiles.privateKey,
+			certificateFile: caRootFiles.cert,
+		},
 	})
 
 	log('Verification cert', caRootVerificationFiles.verificationCert)

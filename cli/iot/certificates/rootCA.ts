@@ -1,4 +1,4 @@
-import { caCertConfig, checkVersion, createKey, openssl } from './openssl.js'
+import { caCertConfig, openssl } from './openssl.js'
 
 export const rootCA = async ({
 	commonName,
@@ -6,20 +6,22 @@ export const rootCA = async ({
 	outFile,
 	csrFile,
 	daysValid,
+	debug,
 }: {
 	commonName: string
 	privateKeyFile: string
 	outFile: string
 	csrFile: string
 	daysValid?: number
+	debug?: (...message: any[]) => void
 }) => {
-	await checkVersion()
+	const opensslV3 = openssl({ debug })
 
 	// Key
-	await createKey(privateKeyFile)
+	await opensslV3.createKey(privateKeyFile)
 
 	// CSR
-	await openssl(
+	await opensslV3.command(
 		'req',
 		'-new',
 		'-config',
@@ -31,7 +33,7 @@ export const rootCA = async ({
 	)
 
 	// Self-signed certificate
-	await openssl(
+	await opensslV3.command(
 		'x509',
 		'-req',
 		'-days',

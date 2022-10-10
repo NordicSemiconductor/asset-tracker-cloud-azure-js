@@ -1,6 +1,9 @@
 import { DeviceRegistrationState } from 'azure-iot-provisioning-service/dist/interfaces'
 import { promises as fs } from 'fs'
 import { connect } from 'mqtt'
+import os from 'os'
+import path from 'path'
+import { CARootFileLocations } from './caFileLocations.js'
 import { deviceFileLocations } from './deviceFileLocations.js'
 import { dpsTopics } from './dpsTopics.js'
 import { globalIotHubDPSHostname } from './ioTHubDPSInfo.js'
@@ -24,11 +27,22 @@ export const provisionDevice = async ({
 		certsDir,
 		deviceId,
 	})
+	const caFiles = CARootFileLocations(certsDir)
 
-	const [deviceCert, deviceKey] = await Promise.all([
-		fs.readFile(deviceFiles.certWithChain, 'utf-8'),
-		fs.readFile(deviceFiles.privateKey, 'utf-8'),
-	])
+	const [deviceCert, deviceKey, rootCert, baltimore, digicertRoot] =
+		await Promise.all([
+			fs.readFile(deviceFiles.cert, 'utf-8'),
+			fs.readFile(deviceFiles.privateKey, 'utf-8'),
+			fs.readFile(caFiles.cert, 'utf-8'),
+			fs.readFile(
+				path.join(process.cwd(), 'data', 'BaltimoreCyberTrustRoot.pem'),
+				'utf-8',
+			),
+			fs.readFile(
+				path.join(process.cwd(), 'data', 'DigiCertTLSECCP384RootG5.crt.pem'),
+				'utf-8',
+			),
+		])
 
 	try {
 		log?.(`Loading config from`, deviceFiles.registration)
@@ -45,6 +59,7 @@ export const provisionDevice = async ({
 			port: 8883,
 			key: deviceKey,
 			cert: deviceCert,
+			ca: [rootCert, baltimore, digicertRoot].join(os.EOL),
 			rejectUnauthorized: true,
 			clientId: deviceId,
 			username: `${idScope}/registrations/${deviceId}/api-version=2019-03-31`,

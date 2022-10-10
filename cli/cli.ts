@@ -18,7 +18,6 @@ import { createSimulatorCertCommand } from './commands/create-simulator-cert.js'
 import { flashFirmwareCommand } from './commands/flash-firmware.js'
 import { functionsSettingsCommand } from './commands/functions-settings.js'
 import { infoCommand } from './commands/info.js'
-import { proofCARootPossessionCommand } from './commands/proof-ca-possession.js'
 import { provisionSimulatorDevice } from './commands/provision-simulator-device.js'
 import { reactConfigCommand } from './commands/react-config.js'
 import { ioTHubDPSInfo } from './iot/ioTHubDPSInfo.js'
@@ -79,16 +78,13 @@ const main = async () => {
 			dpsName,
 			resourceGroup,
 		}),
-		proofCARootPossessionCommand({
-			iotDpsClient: getIotDpsClient,
-			certsDir,
-			dpsName,
-			resourceGroup,
-		}),
 		createCAIntermediateCommand({
 			certsDir,
+			iotDpsClient: getIotDpsClient,
 			ioTHubDPSConnectionString: async () =>
 				getIotHubInfo().then(({ connectionString }) => connectionString),
+			dpsName,
+			resourceGroup,
 		}),
 		createAndProvisionDeviceCertCommand({
 			certsDir,

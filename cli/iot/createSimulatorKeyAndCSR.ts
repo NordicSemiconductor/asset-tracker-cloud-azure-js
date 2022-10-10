@@ -1,4 +1,4 @@
-import { createKey, openssl } from './certificates/openssl.js'
+import { leafCertConfig, openssl } from './certificates/openssl.js'
 import { deviceFileLocations } from './deviceFileLocations.js'
 
 export const defaultDeviceCertificateValidityInDays = 10950
@@ -16,27 +16,24 @@ export const createSimulatorKeyAndCSR = async ({
 	deviceId: string
 	log?: (...message: any[]) => void
 	debug?: (...message: any[]) => void
-}): Promise<{ deviceId: string }> => {
-	log?.(`Generating certificate for device ${deviceId}`)
+}): Promise<void> => {
+	log?.(`Generating key and CSR for device ${deviceId}`)
 	const deviceFiles = deviceFileLocations({
 		certsDir,
 		deviceId,
 	})
+	const opensslV3 = openssl({ debug })
 
-	await createKey(deviceFiles.privateKey)
+	await opensslV3.createKey(deviceFiles.privateKey)
 
-	debug?.(`${deviceFiles.privateKey} written`)
-
-	await openssl(
+	await opensslV3.command(
 		'req',
 		'-new',
+		'-config',
+		await leafCertConfig(deviceId),
 		'-key',
 		deviceFiles.privateKey,
 		'-out',
 		deviceFiles.csr,
 	)
-
-	debug?.(deviceFiles.csr)
-
-	return { deviceId }
 }

@@ -18,7 +18,7 @@ export const generateCAIntermediate = async (args: {
 	log: (...message: any[]) => void
 	debug: (...message: any[]) => void
 	daysValid?: number
-}): Promise<void> => {
+}): Promise<{ name: string }> => {
 	const { certsDir, log, id } = args
 	const caRootFiles = CARootFileLocations(certsDir)
 
@@ -29,19 +29,21 @@ export const generateCAIntermediate = async (args: {
 		id,
 	})
 
-	const intermediateName = certificateName(
-		`Asset Tracker Intermediate CA ${id}`,
-	)
+	const intermediateName = certificateName(`nrfassettracker-intermediate-${id}`)
 
 	await intermediateCA({
 		commonName: intermediateName,
 		daysValid: args.daysValid ?? defaultIntermediateCAValidityInDays,
-		signkeyFile: caRootFiles.privateKey,
-		signCertificateFile: caRootFiles.cert,
 		outFile: caIntermediateFiles.cert,
 		privateKeyFile: caIntermediateFiles.privateKey,
 		csrFile: caIntermediateFiles.csr,
+		ca: {
+			keyFile: caRootFiles.privateKey,
+			certificateFile: caRootFiles.cert,
+		},
 	})
 
 	log('Intermediate CA Certificate', caIntermediateFiles.cert)
+
+	return { name: intermediateName }
 }

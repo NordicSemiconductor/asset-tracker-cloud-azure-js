@@ -1,6 +1,7 @@
 import { IotDpsClient } from '@azure/arm-deviceprovisioningservices'
 import { randomWords } from '@nordicsemiconductor/random-words'
 import { readFile, writeFile } from 'fs/promises'
+import { CARootFileLocations } from '../iot/caFileLocations.js'
 import { createSimulatorKeyAndCSR } from '../iot/createSimulatorKeyAndCSR.js'
 import { deviceFileLocations } from '../iot/deviceFileLocations.js'
 import {
@@ -10,7 +11,7 @@ import {
 import { list as listIntermediateCerts } from '../iot/intermediateRegistry.js'
 import { globalIotHubDPSHostname } from '../iot/ioTHubDPSInfo.js'
 import {
-	debug,
+	debug as debugFn,
 	heading,
 	log,
 	newline,
@@ -46,15 +47,21 @@ export const createSimulatorCertCommand = ({
 			flags: '-e, --expires <expires>',
 			description: `Validity of device certificate in days. Defaults to ${defaultDeviceCertificateValidityInDays} days.`,
 		},
+		{
+			flags: '--debug',
+			description: `Log debug messages`,
+		},
 	],
 	action: async ({
 		deviceId,
 		intermediateCertId,
 		expires,
+		debug,
 	}: {
 		deviceId?: string
 		intermediateCertId?: string
 		expires?: string
+		debug?: boolean
 	}) => {
 		const id = deviceId ?? (await randomWords({ numWords: 3 })).join('-')
 
@@ -71,14 +78,14 @@ export const createSimulatorCertCommand = ({
 			deviceId: id,
 			certsDir,
 			log,
-			debug,
+			debug: debug ? debugFn : undefined,
 		})
 
 		await generateDeviceCertificate({
 			deviceId: id,
 			certsDir,
 			log,
-			debug,
+			debug: debug ? debugFn : undefined,
 			intermediateCertId,
 			daysValid: expires !== undefined ? parseInt(expires, 10) : undefined,
 		})
@@ -92,8 +99,10 @@ export const createSimulatorCertCommand = ({
 		const {
 			json: certJSON,
 			privateKey,
-			certWithChain,
+			cert,
 		} = deviceFileLocations({ certsDir, deviceId: id })
+
+		const { cert: caCert } = CARootFileLocations(certsDir)
 
 		await writeFile(
 			certJSON,
@@ -101,7 +110,8 @@ export const createSimulatorCertCommand = ({
 				{
 					resourceGroup,
 					privateKey: await readFile(privateKey, 'utf-8'),
-					clientCert: await readFile(certWithChain, 'utf-8'),
+					clientCert: await readFile(cert, 'utf-8'),
+					caCert: await readFile(caCert, 'utf-8'),
 					clientId: id,
 					idScope: properties.idScope as string,
 				},
