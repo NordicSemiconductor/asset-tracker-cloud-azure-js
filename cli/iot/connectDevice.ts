@@ -3,8 +3,8 @@ import { connect, MqttClient } from 'mqtt'
 import os from 'node:os'
 import path from 'path'
 import { run } from '../process/run.js'
-import { CARootFileLocations } from './caFileLocations.js'
-import { deviceFileLocations } from './deviceFileLocations.js'
+import { CARootFileLocations } from './certificates/caFileLocations.js'
+import { deviceFileLocations } from './certificates/deviceFileLocations.js'
 
 /**
  * Connect the device to the Azure IoT Hub.

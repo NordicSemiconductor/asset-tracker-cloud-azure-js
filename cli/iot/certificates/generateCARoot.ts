@@ -1,6 +1,6 @@
 import { promises as fs } from 'fs'
 import { CARootFileLocations } from './caFileLocations.js'
-import { rootCA } from './certificates/rootCA.js'
+import { rootCA } from './rootCA.js'
 
 export const defaultCAValidityInDays = 365
 
@@ -48,8 +48,7 @@ export const generateCARoot = async ({
 		daysValid: daysValid ?? defaultCAValidityInDays,
 		outFile: caFiles.cert,
 		privateKeyFile: caFiles.privateKey,
-		csrFile: caFiles.csr,
-		debug
+		debug,
 	})
 
 	log('Root CA Certificate', caFiles.cert)

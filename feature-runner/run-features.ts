@@ -16,8 +16,8 @@ import { cliCredentials } from '../cli/cliCredentials.js'
 import {
 	CAIntermediateFileLocations,
 	CARootFileLocations,
-} from '../cli/iot/caFileLocations.js'
-import { fingerprint } from '../cli/iot/fingerprint.js'
+} from '../cli/iot/certificates/caFileLocations.js'
+import { fingerprint } from '../cli/iot/certificates/fingerprint.js'
 import { list } from '../cli/iot/intermediateRegistry.js'
 import { ioTHubDPSInfo } from '../cli/iot/ioTHubDPSInfo.js'
 import { debug, error, heading, settings } from '../cli/logging.js'

@@ -10,12 +10,12 @@ import { promises as fs } from 'fs'
 import { readFile } from 'fs/promises'
 import * as os from 'os'
 import * as path from 'path'
-import { CARootFileLocations } from '../iot/caFileLocations.js'
-import { deviceFileLocations } from '../iot/deviceFileLocations.js'
+import { CARootFileLocations } from '../iot/certificates/caFileLocations.js'
+import { deviceFileLocations } from '../iot/certificates/deviceFileLocations.js'
 import {
 	defaultDeviceCertificateValidityInDays,
 	generateDeviceCertificate,
-} from '../iot/generateDeviceCertificate.js'
+} from '../iot/certificates/generateDeviceCertificate.js'
 import { list as listIntermediateCerts } from '../iot/intermediateRegistry.js'
 import { globalIotHubDPSHostname } from '../iot/ioTHubDPSInfo.js'
 import {

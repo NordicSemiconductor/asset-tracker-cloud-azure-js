@@ -14,7 +14,7 @@ export const intermediateCA = async ({
 	outFile: string
 	csrFile: string
 	daysValid?: number
-	ca?: {
+	ca: {
 		keyFile: string
 		certificateFile: string
 	}
@@ -23,35 +23,55 @@ export const intermediateCA = async ({
 	const opensslV3 = openssl({ debug })
 
 	// Key
-	await opensslV3.createKey(privateKeyFile)
+	await opensslV3.command(
+		'genrsa',
+		'-aes256',
+		'-out',
+		privateKeyFile,
+		'-passout',
+		'pass:1234',
+		'4096',
+	)
 
 	// CSR
 	await opensslV3.command(
 		'req',
 		'-new',
+		'-sha256',
 		'-config',
 		await caCertConfig(commonName),
 		'-key',
 		privateKeyFile,
+		'-passin',
+		'pass:1234',
+		'-CA',
+		ca.certificateFile,
+		'-CAkey',
+		ca.keyFile,
 		'-out',
 		csrFile,
 	)
 
-	const args: string[] = [
-		'x509',
-		'-req',
+	// Cert
+	await opensslV3.command(
+		'ca',
+		'-batch',
+		'-config',
+		await caCertConfig(commonName),
+		'-extensions',
+		'v3_req',
+		'-passin',
+		'pass:1234',
+		'-key',
+		privateKeyFile,
 		'-days',
 		`${daysValid ?? 90}`,
+		'-notext',
+		'-md',
+		'sha256',
 		'-in',
 		csrFile,
-	]
-
-	if (ca !== undefined) {
-		args.push('-CA', ca.certificateFile, '-CAkey', ca.keyFile)
-	} else {
-		args.push('-signkey', privateKeyFile)
-	}
-
-	// Cert
-	await opensslV3.command(...args, '-out', outFile)
+		'-out',
+		outFile,
+	)
 }

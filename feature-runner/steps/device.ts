@@ -10,10 +10,10 @@ import chaiSubset from 'chai-subset'
 import { MqttClient } from 'mqtt'
 import fetch from 'node-fetch'
 import { v4 } from 'uuid'
+import { createSimulatorKeyAndCSR } from '../../cli/iot/certificates/createSimulatorKeyAndCSR.js'
+import { generateDeviceCertificate } from '../../cli/iot/certificates/generateDeviceCertificate.js'
 import { connectDevice } from '../../cli/iot/connectDevice.js'
-import { createSimulatorKeyAndCSR } from '../../cli/iot/createSimulatorKeyAndCSR.js'
 import { deviceTopics } from '../../cli/iot/deviceTopics.js'
-import { generateDeviceCertificate } from '../../cli/iot/generateDeviceCertificate.js'
 import { matchDeviceBoundTopic } from './device/matchDeviceBoundTopic.js'
 chai.use(chaiSubset)
 

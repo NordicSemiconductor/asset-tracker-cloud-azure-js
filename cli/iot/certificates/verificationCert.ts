@@ -1,16 +1,23 @@
-import { caCertConfig, openssl } from './openssl.js'
+import { openssl, verificationCertConfig } from './openssl.js'
 
-export const rootCA = async ({
+export const verificationCert = async ({
 	commonName,
 	privateKeyFile,
-	outFile,
+	outFile: outFile,
+	csrFile,
 	daysValid,
+	ca,
 	debug,
 }: {
 	commonName: string
 	privateKeyFile: string
 	outFile: string
+	csrFile: string
 	daysValid?: number
+	ca: {
+		keyFile: string
+		certificateFile: string
+	}
 	debug?: (...message: any[]) => void
 }) => {
 	const opensslV3 = openssl({ debug })
@@ -26,22 +33,34 @@ export const rootCA = async ({
 		'4096',
 	)
 
-	// Self-signed certificate
+	// CSR
 	await opensslV3.command(
 		'req',
 		'-new',
-		'-x509',
 		'-config',
-		await caCertConfig(commonName),
+		await verificationCertConfig(commonName),
 		'-key',
 		privateKeyFile,
 		'-passin',
 		'pass:1234',
+		'-out',
+		csrFile,
+	)
+
+	// Cert
+	await opensslV3.command(
+		'x509',
+		'-req',
 		'-days',
 		`${daysValid ?? 90}`,
-		'-sha256',
-		'-extensions',
-		'v3_req',
+		'-in',
+		csrFile,
+		'-CA',
+		ca.certificateFile,
+		'-CAkey',
+		ca.keyFile,
+		'-passin',
+		'pass:1234',
 		'-out',
 		outFile,
 	)

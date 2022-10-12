@@ -1,6 +1,6 @@
 import { writeFile } from 'fs/promises'
 import { CAIntermediateFileLocations } from './caFileLocations.js'
-import { deviceCertificate } from './certificates/deviceCertificate.js'
+import { deviceCertificate } from './deviceCertificate.js'
 import { deviceFileLocations } from './deviceFileLocations.js'
 import { fingerprint } from './fingerprint.js'
 

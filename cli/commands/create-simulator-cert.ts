@@ -1,13 +1,16 @@
 import { IotDpsClient } from '@azure/arm-deviceprovisioningservices'
 import { randomWords } from '@nordicsemiconductor/random-words'
 import { readFile, writeFile } from 'fs/promises'
-import { CARootFileLocations } from '../iot/caFileLocations.js'
-import { createSimulatorKeyAndCSR } from '../iot/createSimulatorKeyAndCSR.js'
-import { deviceFileLocations } from '../iot/deviceFileLocations.js'
+import {
+	CAIntermediateFileLocations,
+	CARootFileLocations,
+} from '../iot/certificates/caFileLocations.js'
+import { createSimulatorKeyAndCSR } from '../iot/certificates/createSimulatorKeyAndCSR.js'
+import { deviceFileLocations } from '../iot/certificates/deviceFileLocations.js'
 import {
 	defaultDeviceCertificateValidityInDays,
 	generateDeviceCertificate,
-} from '../iot/generateDeviceCertificate.js'
+} from '../iot/certificates/generateDeviceCertificate.js'
 import { list as listIntermediateCerts } from '../iot/intermediateRegistry.js'
 import { globalIotHubDPSHostname } from '../iot/ioTHubDPSInfo.js'
 import {
@@ -102,16 +105,20 @@ export const createSimulatorCertCommand = ({
 			cert,
 		} = deviceFileLocations({ certsDir, deviceId: id })
 
-		const { cert: caCert } = CARootFileLocations(certsDir)
+		const { cert: rootCACert } = CARootFileLocations(certsDir)
+		const { cert: intermediateCACert } = CAIntermediateFileLocations({
+			certsDir,
+			id: intermediateCertId,
+		})
 
 		await writeFile(
 			certJSON,
 			JSON.stringify(
 				{
-					resourceGroup,
 					privateKey: await readFile(privateKey, 'utf-8'),
 					clientCert: await readFile(cert, 'utf-8'),
-					caCert: await readFile(caCert, 'utf-8'),
+					intermediateCACert: await readFile(intermediateCACert, 'utf-8'),
+					rootCACert: await readFile(rootCACert, 'utf-8'),
 					clientId: id,
 					idScope: properties.idScope as string,
 				},

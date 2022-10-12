@@ -1,4 +1,4 @@
-import { run } from '../process/run.js'
+import { run } from '../../process/run.js'
 
 export const fingerprint = async (certLocation: string): Promise<string> =>
 	(

@@ -1,5 +1,5 @@
-import { leafCertConfig, openssl } from './certificates/openssl.js'
 import { deviceFileLocations } from './deviceFileLocations.js'
+import { leafCertConfig, openssl } from './openssl.js'
 
 export const defaultDeviceCertificateValidityInDays = 10950
 

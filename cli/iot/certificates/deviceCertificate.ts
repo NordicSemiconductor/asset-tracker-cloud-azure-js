@@ -21,6 +21,7 @@ export const deviceCertificate = async ({
 	await openssl({ debug }).command(
 		'x509',
 		'-req',
+		'-sha256',
 		'-extensions',
 		'v3_req',
 		'-extfile',

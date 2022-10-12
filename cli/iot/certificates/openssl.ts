@@ -19,7 +19,7 @@ const command = (args: string[], debug?: (...message: any[]) => void) =>
 					debug?.('[OpenSSL] «', stderr)
 					return reject(stderr)
 				}
-				debug?.('[OpenSSL] «', stdout)
+				if (stdout.length > 0) debug?.('[OpenSSL] «', stdout)
 				return resolve(stdout)
 			},
 		)
@@ -52,6 +52,27 @@ export const openssl = ({
 		),
 })
 
+export const verificationCertConfig = async (
+	commonName: string,
+): Promise<string> => {
+	const tempDir = await mkdtemp(
+		path.join(os.tmpdir(), 'nrf-asset-tracker-azure-certs-'),
+	)
+	const configFile = path.join(tempDir, `verification-cert-${v4()}.conf`)
+	await writeFile(
+		configFile,
+		[
+			'[ req ]',
+			'distinguished_name = req_distinguished_name',
+			'prompt = no',
+			'[ req_distinguished_name ]',
+			'commonName = ' + commonName,
+		].join('\n'),
+		'utf-8',
+	)
+	return configFile
+}
+
 export const caCertConfig = async (commonName: string): Promise<string> => {
 	const tempDir = await mkdtemp(
 		path.join(os.tmpdir(), 'nrf-asset-tracker-azure-certs-'),
@@ -68,6 +89,9 @@ export const caCertConfig = async (commonName: string): Promise<string> => {
 			'commonName = ' + commonName,
 			'[ v3_req ]',
 			'basicConstraints = critical,CA:true',
+			'subjectKeyIdentifier = hash',
+			'authorityKeyIdentifier = keyid:always,issuer',
+			'keyUsage = critical, digitalSignature, cRLSign, keyCertSign',
 		].join('\n'),
 		'utf-8',
 	)
@@ -90,6 +114,10 @@ export const leafCertConfig = async (commonName: string): Promise<string> => {
 			'commonName = ' + commonName,
 			'[ v3_req ]',
 			'extendedKeyUsage = critical,clientAuth',
+			'basicConstraints = CA:FALSE',
+			'subjectKeyIdentifier = hash',
+			'authorityKeyIdentifier = keyid,issuer',
+			'keyUsage = critical, nonRepudiation, digitalSignature, keyEncipherment',
 		].join('\n'),
 	)
 	return configFile
