@@ -10,7 +10,7 @@ import { promises as fs } from 'fs'
 import { readFile } from 'fs/promises'
 import * as os from 'os'
 import * as path from 'path'
-import { CARootFileLocations } from '../iot/certificates/caFileLocations.js'
+import { CAIntermediateFileLocations } from '../iot/certificates/caFileLocations.js'
 import { deviceFileLocations } from '../iot/certificates/deviceFileLocations.js'
 import {
 	defaultDeviceCertificateValidityInDays,
@@ -176,23 +176,22 @@ export const createAndProvisionDeviceCertCommand = ({
 			certsDir,
 			deviceId,
 		})
-		const caRootFiles = CARootFileLocations(certsDir)
+		const caIntermediateFiles = CAIntermediateFileLocations({
+			certsDir,
+			id: intermediateCertId,
+		})
 
 		await flashCertificate({
 			at: connection.at,
-			caCert: [
-				await readFile(caRootFiles.cert, 'utf-8'),
-				await readFile(
-					path.resolve(
-						process.cwd(),
-						'data',
-						'DigiCertTLSECCP384RootG5.crt.pem',
-					),
-					'utf-8',
-				),
-			].join(os.EOL),
 			secTag: effectiveSecTag,
-			clientCert: await readFile(cert, 'utf-8'),
+			clientCert: [
+				await readFile(cert, 'utf-8'),
+				await readFile(caIntermediateFiles.cert, 'utf-8'),
+			].join(os.EOL),
+			caCert: await readFile(
+				path.resolve(process.cwd(), 'data', 'BaltimoreCyberTrustRoot.pem'),
+				'utf-8',
+			),
 		})
 		success('Certificate written to device')
 

@@ -12,8 +12,8 @@ import fetch from 'node-fetch'
 import { v4 } from 'uuid'
 import { createSimulatorKeyAndCSR } from '../../cli/iot/certificates/createSimulatorKeyAndCSR.js'
 import { generateDeviceCertificate } from '../../cli/iot/certificates/generateDeviceCertificate.js'
-import { connectDevice } from '../../cli/iot/connectDevice.js'
-import { deviceTopics } from '../../cli/iot/deviceTopics.js'
+import { connectDevice } from './device/connectDevice.js'
+import { deviceTopics } from './device/deviceTopics.js'
 import { matchDeviceBoundTopic } from './device/matchDeviceBoundTopic.js'
 chai.use(chaiSubset)
 
@@ -30,7 +30,7 @@ export const deviceStepRunners = ({
 		regexGroupMatcher(
 			/^I generate a certificate for the (?:device|tracker) "(?<deviceId>[^"]+)"$/,
 		)(async ({ deviceId }) => {
-			await createSimulatorKeyAndCSR({ certsDir, deviceId })
+			await createSimulatorKeyAndCSR({ certsDir, deviceId, intermediateCertId })
 			await generateDeviceCertificate({
 				deviceId,
 				certsDir,

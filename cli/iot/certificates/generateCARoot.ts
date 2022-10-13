@@ -1,6 +1,7 @@
 import { promises as fs } from 'fs'
 import { CARootFileLocations } from './caFileLocations.js'
-import { rootCA } from './rootCA.js'
+import { openssl } from './openssl.js'
+import { opensslConfig } from './opensslConfig.js'
 
 export const defaultCAValidityInDays = 365
 
@@ -23,7 +24,7 @@ export const generateCARoot = async ({
 	debug?: (...message: any[]) => void
 	daysValid?: number
 }): Promise<void> => {
-	const caFiles = CARootFileLocations(certsDir)
+	const { cert, privateKey } = CARootFileLocations(certsDir)
 	try {
 		await fs.stat(certsDir)
 	} catch {
@@ -33,23 +34,59 @@ export const generateCARoot = async ({
 
 	let certExists = false
 	try {
-		await fs.stat(caFiles.cert)
+		await fs.stat(cert)
 		certExists = true
 	} catch {
 		// pass
 	}
 	if (certExists) {
-		throw new Error(`CA Root certificate exists: ${caFiles.cert}!`)
+		throw new Error(`CA Root certificate exists: ${cert}!`)
 	}
 
 	// Create the Root CA Cert
-	await rootCA({
-		commonName: name,
-		daysValid: daysValid ?? defaultCAValidityInDays,
-		outFile: caFiles.cert,
-		privateKeyFile: caFiles.privateKey,
-		debug,
-	})
+	const opensslV3 = openssl({ debug })
 
-	log('Root CA Certificate', caFiles.cert)
+	// Create the root CA private key:
+	// openssl genrsa -aes256 -passout pass:1234 -out ./private/azure-iot-test-only.root.ca.key.pem 4096
+	await opensslV3.command(
+		'genrsa',
+		'-aes256',
+		'-passout',
+		'pass:1234',
+		'-out',
+		privateKey,
+		'4096',
+	)
+
+	// Create the root CA certificate:
+	// openssl req -new -x509 -config ./openssl_root_ca.cnf -passin pass:1234 -key ./private/azure-iot-test-only.root.ca.key.pem -subj '/CN=Azure IoT Hub CA Cert Test Only' -days 30 -sha256 -extensions v3_ca -out ./certs/azure-iot-test-only.root.ca.cert.pem
+	await opensslV3.command(
+		'req',
+		'-new',
+		'-x509',
+		'-config',
+		opensslConfig({
+			dir: certsDir,
+			certificateFile: cert,
+			privateKeyFile: privateKey,
+		}),
+		'-passin',
+		'pass:1234',
+		'-key',
+		privateKey,
+		'-subj',
+		`/CN=${name}`,
+		'-days',
+		`${daysValid ?? 90}`,
+		'-sha256',
+		'-extensions',
+		'v3_ca',
+		'-out',
+		cert,
+	)
+
+	// Examine the root CA certificate:
+	debug?.(await opensslV3.command('x509', '-noout', '-text', '-in', cert))
+
+	log('Root CA Certificate', cert)
 }

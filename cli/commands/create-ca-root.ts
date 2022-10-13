@@ -1,5 +1,5 @@
 import { IotDpsClient } from '@azure/arm-deviceprovisioningservices'
-import { writeFile } from 'fs/promises'
+import { readFile, writeFile } from 'fs/promises'
 import { v4 } from 'uuid'
 import { CARootFileLocations } from '../iot/certificates/caFileLocations.js'
 import { certificateName as cn } from '../iot/certificates/certificateName.js'
@@ -7,8 +7,14 @@ import {
 	defaultCAValidityInDays,
 	generateCARoot,
 } from '../iot/certificates/generateCARoot.js'
-import { registerCertificate } from '../iot/certificates/registerCertificate'
-import { debug as debugFN, log, newline, next, success } from '../logging.js'
+import {
+	debug as debugFN,
+	log,
+	newline,
+	next,
+	setting,
+	success,
+} from '../logging.js'
 import { CommandDefinition } from './CommandDefinition.js'
 
 export const createCARootCommand = ({
@@ -42,7 +48,7 @@ export const createCARootCommand = ({
 			certsDir,
 			name: certificateName,
 			log,
-			debug: debug ? debugFN : undefined,
+			debug: debug === true ? debugFN : undefined,
 			daysValid: expires !== undefined ? parseInt(expires, 10) : undefined,
 		})
 		success(`CA root certificate generated.`)
@@ -50,14 +56,22 @@ export const createCARootCommand = ({
 		const caFiles = CARootFileLocations(certsDir)
 		await writeFile(caFiles.id, certificateName, 'utf-8')
 
-		await registerCertificate(
-			certificateName,
-			CARootFileLocations(certsDir),
-			iotDpsClient,
+		// Register root CA certificate on DPS
+		const armDpsClient = await iotDpsClient()
+		await armDpsClient.dpsCertificate.createOrUpdate(
 			resourceGroup,
 			dpsName,
-			debug ? debugFN : undefined,
+			certificateName,
+			{
+				properties: {
+					certificate: new TextEncoder().encode(
+						await readFile(caFiles.cert, 'utf-8'),
+					),
+					isVerified: true,
+				},
+			},
 		)
+		setting('DPS', dpsName)
 
 		newline()
 		next(

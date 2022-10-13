@@ -1,9 +1,12 @@
+import { stat, writeFile } from 'fs/promises'
+import path from 'path'
 import {
 	CAIntermediateFileLocations,
 	CARootFileLocations,
 } from './caFileLocations.js'
 import { certificateName } from './certificateName.js'
-import { intermediateCA } from './intermediateCA.js'
+import { openssl } from './openssl.js'
+import { opensslConfig } from './opensslConfig.js'
 
 export const defaultIntermediateCAValidityInDays = 365
 
@@ -25,31 +28,95 @@ export const generateCAIntermediate = async ({
 	debug?: (...message: any[]) => void
 	daysValid?: number
 }): Promise<{ name: string }> => {
-	const caRootFiles = CARootFileLocations(certsDir)
-
-	// Create the intermediate CA cert (signed by the root)
-
-	const caIntermediateFiles = CAIntermediateFileLocations({
+	const { privateKey, cert, csr } = CAIntermediateFileLocations({
 		certsDir,
 		id,
 	})
 
 	const intermediateName = certificateName(`nrfassettracker-intermediate-${id}`)
 
-	await intermediateCA({
-		commonName: intermediateName,
-		daysValid: daysValid ?? defaultIntermediateCAValidityInDays,
-		outFile: caIntermediateFiles.cert,
-		privateKeyFile: caIntermediateFiles.privateKey,
-		csrFile: caIntermediateFiles.csr,
-		ca: {
-			keyFile: caRootFiles.privateKey,
-			certificateFile: caRootFiles.cert,
-		},
-		debug,
-	})
+	// Create the intermediate CA certificate
+	const opensslV3 = openssl({ debug })
 
-	log('Intermediate CA Certificate', caIntermediateFiles.cert)
+	// Create the database file (index.txt), and the serial number file (serial)
+	try {
+		await stat(path.join(certsDir, 'index.txt'))
+	} catch {
+		await writeFile(path.join(certsDir, 'index.txt'), '')
+		await writeFile(
+			path.join(certsDir, 'index.txt.attr'),
+			'unique_subject = no',
+		)
+		const serial = await opensslV3.command('rand', '-hex', '16')
+		await writeFile(path.join(certsDir, 'serial'), serial)
+	}
+
+	// Create the intermediate CA private key:
+	// openssl genrsa -aes256 -passout pass:1234 -out ./private/azure-iot-test-only.intermediate.key.pem 4096
+	await opensslV3.command(
+		'genrsa',
+		'-aes256',
+		'-passout',
+		'pass:1234',
+		'-out',
+		privateKey,
+		'4096',
+	)
+
+	// Create the intermediate CA certificate signing request (CSR):
+	// openssl req -new -sha256 -passin pass:1234 -config ./openssl_device_intermediate_ca.cnf -subj '/CN=Azure IoT Hub Intermediate Cert Test Only' -key ./private/azure-iot-test-only.intermediate.key.pem -out ./csr/azure-iot-test-only.intermediate.csr.pem
+	await opensslV3.command(
+		'req',
+		'-new',
+		'-sha256',
+		'-passin',
+		'pass:1234',
+		'-config',
+		opensslConfig({
+			dir: certsDir,
+			certificateFile: cert,
+			privateKeyFile: privateKey,
+		}),
+		'-subj',
+		`/CN=${intermediateName}`,
+		'-key',
+		privateKey,
+		'-out',
+		csr,
+	)
+
+	// Sign the intermediate certificate with the root CA certificate
+	// openssl ca -batch -config ./openssl_root_ca.cnf -passin pass:1234 -extensions v3_intermediate_ca -days 30 -notext -md sha256 -in ./csr/azure-iot-test-only.intermediate.csr.pem -out ./certs/azure-iot-test-only.intermediate.cert.pem
+	const caRootFiles = CARootFileLocations(certsDir)
+	await opensslV3.command(
+		'ca',
+		'-batch',
+		'-config',
+		opensslConfig({
+			dir: certsDir,
+			certificateFile: caRootFiles.cert,
+			privateKeyFile: caRootFiles.privateKey,
+		}),
+		'-passin',
+		'pass:1234',
+		'-extensions',
+		'v3_intermediate_ca',
+		'-days',
+		`${daysValid ?? 30}`,
+		'-notext',
+		'-md',
+		'sha256',
+		'-in',
+		csr,
+		'-out',
+		cert,
+	)
+
+	// Examine the intermediate CA certificate:
+	// openssl x509 -noout -text -in ./certs/azure-iot-test-only.intermediate.cert.pem
+	debug?.(await opensslV3.command('x509', '-noout', '-text', '-in', cert))
+
+	log('Intermediate CA Certificate', cert)
 
 	return { name: intermediateName }
 }

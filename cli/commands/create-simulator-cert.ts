@@ -81,14 +81,15 @@ export const createSimulatorCertCommand = ({
 			deviceId: id,
 			certsDir,
 			log,
-			debug: debug ? debugFn : undefined,
+			debug: debug === true ? debugFn : undefined,
+			intermediateCertId,
 		})
 
 		await generateDeviceCertificate({
 			deviceId: id,
 			certsDir,
 			log,
-			debug: debug ? debugFn : undefined,
+			debug: debug === true ? debugFn : undefined,
 			intermediateCertId,
 			daysValid: expires !== undefined ? parseInt(expires, 10) : undefined,
 		})
@@ -99,28 +100,30 @@ export const createSimulatorCertCommand = ({
 			await iotDpsClient()
 		).iotDpsResource.get(dpsName, resourceGroup)
 
+		const rootCAFiles = CARootFileLocations(certsDir)
+		const intermediateCAFiles = CAIntermediateFileLocations({
+			certsDir,
+			id: intermediateCertId,
+		})
 		const {
 			json: certJSON,
 			privateKey,
 			cert,
-		} = deviceFileLocations({ certsDir, deviceId: id })
-
-		const { cert: rootCACert } = CARootFileLocations(certsDir)
-		const { cert: intermediateCACert } = CAIntermediateFileLocations({
+		} = deviceFileLocations({
 			certsDir,
-			id: intermediateCertId,
+			deviceId: id,
 		})
 
 		await writeFile(
 			certJSON,
 			JSON.stringify(
 				{
-					privateKey: await readFile(privateKey, 'utf-8'),
-					clientCert: await readFile(cert, 'utf-8'),
-					intermediateCACert: await readFile(intermediateCACert, 'utf-8'),
-					rootCACert: await readFile(rootCACert, 'utf-8'),
 					clientId: id,
 					idScope: properties.idScope as string,
+					privateKey: await readFile(privateKey, 'utf-8'),
+					certificate: await readFile(cert, 'utf-8'),
+					intermediateCA: await readFile(intermediateCAFiles.cert, 'utf-8'),
+					rootCA: await readFile(rootCAFiles.cert, 'utf-8'),
 				},
 				null,
 				2,
@@ -137,6 +140,7 @@ export const createSimulatorCertCommand = ({
 		heading('Firmware configuration')
 		setting('DPS hostname', globalIotHubDPSHostname)
 		setting('ID scope', properties.idScope as string)
+		setting('Client ID', id)
 	},
 	help: 'Generate a certificate for a simulated device and register a device in the registry.',
 })

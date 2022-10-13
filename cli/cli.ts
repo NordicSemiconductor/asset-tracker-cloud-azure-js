@@ -18,7 +18,6 @@ import { createSimulatorCertCommand } from './commands/create-simulator-cert.js'
 import { flashFirmwareCommand } from './commands/flash-firmware.js'
 import { functionsSettingsCommand } from './commands/functions-settings.js'
 import { infoCommand } from './commands/info.js'
-import { provisionSimulatorDevice } from './commands/provision-simulator-device.js'
 import { reactConfigCommand } from './commands/react-config.js'
 import { ioTHubDPSInfo } from './iot/ioTHubDPSInfo.js'
 import { error, help } from './logging.js'
@@ -80,11 +79,8 @@ const main = async () => {
 		}),
 		createCAIntermediateCommand({
 			certsDir,
-			iotDpsClient: getIotDpsClient,
 			ioTHubDPSConnectionString: async () =>
 				getIotHubInfo().then(({ connectionString }) => connectionString),
-			dpsName,
-			resourceGroup,
 		}),
 		createAndProvisionDeviceCertCommand({
 			certsDir,
@@ -109,12 +105,6 @@ const main = async () => {
 			appName: appName(),
 		}),
 		flashFirmwareCommand(),
-		provisionSimulatorDevice({
-			iotDpsClient: getIotDpsClient,
-			certsDir,
-			dpsName,
-			resourceGroup,
-		}),
 		cliConfigCommand({
 			resourceGroup,
 			appName: appName(),

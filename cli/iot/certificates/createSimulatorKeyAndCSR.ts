@@ -1,5 +1,7 @@
+import { CAIntermediateFileLocations } from './caFileLocations.js'
 import { deviceFileLocations } from './deviceFileLocations.js'
-import { leafCertConfig, openssl } from './openssl.js'
+import { openssl } from './openssl.js'
+import { opensslConfig } from './opensslConfig.js'
 
 export const defaultDeviceCertificateValidityInDays = 10950
 
@@ -11,29 +13,54 @@ export const createSimulatorKeyAndCSR = async ({
 	log,
 	debug,
 	deviceId,
+	intermediateCertId,
 }: {
 	certsDir: string
 	deviceId: string
+	intermediateCertId: string
 	log?: (...message: any[]) => void
 	debug?: (...message: any[]) => void
 }): Promise<void> => {
 	log?.(`Generating key and CSR for device ${deviceId}`)
-	const deviceFiles = deviceFileLocations({
+	const caIntermediateFiles = CAIntermediateFileLocations({
+		certsDir,
+		id: intermediateCertId,
+	})
+	const { privateKey, csr } = deviceFileLocations({
 		certsDir,
 		deviceId,
 	})
+	// Create the device certificates
 	const opensslV3 = openssl({ debug })
 
-	await opensslV3.createKey(deviceFiles.privateKey)
+	// Create the first device private key.
+	// openssl genrsa -out ./private/device-01.key.pem 4096
+	await opensslV3.command(
+		'ecparam',
+		'-out',
+		privateKey,
+		'-name',
+		'prime256v1',
+		'-genkey',
+	)
 
+	// Create the device certificate CSR.
+	// openssl req -config ./openssl_device_intermediate_ca.cnf -key ./private/device-01.key.pem -subj '/CN=device-01' -new -sha256 -out ./csr/device-01.csr.pem
 	await opensslV3.command(
 		'req',
-		'-new',
 		'-config',
-		await leafCertConfig(deviceId),
+		opensslConfig({
+			dir: certsDir,
+			certificateFile: caIntermediateFiles.cert,
+			privateKeyFile: caIntermediateFiles.privateKey,
+		}),
 		'-key',
-		deviceFiles.privateKey,
+		privateKey,
+		'-subj',
+		`/CN=${deviceId}`,
+		'-new',
+		'-sha256',
 		'-out',
-		deviceFiles.csr,
+		csr,
 	)
 }

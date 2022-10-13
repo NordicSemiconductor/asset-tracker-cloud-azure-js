@@ -2,9 +2,12 @@ import { promises as fs } from 'fs'
 import { connect, MqttClient } from 'mqtt'
 import os from 'node:os'
 import path from 'path'
-import { run } from '../process/run.js'
-import { CARootFileLocations } from './certificates/caFileLocations.js'
-import { deviceFileLocations } from './certificates/deviceFileLocations.js'
+import {
+	CAIntermediateFileLocations,
+	CARootFileLocations,
+} from '../../../cli/iot/certificates/caFileLocations.js'
+import { deviceFileLocations } from '../../../cli/iot/certificates/deviceFileLocations.js'
+import { run } from '../../../cli/process/run.js'
 
 /**
  * Connect the device to the Azure IoT Hub.
@@ -24,16 +27,25 @@ export const connectDevice = async ({
 		deviceId,
 	})
 	const rootCAFiles = CARootFileLocations(certsDir)
-	const [deviceCert, deviceKey, rootCA, digiCert] = await Promise.all([
-		fs.readFile(deviceFiles.cert, 'utf-8'),
-		fs.readFile(deviceFiles.privateKey, 'utf-8'),
-		fs.readFile(rootCAFiles.cert, 'utf-8'),
-		fs.readFile(rootCAFiles.cert, 'utf-8'),
-		fs.readFile(
-			path.join(process.cwd(), 'data', 'DigiCertTLSECCP384RootG5.crt.pem'),
-			'utf-8',
-		),
-	])
+	const intermediateCAFiles = CAIntermediateFileLocations({
+		certsDir,
+		id: deviceId,
+	})
+	const [deviceKey, deviceCert, intermediateCA, rootCA, digiCert, baltimore] =
+		await Promise.all([
+			fs.readFile(deviceFiles.privateKey, 'utf-8'),
+			fs.readFile(deviceFiles.cert, 'utf-8'),
+			fs.readFile(intermediateCAFiles.cert, 'utf-8'),
+			fs.readFile(rootCAFiles.cert, 'utf-8'),
+			fs.readFile(
+				path.join(process.cwd(), 'data', 'DigiCertTLSECCP384RootG5.crt.pem'),
+				'utf-8',
+			),
+			fs.readFile(
+				path.join(process.cwd(), 'data', 'BaltimoreCyberTrustRoot.pem'),
+				'utf-8',
+			),
+		])
 
 	let iotHub: string
 
@@ -63,14 +75,14 @@ export const connectDevice = async ({
 			host: iotHub,
 			port: 8883,
 			key: deviceKey,
-			cert: deviceCert,
+			cert: [deviceCert, intermediateCA, rootCA].join(os.EOL),
 			rejectUnauthorized: true,
 			clientId: deviceId,
 			protocol: 'mqtts',
 			username: `${iotHub}/${deviceId}/?api-version=2020-09-30`,
 			protocolVersion: 4,
 			clean: true,
-			ca: [rootCA, digiCert].join(os.EOL),
+			ca: [baltimore, digiCert].join(os.EOL),
 		})
 		client.on('connect', async () => {
 			log?.('Connected', deviceId)

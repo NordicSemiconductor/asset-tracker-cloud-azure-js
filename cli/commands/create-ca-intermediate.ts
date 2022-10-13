@@ -1,4 +1,3 @@
-import { IotDpsClient } from '@azure/arm-deviceprovisioningservices'
 import { ProvisioningServiceClient } from 'azure-iot-provisioning-service'
 import { readFile } from 'fs/promises'
 import { v4 } from 'uuid'
@@ -8,20 +7,21 @@ import {
 	generateCAIntermediate,
 } from '../iot/certificates/generateCAIntermediate.js'
 import { add as addToIntermediateRegistry } from '../iot/intermediateRegistry.js'
-import { debug as debugFN, log, newline, next, setting, success } from '../logging.js'
+import {
+	debug as debugFN,
+	log,
+	newline,
+	next,
+	setting,
+	success,
+} from '../logging.js'
 import { CommandDefinition } from './CommandDefinition.js'
 
 export const createCAIntermediateCommand = ({
 	certsDir: certsDirPromise,
 	ioTHubDPSConnectionString,
-	iotDpsClient,
-	resourceGroup,
-	dpsName,
 }: {
 	certsDir: () => Promise<string>
-	resourceGroup: string
-	dpsName: string
-	iotDpsClient: () => Promise<IotDpsClient>
 	ioTHubDPSConnectionString: () => Promise<string>
 }): CommandDefinition => ({
 	command: 'create-ca-intermediate',
@@ -36,7 +36,7 @@ export const createCAIntermediateCommand = ({
 			description: `Log debug messages`,
 		},
 	],
-	action: async ({ expires, debug }: { expires?: string, debug?: boolean }) => {
+	action: async ({ expires, debug }: { expires?: string; debug?: boolean }) => {
 		const id = v4()
 
 		const certsDir = await certsDirPromise()
@@ -46,7 +46,7 @@ export const createCAIntermediateCommand = ({
 			id,
 			certsDir,
 			log,
-			debug: debug ? debugFN: undefined,
+			debug: debug === true ? debugFN : undefined,
 			daysValid: expires !== undefined ? parseInt(expires, 10) : undefined,
 		})
 		success(`CA intermediate certificate generated.`)

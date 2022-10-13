@@ -1,13 +1,17 @@
 import chalk from 'chalk'
 import { execFile } from 'node:child_process'
-import { mkdtemp, writeFile } from 'node:fs/promises'
-import os from 'node:os'
-import path from 'node:path'
-import { v4 } from 'uuid'
 
-const command = (args: string[], debug?: (...message: any[]) => void) =>
+const command = async ({
+	cmd,
+	args,
+	debug,
+}: {
+	cmd: string
+	args: string[]
+	debug?: (...message: any[]) => void
+}) =>
 	new Promise<string>((resolve, reject) => {
-		debug?.('[OpenSSL] »', ...args.map((s) => chalk.gray(s)))
+		debug?.(`[${cmd}] »`, ...args.map((s) => chalk.gray(s)))
 		execFile(
 			'openssl',
 			args,
@@ -16,10 +20,10 @@ const command = (args: string[], debug?: (...message: any[]) => void) =>
 			},
 			(err, stdout, stderr) => {
 				if (err !== null) {
-					debug?.('[OpenSSL] «', stderr)
+					debug?.(`[${cmd}] «`, stderr)
 					return reject(stderr)
 				}
-				if (stdout.length > 0) debug?.('[OpenSSL] «', stdout)
+				if (stdout.length > 0) debug?.(`[${cmd}] «`, stdout)
 				return resolve(stdout)
 			},
 		)
@@ -31,94 +35,16 @@ export const openssl = ({
 }: {
 	debug?: (...message: any[]) => void
 	expectedVersion?: number
-}) => ({
+}): {
+	command: (...args: string[]) => Promise<string>
+} => ({
 	command: async (...args: string[]): Promise<string> => {
-		const version = await command(['version'])
+		const version = await command({ cmd: 'openssl', args: ['version'] })
 		if (!version.includes(`OpenSSL ${expectedVersion ?? 3}`)) {
 			throw new Error(
 				`Expected OpenSSL version ${expectedVersion ?? 3}.x, got ${version}!`,
 			)
 		}
-		return command(args, debug)
+		return command({ cmd: 'openssl', args, debug })
 	},
-	createKey: async (outFileLocation: string) =>
-		openssl({ debug }).command(
-			'ecparam',
-			'-out',
-			outFileLocation,
-			'-name',
-			'prime256v1',
-			'-genkey',
-		),
 })
-
-export const verificationCertConfig = async (
-	commonName: string,
-): Promise<string> => {
-	const tempDir = await mkdtemp(
-		path.join(os.tmpdir(), 'nrf-asset-tracker-azure-certs-'),
-	)
-	const configFile = path.join(tempDir, `verification-cert-${v4()}.conf`)
-	await writeFile(
-		configFile,
-		[
-			'[ req ]',
-			'distinguished_name = req_distinguished_name',
-			'prompt = no',
-			'[ req_distinguished_name ]',
-			'commonName = ' + commonName,
-		].join('\n'),
-		'utf-8',
-	)
-	return configFile
-}
-
-export const caCertConfig = async (commonName: string): Promise<string> => {
-	const tempDir = await mkdtemp(
-		path.join(os.tmpdir(), 'nrf-asset-tracker-azure-certs-'),
-	)
-	const configFile = path.join(tempDir, `ca-cert-${v4()}.conf`)
-	await writeFile(
-		configFile,
-		[
-			'[ req ]',
-			'req_extensions = v3_req',
-			'distinguished_name = req_distinguished_name',
-			'prompt = no',
-			'[ req_distinguished_name ]',
-			'commonName = ' + commonName,
-			'[ v3_req ]',
-			'basicConstraints = critical,CA:true',
-			'subjectKeyIdentifier = hash',
-			'authorityKeyIdentifier = keyid:always,issuer',
-			'keyUsage = critical, digitalSignature, cRLSign, keyCertSign',
-		].join('\n'),
-		'utf-8',
-	)
-	return configFile
-}
-
-export const leafCertConfig = async (commonName: string): Promise<string> => {
-	const tempDir = await mkdtemp(
-		path.join(os.tmpdir(), 'nrf-asset-tracker-azure-certs-'),
-	)
-	const configFile = path.join(tempDir, `leaf-cert-${v4()}.conf`)
-	await writeFile(
-		configFile,
-		[
-			'[ req ]',
-			'req_extensions = v3_req',
-			'distinguished_name = req_distinguished_name',
-			'prompt = no',
-			'[ req_distinguished_name ]',
-			'commonName = ' + commonName,
-			'[ v3_req ]',
-			'extendedKeyUsage = critical,clientAuth',
-			'basicConstraints = CA:FALSE',
-			'subjectKeyIdentifier = hash',
-			'authorityKeyIdentifier = keyid,issuer',
-			'keyUsage = critical, nonRepudiation, digitalSignature, keyEncipherment',
-		].join('\n'),
-	)
-	return configFile
-}
