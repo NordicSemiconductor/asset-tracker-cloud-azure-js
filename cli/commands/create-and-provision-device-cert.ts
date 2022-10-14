@@ -31,6 +31,7 @@ import { CommandDefinition } from './CommandDefinition.js'
 
 export const defaultPort = '/dev/ttyACM0'
 export const defaultSecTag = 11
+export const defaultSecondarySecTag = defaultSecTag + 1
 
 export const createAndProvisionDeviceCertCommand = ({
 	certsDir: certsDirPromise,
@@ -59,6 +60,10 @@ export const createAndProvisionDeviceCertCommand = ({
 		},
 		{
 			flags: '-s, --sec-tag <secTag>',
+			description: `Use this secTag, defaults to ${defaultSecTag}`,
+		},
+		{
+			flags: '-S, --secondary-sec-tag <secTag>',
 			description: `Use this secTag, defaults to ${defaultSecTag}`,
 		},
 		{
@@ -91,6 +96,7 @@ export const createAndProvisionDeviceCertCommand = ({
 		intermediateCertId,
 		expires,
 		secTag,
+		secondarySecTag,
 		deletePrivateKey,
 	}) => {
 		const logFn = debug === true ? log : undefined
@@ -181,6 +187,7 @@ export const createAndProvisionDeviceCertCommand = ({
 			id: intermediateCertId,
 		})
 
+		const effectiveSecondarySecTag = secondarySecTag ?? defaultSecondarySecTag
 		await flashCertificate({
 			at: connection.at,
 			secTag: effectiveSecTag,
@@ -192,6 +199,17 @@ export const createAndProvisionDeviceCertCommand = ({
 				path.resolve(process.cwd(), 'data', 'BaltimoreCyberTrustRoot.pem'),
 				'utf-8',
 			),
+			secondaryCaCert: {
+				secTag: effectiveSecondarySecTag,
+				caCert: await readFile(
+					path.resolve(
+						process.cwd(),
+						'data',
+						'DigiCertTLSECCP384RootG5.crt.pem',
+					),
+					'utf-8',
+				),
+			},
 		})
 		success('Certificate written to device')
 
