@@ -1,16 +1,22 @@
-import { IotDpsClient } from '@azure/arm-deviceprovisioningservices'
 import { randomWords } from '@nordicsemiconductor/random-words'
 import { readFile, writeFile } from 'fs/promises'
-import { createSimulatorKeyAndCSR } from '../iot/createSimulatorKeyAndCSR.js'
-import { deviceFileLocations } from '../iot/deviceFileLocations.js'
+import {
+	CAIntermediateFileLocations,
+	CARootFileLocations,
+} from '../iot/certificates/caFileLocations.js'
+import { createSimulatorKeyAndCSR } from '../iot/certificates/createSimulatorKeyAndCSR.js'
+import {
+	DeviceCertificateJSON,
+	deviceFileLocations,
+} from '../iot/certificates/deviceFileLocations.js'
 import {
 	defaultDeviceCertificateValidityInDays,
 	generateDeviceCertificate,
-} from '../iot/generateDeviceCertificate.js'
+} from '../iot/certificates/generateDeviceCertificate.js'
 import { list as listIntermediateCerts } from '../iot/intermediateRegistry.js'
 import { globalIotHubDPSHostname } from '../iot/ioTHubDPSInfo.js'
 import {
-	debug,
+	debug as debugFn,
 	heading,
 	log,
 	newline,
@@ -22,14 +28,13 @@ import { CommandDefinition } from './CommandDefinition.js'
 
 export const createSimulatorCertCommand = ({
 	certsDir: certsDirPromise,
-	resourceGroup,
-	iotDpsClient,
-	dpsName,
+	idScope: idScopePromise,
 }: {
 	certsDir: () => Promise<string>
-	iotDpsClient: () => Promise<IotDpsClient>
-	resourceGroup: string
-	dpsName: string
+	/**
+	 * Promise that returns the idScope
+	 */
+	idScope: () => Promise<string>
 }): CommandDefinition => ({
 	command: 'create-simulator-cert',
 	options: [
@@ -46,15 +51,21 @@ export const createSimulatorCertCommand = ({
 			flags: '-e, --expires <expires>',
 			description: `Validity of device certificate in days. Defaults to ${defaultDeviceCertificateValidityInDays} days.`,
 		},
+		{
+			flags: '--debug',
+			description: `Log debug messages`,
+		},
 	],
 	action: async ({
 		deviceId,
 		intermediateCertId,
 		expires,
+		debug,
 	}: {
 		deviceId?: string
 		intermediateCertId?: string
 		expires?: string
+		debug?: boolean
 	}) => {
 		const id = deviceId ?? (await randomWords({ numWords: 3 })).join('-')
 
@@ -65,51 +76,55 @@ export const createSimulatorCertCommand = ({
 			intermediateCertId = intermediateCerts[0]
 		}
 
+		const rootCAFiles = CARootFileLocations(certsDir)
+		await readFile(rootCAFiles.cert)
+
+		const intermediateCAFiles = CAIntermediateFileLocations({
+			certsDir,
+			id: intermediateCertId,
+		})
+
+		await readFile(intermediateCAFiles.cert, 'utf-8')
 		setting('Intermediate certificate', intermediateCertId)
 
 		await createSimulatorKeyAndCSR({
 			deviceId: id,
 			certsDir,
 			log,
-			debug,
+			debug: debug === true ? debugFn : undefined,
+			intermediateCertId,
 		})
 
 		await generateDeviceCertificate({
 			deviceId: id,
 			certsDir,
 			log,
-			debug,
+			debug: debug === true ? debugFn : undefined,
 			intermediateCertId,
 			daysValid: expires !== undefined ? parseInt(expires, 10) : undefined,
 		})
 		success(`Certificate for device generated.`)
 		setting('Certificate ID', id)
 
-		const { properties } = await (
-			await iotDpsClient()
-		).iotDpsResource.get(dpsName, resourceGroup)
-
 		const {
 			json: certJSON,
 			privateKey,
-			certWithChain,
-		} = deviceFileLocations({ certsDir, deviceId: id })
+			cert,
+		} = deviceFileLocations({
+			certsDir,
+			deviceId: id,
+		})
 
-		await writeFile(
-			certJSON,
-			JSON.stringify(
-				{
-					resourceGroup,
-					privateKey: await readFile(privateKey, 'utf-8'),
-					clientCert: await readFile(certWithChain, 'utf-8'),
-					clientId: id,
-					idScope: properties.idScope as string,
-				},
-				null,
-				2,
-			),
-			'utf-8',
-		)
+		const idScope = await idScopePromise()
+		const simulatorJSON: DeviceCertificateJSON = {
+			clientId: id,
+			idScope,
+			privateKey: await readFile(privateKey, 'utf-8'),
+			certificate: await readFile(cert, 'utf-8'),
+			intermediateCA: await readFile(intermediateCAFiles.cert, 'utf-8'),
+			rootCA: await readFile(rootCAFiles.cert, 'utf-8'),
+		}
+		await writeFile(certJSON, JSON.stringify(simulatorJSON, null, 2), 'utf-8')
 		success(`${certJSON} written`)
 		newline()
 		next(
@@ -119,7 +134,8 @@ export const createSimulatorCertCommand = ({
 
 		heading('Firmware configuration')
 		setting('DPS hostname', globalIotHubDPSHostname)
-		setting('ID scope', properties.idScope as string)
+		setting('ID scope', idScope)
+		setting('Client ID', id)
 	},
 	help: 'Generate a certificate for a simulated device and register a device in the registry.',
 })

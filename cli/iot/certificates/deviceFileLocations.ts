@@ -9,22 +9,27 @@ export const deviceFileLocations = ({
 }): {
 	privateKey: string
 	cert: string
-	caCertificateChain: string
-	certWithChain: string
 	registration: string
 	intermediateCertId: string
 	json: string
 	csr: string
 } => ({
-	privateKey: path.resolve(certsDir, `device-${deviceId}.key`),
-	cert: path.resolve(certsDir, `device-${deviceId}.pem`),
-	caCertificateChain: path.resolve(certsDir, `device-${deviceId}.ca.pem`),
-	certWithChain: path.resolve(certsDir, `device-${deviceId}.bundle.pem`),
+	privateKey: path.resolve(certsDir, `device-${deviceId}.pem.key`),
+	cert: path.resolve(certsDir, `device-${deviceId}.pem.crt`),
 	registration: path.resolve(certsDir, `device-${deviceId}.registration.json`),
 	intermediateCertId: path.resolve(
 		certsDir,
 		`device-${deviceId}.intermediateCertId`,
 	),
 	json: path.resolve(certsDir, `device-${deviceId}.json`),
-	csr: path.resolve(certsDir, `device-${deviceId}.csr`),
+	csr: path.resolve(certsDir, `device-${deviceId}.pem.csr`),
 })
+
+export type DeviceCertificateJSON = {
+	clientId: string
+	idScope: string
+	privateKey: string
+	certificate: string
+	intermediateCA: string
+	rootCA: string
+}

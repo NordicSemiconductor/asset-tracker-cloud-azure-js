@@ -1,4 +1,4 @@
-import { run } from '../process/run.js'
+import { run } from '../../process/run.js'
 
 export const fingerprint = async (certLocation: string): Promise<string> =>
 	(
@@ -16,6 +16,6 @@ export const fingerprint = async (certLocation: string): Promise<string> =>
 			],
 		})
 	)
-		.replace('SHA1 Fingerprint=', '')
+		.replace('sha1 Fingerprint=', '')
 		.replace(/:/g, '')
 		.trim()

@@ -1,4 +1,5 @@
 import { promises as fs } from 'fs'
+import { readdir } from 'fs/promises'
 import * as path from 'path'
 
 export const CAIntermediateRegistryLocation = (
@@ -16,7 +17,11 @@ export const list = async ({
 	try {
 		return JSON.parse(await fs.readFile(intermediateRegistry, 'utf-8'))
 	} catch {
-		return []
+		// Fallback
+		return (await readdir(certsDir))
+			.filter((s) => s.startsWith('CA.intermediate.') && s.endsWith('.pem.crt'))
+			.map((s) => /^CA\.intermediate\.([^.]+)\.pem\.crt$/.exec(s)?.[1] ?? '')
+			.filter((s) => s.length > 0)
 	}
 }
 

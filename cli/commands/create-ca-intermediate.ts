@@ -1,13 +1,20 @@
 import { ProvisioningServiceClient } from 'azure-iot-provisioning-service'
+import { readFile } from 'fs/promises'
 import { v4 } from 'uuid'
-import { CAIntermediateFileLocations } from '../iot/caFileLocations.js'
-import { fingerprint } from '../iot/fingerprint.js'
+import { CAIntermediateFileLocations } from '../iot/certificates/caFileLocations.js'
 import {
 	defaultIntermediateCAValidityInDays,
 	generateCAIntermediate,
-} from '../iot/generateCAIntermediate.js'
+} from '../iot/certificates/generateCAIntermediate.js'
 import { add as addToIntermediateRegistry } from '../iot/intermediateRegistry.js'
-import { debug, log, newline, next, setting } from '../logging.js'
+import {
+	debug as debugFN,
+	log,
+	newline,
+	next,
+	setting,
+	success,
+} from '../logging.js'
 import { CommandDefinition } from './CommandDefinition.js'
 
 export const createCAIntermediateCommand = ({
@@ -23,22 +30,26 @@ export const createCAIntermediateCommand = ({
 			flags: '-e, --expires <expires>',
 			description: `Validity of device certificate in days. Defaults to ${defaultIntermediateCAValidityInDays} days.`,
 		},
+
+		{
+			flags: '--debug',
+			description: `Log debug messages`,
+		},
 	],
-	action: async ({ expires }: { expires?: string }) => {
+	action: async ({ expires, debug }: { expires?: string; debug?: boolean }) => {
 		const id = v4()
 
 		const certsDir = await certsDirPromise()
+		const caIntermediateFiles = CAIntermediateFileLocations({ certsDir, id })
 
-		const intermediate = await generateCAIntermediate({
+		const { name: certificateName } = await generateCAIntermediate({
 			id,
 			certsDir,
 			log,
-			debug,
+			debug: debug === true ? debugFN : undefined,
 			daysValid: expires !== undefined ? parseInt(expires, 10) : undefined,
 		})
-		debug(`CA intermediate certificate generated.`)
-		const caFiles = CAIntermediateFileLocations({ certsDir, id })
-		setting('Fingerprint', await fingerprint(caFiles.cert))
+		success(`CA intermediate certificate generated.`)
 
 		await addToIntermediateRegistry({ certsDir, id })
 
@@ -49,23 +60,17 @@ export const createCAIntermediateCommand = ({
 		const dpsClient =
 			ProvisioningServiceClient.fromConnectionString(dpsConnString)
 
-		const enrollmentGroupId = `nrfassettracker-${id}`
-
-		// FIXME: Remove undefined, once https://github.com/Azure/azure-iot-sdk-node/pull/663 is released
 		await dpsClient.createOrUpdateEnrollmentGroup({
-			enrollmentGroupId,
+			enrollmentGroupId: certificateName,
 			attestation: {
 				type: 'x509',
 				x509: {
 					signingCertificates: {
 						primary: {
-							certificate: intermediate.certificate,
+							certificate: await readFile(caIntermediateFiles.cert, 'utf-8'),
 							info: undefined as any,
 						},
-						secondary: undefined as any,
 					},
-					clientCertificates: undefined as any,
-					caReferences: undefined as any,
 				},
 			},
 			provisioningStatus: 'enabled',
@@ -76,23 +81,23 @@ export const createCAIntermediateCommand = ({
 			initialTwin: {
 				tags: { ADUGroup: 'all' }, // Register support for Azure Device Update
 			} as any,
-			iotHubHostName: undefined as any,
-			iotHubs: undefined as any,
-			etag: undefined as any,
-			createdDateTimeUtc: undefined as any,
-			lastUpdatedDateTimeUtc: undefined as any,
 		})
 
 		setting(
-			`Created enrollment group for CA intermediate certificiate`,
-			enrollmentGroupId,
+			`Created enrollment group for CA intermediate certificate`,
+			certificateName,
 		)
 
 		newline()
 
 		next(
 			'You can now generate device certificates using',
-			'node cli create-and-provision-device-cert',
+			'./cli.sh create-and-provision-device-cert',
+		)
+
+		next(
+			'You can now generate simulator certificates using',
+			'./cli.sh create-simulator-cert',
 		)
 	},
 	help: 'Creates a CA intermediate certificate registers it with an IoT Device Provisioning Service enrollment group',

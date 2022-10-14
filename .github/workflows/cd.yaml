@@ -202,7 +202,7 @@ jobs:
             az storage blob service-properties update --account-name ${{ env.STORAGE_ACCOUNT_NAME }} --static-website --404-document index.html --index-document index.html
 
       - name: Determine Web App settings
-        run: node cli react-config >> $GITHUB_ENV
+        run: ./cli.sh react-config >> $GITHUB_ENV
 
       - name: Determine public URL
         id: web-app-url

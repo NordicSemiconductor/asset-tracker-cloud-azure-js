@@ -10,6 +10,7 @@ import {
 	resourceGroupName,
 } from '../arm/resources.js'
 import { cliCredentials } from './cliCredentials.js'
+import { cliConfigCommand } from './commands/cli-config.js'
 import { createAndProvisionDeviceCertCommand } from './commands/create-and-provision-device-cert.js'
 import { createCAIntermediateCommand } from './commands/create-ca-intermediate.js'
 import { createCARootCommand } from './commands/create-ca-root.js'
@@ -17,8 +18,6 @@ import { createSimulatorCertCommand } from './commands/create-simulator-cert.js'
 import { flashFirmwareCommand } from './commands/flash-firmware.js'
 import { functionsSettingsCommand } from './commands/functions-settings.js'
 import { infoCommand } from './commands/info.js'
-import { proofCARootPossessionCommand } from './commands/proof-ca-possession.js'
-import { provisionSimulatorDevice } from './commands/provision-simulator-device.js'
 import { reactConfigCommand } from './commands/react-config.js'
 import { ioTHubDPSInfo } from './iot/ioTHubDPSInfo.js'
 import { error, help } from './logging.js'
@@ -46,8 +45,14 @@ const main = async () => {
 		credentials: getCurrentCreds,
 	})
 
+	const getIotHubHostname = async (): Promise<string> => {
+		if (process.env.AZURE_IOT_HUB_HOSTNAME !== undefined)
+			return process.env.AZURE_IOT_HUB_HOSTNAME
+		return (await getIotHubInfo()).hostname
+	}
+
 	const certsDir = async (): Promise<string> =>
-		getIotHubInfo().then(({ hostname }) =>
+		getIotHubHostname().then((hostname) =>
 			path.resolve(process.cwd(), 'certificates', hostname),
 		)
 
@@ -61,6 +66,16 @@ const main = async () => {
 				new WebSiteManagementClient(creds.credentials, creds.subscriptionId),
 		)
 
+	const getIdScope = async () => {
+		if (process.env.AZURE_IOT_HUB_ID_SCOPE !== undefined)
+			return process.env.AZURE_IOT_HUB_ID_SCOPE
+		const { properties } = await (
+			await getIotDpsClient()
+		).iotDpsResource.get(dpsName, resourceGroup)
+		return properties.idScope as string
+	}
+
+	program.name('./cli.sh')
 	program.description('Asset Tracker Command Line Interface')
 
 	const commands = [
@@ -77,12 +92,6 @@ const main = async () => {
 			dpsName,
 			resourceGroup,
 		}),
-		proofCARootPossessionCommand({
-			iotDpsClient: getIotDpsClient,
-			certsDir,
-			dpsName,
-			resourceGroup,
-		}),
 		createCAIntermediateCommand({
 			certsDir,
 			ioTHubDPSConnectionString: async () =>
@@ -90,15 +99,11 @@ const main = async () => {
 		}),
 		createAndProvisionDeviceCertCommand({
 			certsDir,
-			resourceGroup,
-			iotDpsClient: getIotDpsClient,
-			dpsName,
+			idScope: getIdScope,
 		}),
 		createSimulatorCertCommand({
 			certsDir,
-			resourceGroup,
-			iotDpsClient: getIotDpsClient,
-			dpsName,
+			idScope: getIdScope,
 		}),
 		reactConfigCommand({
 			websiteClient: getWebsiteClient,
@@ -111,11 +116,11 @@ const main = async () => {
 			appName: appName(),
 		}),
 		flashFirmwareCommand(),
-		provisionSimulatorDevice({
-			iotDpsClient: getIotDpsClient,
-			certsDir,
-			dpsName,
+		cliConfigCommand({
 			resourceGroup,
+			appName: appName(),
+			idScope: getIdScope,
+			hostname: getIotHubHostname,
 		}),
 	]
 

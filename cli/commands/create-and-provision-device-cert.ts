@@ -1,46 +1,46 @@
-import { IotDpsClient } from '@azure/arm-deviceprovisioningservices'
 import {
 	atHostHexfile,
 	connect,
-	Connection,
 	createPrivateKeyAndCSR,
 	flashCertificate,
 	getIMEI,
 } from '@nordicsemiconductor/firmware-ci-device-helpers'
-import chalk from 'chalk'
 import { promises as fs } from 'fs'
 import { readFile } from 'fs/promises'
 import * as os from 'os'
 import * as path from 'path'
-import {
-	CAIntermediateFileLocations,
-	CARootFileLocations,
-} from '../iot/caFileLocations.js'
-import { deviceFileLocations } from '../iot/deviceFileLocations.js'
+import { CAIntermediateFileLocations } from '../iot/certificates/caFileLocations.js'
+import { deviceFileLocations } from '../iot/certificates/deviceFileLocations.js'
 import {
 	defaultDeviceCertificateValidityInDays,
 	generateDeviceCertificate,
-} from '../iot/generateDeviceCertificate.js'
+} from '../iot/certificates/generateDeviceCertificate.js'
 import { list as listIntermediateCerts } from '../iot/intermediateRegistry.js'
 import { globalIotHubDPSHostname } from '../iot/ioTHubDPSInfo.js'
-import { readlineDevice } from '../iot/readlineDevice.js'
-import { heading, progress, setting, success } from '../logging.js'
+import {
+	debug as dbg,
+	heading,
+	log,
+	progress,
+	setting,
+	success,
+} from '../logging.js'
 import { run } from '../process/run.js'
 import { CommandDefinition } from './CommandDefinition.js'
 
 export const defaultPort = '/dev/ttyACM0'
 export const defaultSecTag = 11
+export const defaultSecondarySecTag = defaultSecTag + 1
 
 export const createAndProvisionDeviceCertCommand = ({
 	certsDir: certsDirPromise,
-	resourceGroup,
-	iotDpsClient,
-	dpsName,
+	idScope: idScopePromise,
 }: {
 	certsDir: () => Promise<string>
-	iotDpsClient: () => Promise<IotDpsClient>
-	resourceGroup: string
-	dpsName: string
+	/**
+	 * Promise that returns the idScope
+	 */
+	idScope: () => Promise<string>
 }): CommandDefinition => ({
 	command: 'create-and-provision-device-cert',
 	options: [
@@ -58,6 +58,10 @@ export const createAndProvisionDeviceCertCommand = ({
 		},
 		{
 			flags: '-s, --sec-tag <secTag>',
+			description: `Use this secTag, defaults to ${defaultSecTag}`,
+		},
+		{
+			flags: '-S, --secondary-sec-tag <secTag>',
 			description: `Use this secTag, defaults to ${defaultSecTag}`,
 		},
 		{
@@ -81,10 +85,6 @@ export const createAndProvisionDeviceCertCommand = ({
 			flags: '-e, --expires <expires>',
 			description: `Validity of device certificate in days. Defaults to ${defaultDeviceCertificateValidityInDays} days.`,
 		},
-		{
-			flags: '-S, --simulated-device',
-			description: `Use a simulated (soft) device. Useful if you do not have physical access to the device. Will print the AT commands sent to the device allows to provide responses on the command line.`,
-		},
 	],
 	action: async ({
 		port,
@@ -94,35 +94,25 @@ export const createAndProvisionDeviceCertCommand = ({
 		intermediateCertId,
 		expires,
 		secTag,
+		secondarySecTag,
 		deletePrivateKey,
-		simulatedDevice,
 	}) => {
-		const logFn = debug === true ? console.log : undefined
-		const debugFn = debug === true ? console.debug : undefined
+		const logFn = debug === true ? log : undefined
+		const debugFn = debug === true ? dbg : undefined
 
-		let connection: Connection
-
-		if (simulatedDevice === true) {
-			console.log(
-				chalk.magenta(`Flashing certificate`),
-				chalk.blue('(simulated device)'),
-			)
-			connection = await readlineDevice()
-		} else {
-			progress('Flashing certificate', port ?? defaultPort)
-			connection = (
-				await connect({
-					atHostHexfile:
-						atHost ??
-						(dk === true ? atHostHexfile['9160dk'] : atHostHexfile['thingy91']),
-					device: port ?? defaultPort,
-					warn: console.error,
-					debug: debugFn,
-					progress: logFn,
-					inactivityTimeoutInSeconds: 60,
-				})
-			).connection
-		}
+		progress('Flashing certificate', port ?? defaultPort)
+		const connection = (
+			await connect({
+				atHostHexfile:
+					atHost ??
+					(dk === true ? atHostHexfile['9160dk'] : atHostHexfile['thingy91']),
+				device: port ?? defaultPort,
+				warn: console.error,
+				debug: debugFn,
+				progress: logFn,
+				inactivityTimeoutInSeconds: 60,
+			})
+		).connection
 
 		const deviceId = await getIMEI({ at: connection.at })
 		setting('IMEI', deviceId)
@@ -176,13 +166,11 @@ export const createAndProvisionDeviceCertCommand = ({
 		success(`Certificate for device generated.`)
 		setting('Certificate ID', deviceId)
 
-		const { properties } = await (
-			await iotDpsClient()
-		).iotDpsResource.get(dpsName, resourceGroup)
+		const idScope = await idScopePromise()
 
 		heading('Firmware configuration')
 		setting('DPS hostname', globalIotHubDPSHostname)
-		setting('ID scope', properties.idScope as string)
+		setting('ID scope', idScope)
 
 		heading('Provisioning certificate')
 
@@ -190,24 +178,35 @@ export const createAndProvisionDeviceCertCommand = ({
 			certsDir,
 			deviceId,
 		})
-		const caRootFiles = CARootFileLocations(certsDir)
 		const caIntermediateFiles = CAIntermediateFileLocations({
 			certsDir,
 			id: intermediateCertId,
 		})
 
+		const intermediateCert = await readFile(caIntermediateFiles.cert, 'utf-8')
+
+		const effectiveSecondarySecTag = secondarySecTag ?? defaultSecondarySecTag
 		await flashCertificate({
 			at: connection.at,
+			secTag: effectiveSecTag,
+			clientCert: [await readFile(cert, 'utf-8'), intermediateCert].join(
+				os.EOL,
+			),
 			caCert: await readFile(
 				path.resolve(process.cwd(), 'data', 'BaltimoreCyberTrustRoot.pem'),
 				'utf-8',
 			),
-			secTag: effectiveSecTag,
-			clientCert: [
-				await readFile(cert, 'utf-8'),
-				await readFile(caIntermediateFiles.cert, 'utf-8'),
-				await readFile(caRootFiles.cert, 'utf-8'),
-			].join(os.EOL),
+			secondaryCaCert: {
+				secTag: effectiveSecondarySecTag,
+				caCert: await readFile(
+					path.resolve(
+						process.cwd(),
+						'data',
+						'DigiCertTLSECCP384RootG5.crt.pem',
+					),
+					'utf-8',
+				),
+			},
 		})
 		success('Certificate written to device')
 

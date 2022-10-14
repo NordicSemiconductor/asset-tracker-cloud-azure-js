@@ -1,7 +1,7 @@
-node_modules/
-dist/
-certificates/
-build/
-cli/index.js
-scripts/pack-app.js
-scripts/pack-mock-http-api-app.js
+/node_modules/
+/dist/
+/certificates/
+/build/
+/cli/index.js
+/scripts/pack-app.js
+/scripts/pack-mock-http-api-app.js

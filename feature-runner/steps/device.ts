@@ -7,22 +7,33 @@ import {
 import * as chai from 'chai'
 import { expect } from 'chai'
 import chaiSubset from 'chai-subset'
+import { readFile, writeFile } from 'fs/promises'
 import { MqttClient } from 'mqtt'
 import fetch from 'node-fetch'
 import { v4 } from 'uuid'
-import { connectDevice } from '../../cli/iot/connectDevice.js'
-import { createSimulatorKeyAndCSR } from '../../cli/iot/createSimulatorKeyAndCSR.js'
-import { deviceTopics } from '../../cli/iot/deviceTopics.js'
-import { generateDeviceCertificate } from '../../cli/iot/generateDeviceCertificate.js'
+import {
+	CAIntermediateFileLocations,
+	CARootFileLocations,
+} from '../../cli/iot/certificates/caFileLocations.js'
+import { createSimulatorKeyAndCSR } from '../../cli/iot/certificates/createSimulatorKeyAndCSR.js'
+import {
+	DeviceCertificateJSON,
+	deviceFileLocations,
+} from '../../cli/iot/certificates/deviceFileLocations.js'
+import { generateDeviceCertificate } from '../../cli/iot/certificates/generateDeviceCertificate.js'
+import { connectDevice } from './device/connectDevice.js'
+import { deviceTopics } from './device/deviceTopics.js'
 import { matchDeviceBoundTopic } from './device/matchDeviceBoundTopic.js'
 chai.use(chaiSubset)
 
 export const deviceStepRunners = ({
 	certsDir,
 	intermediateCertId,
+	idScope,
 }: {
 	certsDir: string
 	intermediateCertId: string
+	idScope: string
 }): ((step: InterpolatedStep) => StepRunnerFunc<any> | false)[] => {
 	const connections = {} as Record<string, MqttClient>
 	let fwResult = ''
@@ -30,13 +41,33 @@ export const deviceStepRunners = ({
 		regexGroupMatcher(
 			/^I generate a certificate for the (?:device|tracker) "(?<deviceId>[^"]+)"$/,
 		)(async ({ deviceId }) => {
-			await createSimulatorKeyAndCSR({ certsDir, deviceId })
+			await createSimulatorKeyAndCSR({ certsDir, deviceId, intermediateCertId })
 			await generateDeviceCertificate({
 				deviceId,
 				certsDir,
 				intermediateCertId,
 			})
 
+			const deviceFiles = deviceFileLocations({ certsDir, deviceId })
+			const intermediateCAFiles = CAIntermediateFileLocations({
+				certsDir,
+				id: intermediateCertId,
+			})
+			const rootCAFiles = CARootFileLocations(certsDir)
+
+			const simulatorJSON: DeviceCertificateJSON = {
+				clientId: deviceId,
+				idScope,
+				privateKey: await readFile(deviceFiles.privateKey, 'utf-8'),
+				certificate: await readFile(deviceFiles.cert, 'utf-8'),
+				intermediateCA: await readFile(intermediateCAFiles.cert, 'utf-8'),
+				rootCA: await readFile(rootCAFiles.cert, 'utf-8'),
+			}
+			await writeFile(
+				deviceFiles.json,
+				JSON.stringify(simulatorJSON, null, 2),
+				'utf-8',
+			)
 			return deviceId
 		}),
 		regexGroupMatcher(
@@ -45,6 +76,7 @@ export const deviceStepRunners = ({
 			const connection = await connectDevice({
 				deviceId,
 				certsDir,
+				intermediateCertId,
 			})
 			connections[deviceId] = connection
 			return deviceId

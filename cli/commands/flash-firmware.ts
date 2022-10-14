@@ -48,7 +48,7 @@ const getLatestFirmware = async ({
 			name.includes('.hex') &&
 			!name.includes('-signed') &&
 			name.includes(dk ? 'nRF9160DK' : 'Thingy91') &&
-			(nodebug ? name.includes('nodebug') : !name.includes('nodebug')),
+			(nodebug === true ? name.includes('nodebug') : !name.includes('nodebug')),
 	)
 
 	if (hexfile === undefined) throw new Error(`Failed to detect latest release.`)

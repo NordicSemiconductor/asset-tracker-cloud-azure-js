@@ -1,7 +1,10 @@
 import { promises as fs } from 'fs'
 import { connect, MqttClient } from 'mqtt'
-import { run } from '../process/run.js'
-import { deviceFileLocations } from './deviceFileLocations.js'
+import os from 'node:os'
+import path from 'path'
+import { CAIntermediateFileLocations } from '../../../cli/iot/certificates/caFileLocations.js'
+import { deviceFileLocations } from '../../../cli/iot/certificates/deviceFileLocations.js'
+import { run } from '../../../cli/process/run.js'
 
 /**
  * Connect the device to the Azure IoT Hub.
@@ -10,9 +13,11 @@ import { deviceFileLocations } from './deviceFileLocations.js'
 export const connectDevice = async ({
 	deviceId,
 	certsDir,
+	intermediateCertId,
 	log,
 }: {
 	deviceId: string
+	intermediateCertId: string
 	log?: (...args: any[]) => void
 	certsDir: string
 }): Promise<MqttClient> => {
@@ -20,10 +25,24 @@ export const connectDevice = async ({
 		certsDir,
 		deviceId,
 	})
-	const [deviceCert, deviceKey] = await Promise.all([
-		fs.readFile(deviceFiles.certWithChain, 'utf-8'),
-		fs.readFile(deviceFiles.privateKey, 'utf-8'),
-	])
+	const intermediateCAFiles = CAIntermediateFileLocations({
+		certsDir,
+		id: intermediateCertId,
+	})
+	const [deviceKey, deviceCert, intermediateCA, digiCert, baltimore] =
+		await Promise.all([
+			fs.readFile(deviceFiles.privateKey, 'utf-8'),
+			fs.readFile(deviceFiles.cert, 'utf-8'),
+			fs.readFile(intermediateCAFiles.cert, 'utf-8'),
+			fs.readFile(
+				path.join(process.cwd(), 'data', 'DigiCertTLSECCP384RootG5.crt.pem'),
+				'utf-8',
+			),
+			fs.readFile(
+				path.join(process.cwd(), 'data', 'BaltimoreCyberTrustRoot.pem'),
+				'utf-8',
+			),
+		])
 
 	let iotHub: string
 
@@ -37,8 +56,13 @@ export const connectDevice = async ({
 		// What happens is that later instances of the client will not handle TLS ECONNRESET errors, so the execution stops.
 		// Running the provisioning in its own process works around this problem.
 		iotHub = await run({
-			command: 'node',
-			args: ['cli', 'provision-simulator-device', deviceId],
+			command: 'npx',
+			args: [
+				'tsx',
+				'./feature-runner/provision-simulator-device.ts',
+				certsDir,
+				deviceId,
+			],
 			log,
 			env: {
 				DONT_DIE_ON_UNHANDLED_EXCEPTIONS: '1',
@@ -53,13 +77,14 @@ export const connectDevice = async ({
 			host: iotHub,
 			port: 8883,
 			key: deviceKey,
-			cert: deviceCert,
+			cert: [deviceCert, intermediateCA].join(os.EOL),
 			rejectUnauthorized: true,
 			clientId: deviceId,
 			protocol: 'mqtts',
 			username: `${iotHub}/${deviceId}/?api-version=2020-09-30`,
 			protocolVersion: 4,
 			clean: true,
+			ca: [baltimore, digiCert].join(os.EOL),
 		})
 		client.on('connect', async () => {
 			log?.('Connected', deviceId)

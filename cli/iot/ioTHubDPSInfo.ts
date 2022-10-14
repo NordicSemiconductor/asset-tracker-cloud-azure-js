@@ -23,6 +23,7 @@ export const ioTHubDPSInfo =
 	async (): Promise<{
 		hostname: string
 		connectionString: string
+		idScope: string
 	}> => {
 		const creds =
 			typeof credentials === 'function' ? await credentials() : credentials
@@ -61,5 +62,6 @@ export const ioTHubDPSInfo =
 		return {
 			hostname: iotHubInfo.properties?.hostName as string,
 			connectionString: `HostName=${dpsInfo.properties.serviceOperationsHostName};SharedAccessKeyName=provisioningserviceowner;SharedAccessKey=${primaryKey}`,
+			idScope: dpsInfo.properties.idScope as string,
 		}
 	}

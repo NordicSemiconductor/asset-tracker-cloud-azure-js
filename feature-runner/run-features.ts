@@ -16,8 +16,8 @@ import { cliCredentials } from '../cli/cliCredentials.js'
 import {
 	CAIntermediateFileLocations,
 	CARootFileLocations,
-} from '../cli/iot/caFileLocations.js'
-import { fingerprint } from '../cli/iot/fingerprint.js'
+} from '../cli/iot/certificates/caFileLocations.js'
+import { fingerprint } from '../cli/iot/certificates/fingerprint.js'
 import { list } from '../cli/iot/intermediateRegistry.js'
 import { ioTHubDPSInfo } from '../cli/iot/ioTHubDPSInfo.js'
 import { debug, error, heading, settings } from '../cli/logging.js'
@@ -124,17 +124,18 @@ program
 			}
 			const apiEndpointUrl = `https://${apiEndpoint}/`
 			const mockHTTPApiEndpointUrl = `https://${mockHTTPApiEndpoint}/`
-
-			const certsDir = await ioTHubDPSInfo({
+			const dpsInfo = await ioTHubDPSInfo({
 				resourceGroupName: resourceGroup,
 				credentials: {
 					credentials,
 					subscriptionId,
 				},
-			})().then(({ hostname }) =>
-				path.join(process.cwd(), 'certificates', hostname),
+			})()
+			const certsDir = path.join(
+				process.cwd(),
+				'certificates',
+				dpsInfo.hostname,
 			)
-
 			const intermediateCerts = await list({ certsDir })
 			const intermediateCertId = intermediateCerts[0]
 			if (intermediateCertId === undefined) {
@@ -210,7 +211,13 @@ program
 					}),
 				)
 				.addStepRunners(restStepRunners())
-				.addStepRunners(deviceStepRunners({ certsDir, intermediateCertId }))
+				.addStepRunners(
+					deviceStepRunners({
+						idScope: dpsInfo.idScope,
+						certsDir,
+						intermediateCertId,
+					}),
+				)
 				.addStepRunners(storageStepRunners())
 				.addStepRunners(
 					(() => {
