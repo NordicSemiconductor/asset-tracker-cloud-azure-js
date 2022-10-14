@@ -1,11 +1,9 @@
-import { stat, writeFile } from 'fs/promises'
-import path from 'path'
 import {
 	CAIntermediateFileLocations,
 	CARootFileLocations,
 } from './caFileLocations.js'
 import { certificateName } from './certificateName.js'
-import { openssl } from './openssl.js'
+import { initDb, openssl } from './openssl.js'
 import { opensslConfig } from './opensslConfig.js'
 
 export const defaultIntermediateCAValidityInDays = 365
@@ -39,17 +37,7 @@ export const generateCAIntermediate = async ({
 	const opensslV3 = openssl({ debug })
 
 	// Create the database file (index.txt), and the serial number file (serial)
-	try {
-		await stat(path.join(certsDir, 'index.txt'))
-	} catch {
-		await writeFile(path.join(certsDir, 'index.txt'), '')
-		await writeFile(
-			path.join(certsDir, 'index.txt.attr'),
-			'unique_subject = no',
-		)
-		const serial = await opensslV3.command('rand', '-hex', '16')
-		await writeFile(path.join(certsDir, 'serial'), serial)
-	}
+	await initDb({ debug, certsDir })
 
 	// Create the intermediate CA private key:
 	// openssl genrsa -aes256 -passout pass:1234 -out ./private/azure-iot-test-only.intermediate.key.pem 4096

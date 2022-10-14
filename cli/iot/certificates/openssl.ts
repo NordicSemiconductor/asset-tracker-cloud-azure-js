@@ -1,5 +1,7 @@
 import chalk from 'chalk'
+import { stat, writeFile } from 'fs/promises'
 import { execFile } from 'node:child_process'
+import * as path from 'path'
 
 const command = async ({
 	cmd,
@@ -48,3 +50,26 @@ export const openssl = ({
 		return command({ cmd: 'openssl', args, debug })
 	},
 })
+
+/**
+ * Create the database file (index.txt), and the serial number file (serial)
+ */
+export const initDb = async ({
+	certsDir,
+	debug,
+}: {
+	certsDir: string
+	debug?: (...message: any[]) => void
+}): Promise<void> => {
+	try {
+		await stat(path.join(certsDir, 'index.txt'))
+	} catch {
+		await writeFile(path.join(certsDir, 'index.txt'), '')
+		await writeFile(
+			path.join(certsDir, 'index.txt.attr'),
+			'unique_subject = no',
+		)
+		const serial = await openssl({ debug }).command('rand', '-hex', '16')
+		await writeFile(path.join(certsDir, 'serial'), serial)
+	}
+}

@@ -1,4 +1,3 @@
-import { IotDpsClient } from '@azure/arm-deviceprovisioningservices'
 import {
 	atHostHexfile,
 	connect,
@@ -35,14 +34,13 @@ export const defaultSecondarySecTag = defaultSecTag + 1
 
 export const createAndProvisionDeviceCertCommand = ({
 	certsDir: certsDirPromise,
-	resourceGroup,
-	iotDpsClient,
-	dpsName,
+	idScope: idScopePromise,
 }: {
 	certsDir: () => Promise<string>
-	iotDpsClient: () => Promise<IotDpsClient>
-	resourceGroup: string
-	dpsName: string
+	/**
+	 * Promise that returns the idScope
+	 */
+	idScope: () => Promise<string>
 }): CommandDefinition => ({
 	command: 'create-and-provision-device-cert',
 	options: [
@@ -168,13 +166,11 @@ export const createAndProvisionDeviceCertCommand = ({
 		success(`Certificate for device generated.`)
 		setting('Certificate ID', deviceId)
 
-		const { properties } = await (
-			await iotDpsClient()
-		).iotDpsResource.get(dpsName, resourceGroup)
+		const idScope = await idScopePromise()
 
 		heading('Firmware configuration')
 		setting('DPS hostname', globalIotHubDPSHostname)
-		setting('ID scope', properties.idScope as string)
+		setting('ID scope', idScope)
 
 		heading('Provisioning certificate')
 
@@ -187,14 +183,15 @@ export const createAndProvisionDeviceCertCommand = ({
 			id: intermediateCertId,
 		})
 
+		const intermediateCert = await readFile(caIntermediateFiles.cert, 'utf-8')
+
 		const effectiveSecondarySecTag = secondarySecTag ?? defaultSecondarySecTag
 		await flashCertificate({
 			at: connection.at,
 			secTag: effectiveSecTag,
-			clientCert: [
-				await readFile(cert, 'utf-8'),
-				await readFile(caIntermediateFiles.cert, 'utf-8'),
-			].join(os.EOL),
+			clientCert: [await readFile(cert, 'utf-8'), intermediateCert].join(
+				os.EOL,
+			),
 			caCert: await readFile(
 				path.resolve(process.cwd(), 'data', 'BaltimoreCyberTrustRoot.pem'),
 				'utf-8',

@@ -1,6 +1,6 @@
 import { CAIntermediateFileLocations } from './caFileLocations.js'
 import { deviceFileLocations } from './deviceFileLocations.js'
-import { openssl } from './openssl.js'
+import { initDb, openssl } from './openssl.js'
 import { opensslConfig } from './opensslConfig.js'
 
 export const defaultDeviceCertificateValidityInDays = 10950
@@ -32,6 +32,9 @@ export const createSimulatorKeyAndCSR = async ({
 	})
 	// Create the device certificates
 	const opensslV3 = openssl({ debug })
+
+	// Create the database file (index.txt), and the serial number file (serial)
+	await initDb({ debug, certsDir })
 
 	// Create the first device private key.
 	// openssl genrsa -out ./private/device-01.key.pem 4096

@@ -45,8 +45,14 @@ const main = async () => {
 		credentials: getCurrentCreds,
 	})
 
+	const getIotHubHostname = async (): Promise<string> => {
+		if (process.env.AZURE_IOT_HUB_HOSTNAME !== undefined)
+			return process.env.AZURE_IOT_HUB_HOSTNAME
+		return (await getIotHubInfo()).hostname
+	}
+
 	const certsDir = async (): Promise<string> =>
-		getIotHubInfo().then(({ hostname }) =>
+		getIotHubHostname().then((hostname) =>
 			path.resolve(process.cwd(), 'certificates', hostname),
 		)
 
@@ -59,6 +65,15 @@ const main = async () => {
 			(creds) =>
 				new WebSiteManagementClient(creds.credentials, creds.subscriptionId),
 		)
+
+	const getIdScope = async () => {
+		if (process.env.AZURE_IOT_HUB_ID_SCOPE !== undefined)
+			return process.env.AZURE_IOT_HUB_ID_SCOPE
+		const { properties } = await (
+			await getIotDpsClient()
+		).iotDpsResource.get(dpsName, resourceGroup)
+		return properties.idScope as string
+	}
 
 	program.name('./cli.sh')
 	program.description('Asset Tracker Command Line Interface')
@@ -84,15 +99,11 @@ const main = async () => {
 		}),
 		createAndProvisionDeviceCertCommand({
 			certsDir,
-			resourceGroup,
-			iotDpsClient: getIotDpsClient,
-			dpsName,
+			idScope: getIdScope,
 		}),
 		createSimulatorCertCommand({
 			certsDir,
-			resourceGroup,
-			iotDpsClient: getIotDpsClient,
-			dpsName,
+			idScope: getIdScope,
 		}),
 		reactConfigCommand({
 			websiteClient: getWebsiteClient,
@@ -108,6 +119,8 @@ const main = async () => {
 		cliConfigCommand({
 			resourceGroup,
 			appName: appName(),
+			idScope: getIdScope,
+			hostname: getIotHubHostname,
 		}),
 	]
 
