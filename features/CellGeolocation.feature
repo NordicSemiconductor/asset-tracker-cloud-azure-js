@@ -60,7 +60,7 @@ Feature: Cell Geolocation API
         When I GET /cellgeolocation?cell={cellId}&area=211&mccmnc=26201
         Then the response status code should be 200
         And the response Content-Type should be "application/json; charset=utf-8"
-        And the response should equal this JSON
+        And the response should match this JSON
             """
             {
             "lng": {lng},

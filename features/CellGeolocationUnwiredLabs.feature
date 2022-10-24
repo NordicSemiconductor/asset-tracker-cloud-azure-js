@@ -41,7 +41,7 @@ Feature: Unwired Labs Cell Geolocation
         Then the response status code should be 200
         And the response Access-Control-Allow-Origin should be "*"
         And the response Content-Type should be "application/json; charset=utf-8"
-        And the response should equal this JSON
+        And the response should match this JSON
             """
             {
                 "accuracy": {accuracy},
