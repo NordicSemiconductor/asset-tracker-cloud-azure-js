@@ -32,6 +32,7 @@ jobs:
       B2C_TENANT_ID: ${{ secrets.B2C_TENANT_ID }}
       RESOURCE_GROUP: ${{ secrets.RESOURCE_GROUP }}
       MOCK_HTTP_API_STORAGE_ACCOUNT_NAME: mockhttpapi
+      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
     steps:
       - name: Print azure CLI version
