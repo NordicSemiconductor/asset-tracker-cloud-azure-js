@@ -3,8 +3,6 @@ import { deviceFileLocations } from './deviceFileLocations.js'
 import { initDb, openssl } from './openssl.js'
 import { opensslConfig } from './opensslConfig.js'
 
-export const defaultDeviceCertificateValidityInDays = 10950
-
 /**
  * Creates a private key and a CSR for a simulated device
  */

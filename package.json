@@ -3,6 +3,7 @@
   "version": "0.0.0-development",
   "description": "A reference implementation of a serverless backend for an IoT product developed using in TypeScript.",
   "type": "module",
+  "main": "./dist/export.js",
   "scripts": {
     "test": "jest",
     "test:e2e": "node --unhandled-rejections=strict dist/feature-runner/run-features.js ./features --print-results --progress",
@@ -93,17 +94,24 @@
     "branches": [
       "saga",
       {
-        "name": "!(saga)",
+        "name": "!(saga|v[0-9].[0-9].x|*_*|*/*)",
         "prerelease": true
       }
     ],
-    "remoteTags": true,
-    "plugins": [
-      "@semantic-release/commit-analyzer",
-      "@semantic-release/release-notes-generator",
-      "@semantic-release/github"
-    ]
+    "remoteTags": true
   },
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "package-lock.json",
+    "dist/export.js",
+    "dist/export.d.ts",
+    "dist/cli/iot/certificates",
+    "dist/cli/process",
+    "LICENSE",
+    "README.md"
+  ],
   "jest": {
     "transform": {
       "^.+\\.(t|j)sx?$": [
