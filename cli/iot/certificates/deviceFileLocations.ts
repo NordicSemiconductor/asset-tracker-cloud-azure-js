@@ -29,7 +29,6 @@ export type DeviceCertificateJSON = {
 	clientId: string
 	idScope: string
 	privateKey: string
-	certificate: string
-	intermediateCA: string
-	rootCA: string
+	clientCert: string
+	caCert: string
 }

@@ -10,11 +10,10 @@ import chaiSubset from 'chai-subset'
 import { readFile, writeFile } from 'fs/promises'
 import { MqttClient } from 'mqtt'
 import fetch from 'node-fetch'
+import os from 'node:os'
+import path from 'node:path'
 import { v4 } from 'uuid'
-import {
-	CAIntermediateFileLocations,
-	CARootFileLocations,
-} from '../../cli/iot/certificates/caFileLocations.js'
+import { CAIntermediateFileLocations } from '../../cli/iot/certificates/caFileLocations.js'
 import { createSimulatorKeyAndCSR } from '../../cli/iot/certificates/createSimulatorKeyAndCSR.js'
 import {
 	DeviceCertificateJSON,
@@ -53,15 +52,18 @@ export const deviceStepRunners = ({
 				certsDir,
 				id: intermediateCertId,
 			})
-			const rootCAFiles = CARootFileLocations(certsDir)
-
 			const simulatorJSON: DeviceCertificateJSON = {
 				clientId: deviceId,
 				idScope,
 				privateKey: await readFile(deviceFiles.privateKey, 'utf-8'),
-				certificate: await readFile(deviceFiles.cert, 'utf-8'),
-				intermediateCA: await readFile(intermediateCAFiles.cert, 'utf-8'),
-				rootCA: await readFile(rootCAFiles.cert, 'utf-8'),
+				clientCert: [
+					await readFile(deviceFiles.cert, 'utf-8'),
+					await readFile(intermediateCAFiles.cert, 'utf-8'),
+				].join(os.EOL),
+				caCert: await readFile(
+					path.resolve(process.cwd(), 'data', 'BaltimoreCyberTrustRoot.pem'),
+					'utf-8',
+				),
 			}
 			await writeFile(
 				deviceFiles.json,

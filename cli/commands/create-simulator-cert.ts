@@ -1,5 +1,7 @@
 import { randomWords } from '@nordicsemiconductor/random-words'
 import { readFile, writeFile } from 'fs/promises'
+import os from 'node:os'
+import path from 'node:path'
 import {
 	CAIntermediateFileLocations,
 	CARootFileLocations,
@@ -114,15 +116,20 @@ export const createSimulatorCertCommand = ({
 			certsDir,
 			deviceId: id,
 		})
-
+		await readFile(intermediateCAFiles.cert, 'utf-8')
 		const idScope = await idScopePromise()
 		const simulatorJSON: DeviceCertificateJSON = {
 			clientId: id,
 			idScope,
 			privateKey: await readFile(privateKey, 'utf-8'),
-			certificate: await readFile(cert, 'utf-8'),
-			intermediateCA: await readFile(intermediateCAFiles.cert, 'utf-8'),
-			rootCA: await readFile(rootCAFiles.cert, 'utf-8'),
+			clientCert: [
+				await readFile(cert, 'utf-8'),
+				await readFile(intermediateCAFiles.cert, 'utf-8'),
+			].join(os.EOL),
+			caCert: await readFile(
+				path.resolve(process.cwd(), 'data', 'BaltimoreCyberTrustRoot.pem'),
+				'utf-8',
+			),
 		}
 		await writeFile(certJSON, JSON.stringify(simulatorJSON, null, 2), 'utf-8')
 		success(`${certJSON} written`)

@@ -1,9 +1,10 @@
 import { DeviceRegistrationState } from 'azure-iot-provisioning-service/dist/interfaces'
 import { promises as fs } from 'fs'
 import { connect } from 'mqtt'
-import os from 'node:os'
-import path from 'node:path'
-import { deviceFileLocations } from '../../../cli/iot/certificates/deviceFileLocations'
+import {
+	DeviceCertificateJSON,
+	deviceFileLocations,
+} from '../../../cli/iot/certificates/deviceFileLocations'
 import { globalIotHubDPSHostname } from '../../../cli/iot/ioTHubDPSInfo'
 import { dpsTopics } from './dpsTopics'
 
@@ -25,16 +26,9 @@ export const provisionDevice = async ({
 		deviceId,
 	})
 
-	const { privateKey, certificate, intermediateCA, idScope } = JSON.parse(
+	const { privateKey, clientCert, caCert, idScope } = JSON.parse(
 		await fs.readFile(deviceFiles.json, 'utf-8'),
-	)
-
-	const digicertRoot = await fs.readFile(
-		path.join(process.cwd(), 'data', 'DigiCertTLSECCP384RootG5.crt.pem'),
-	)
-	const baltimoreRoot = await fs.readFile(
-		path.join(process.cwd(), 'data', 'BaltimoreCyberTrustRoot.pem'),
-	)
+	) as DeviceCertificateJSON
 
 	try {
 		log?.(`Loading config from`, deviceFiles.registration)
@@ -50,8 +44,8 @@ export const provisionDevice = async ({
 			host: globalIotHubDPSHostname,
 			port: 8883,
 			key: privateKey,
-			cert: [certificate, intermediateCA].join(os.EOL),
-			ca: [digicertRoot, baltimoreRoot].join(os.EOL),
+			cert: clientCert,
+			ca: caCert,
 			rejectUnauthorized: true,
 			clientId: deviceId,
 			username: `${idScope}/registrations/${deviceId}/api-version=2019-03-31`,
