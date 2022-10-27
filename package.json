@@ -63,7 +63,7 @@
     "@types/jsonwebtoken": "8.5.9",
     "@types/node": "18.11.6",
     "@types/pem": "1.9.6",
-    "@types/semver": "7.3.12",
+    "@types/semver": "7.3.13",
     "@types/uuid": "8.3.4",
     "chai-subset": "1.6.0",
     "chalk": "5.1.2",
