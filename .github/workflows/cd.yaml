@@ -210,7 +210,7 @@ jobs:
         with:
           inlineScript: |
             PUBLIC_URL=`az storage account show -g ${{ env.RESOURCE_GROUP }} -n ${{ env.STORAGE_ACCOUNT_NAME }} --query 'primaryEndpoints.web' --output tsv | tr -d '\n'`
-            echo "::set-output name=web_app_url::${PUBLIC_URL}"
+            echo "web_app_url=${PUBLIC_URL}" >> $GITHUB_OUTPUT
             echo "PUBLIC_URL=${PUBLIC_URL}" >> $GITHUB_ENV
 
       - name: Build app
