@@ -1,0 +1,3 @@
+[submodule "memfault-integration"]
+	path = memfault-integration
+	url = https://github.com/NordicSemiconductor/asset-tracker-cloud-memfault-azure-js

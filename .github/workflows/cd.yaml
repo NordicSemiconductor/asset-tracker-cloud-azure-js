@@ -24,22 +24,6 @@ jobs:
       name: production
       url: ${{ steps.web-app-url.outputs.web_app_url }}
 
-    env:
-      APP_REG_CLIENT_ID: ${{ secrets.APP_REG_CLIENT_ID }}
-      LOCATION: ${{ secrets.LOCATION }}
-      APP_NAME: ${{ secrets.APP_NAME }}
-      STORAGE_ACCOUNT_NAME: ${{ secrets.STORAGE_ACCOUNT_NAME }}
-      B2C_TENANT: ${{ secrets.B2C_TENANT }}
-      RESOURCE_GROUP: ${{ secrets.RESOURCE_GROUP }}
-      UNWIRED_LABS_API_KEY: ${{ secrets.UNWIRED_LABS_API_KEY }}
-      NRF_CLOUD_TEAM_ID: ${{ secrets.NRF_CLOUD_TEAM_ID }}
-      NRF_CLOUD_CELL_LOCATION_SERVICE_KEY:
-        ${{ secrets.NRF_CLOUD_CELL_LOCATION_SERVICE_KEY }}
-      NRF_CLOUD_AGPS_LOCATION_SERVICE_KEY:
-        ${{ secrets.NRF_CLOUD_AGPS_LOCATION_SERVICE_KEY }}
-      NRF_CLOUD_PGPS_LOCATION_SERVICE_KEY:
-        ${{ secrets.NRF_CLOUD_AGPS_LOCATION_SERVICE_KEY }}
-
     outputs:
       web_app_url: ${{ steps.web-app-url.outputs.web_app_url }}
 
@@ -58,6 +42,8 @@ jobs:
             az account list --output table
 
       - uses: actions/checkout@v3
+        with:
+          submodules: true
 
       - uses: actions/setup-node@v3
         with:
@@ -75,34 +61,30 @@ jobs:
       - name: Compile source
         run: npx tsc
 
-      - name: Set Key Vault name
-        run: |
-          echo "keyVaultName=${APP_NAME:-nrfassettracker}" >> $GITHUB_ENV
-
       # Unwired Labs API
       - name: Enable Unwired Labs API
-        if: env.UNWIRED_LABS_API_KEY != ''
+        if: secrets.UNWIRED_LABS_API_KEY != ''
         run: echo "enableUnwiredLabsCellLocation=true" >> $GITHUB_ENV
       - name: Disable Unwired Labs API
-        if: env.UNWIRED_LABS_API_KEY == ''
+        if: secrets.UNWIRED_LABS_API_KEY == ''
         run: echo "enableUnwiredLabsCellLocation=false" >> $GITHUB_ENV
       - name: Set Unwired Labs API key
         if: env.enableUnwiredLabsCellLocation == 'true'
         uses: azure/CLI@v1
         with:
           inlineScript: |
-            az keyvault secret set --vault-name ${{ env.keyVaultName }} --name unwiredlabsApiKey --value ${{ secrets.UNWIRED_LABS_API_KEY }}
+            az keyvault secret set --vault-name ${{ secrets.APP_NAME }} --name unwiredlabsApiKey --value ${{ secrets.UNWIRED_LABS_API_KEY }}
 
       # nRF Cloud Cell Location API
       - name: Enable nRF Cloud Cell Location API
         if:
-          env.NRF_CLOUD_TEAM_ID != '' && env.NRF_CLOUD_CELL_LOCATION_SERVICE_KEY
-          != ''
+          secrets.NRF_CLOUD_TEAM_ID != '' &&
+          secrets.NRF_CLOUD_CELL_LOCATION_SERVICE_KEY != ''
         run: echo "enableNrfCloudCellLocationService=true" >> $GITHUB_ENV
       - name: Disable nRF Cloud Cell Location API
         if:
-          env.NRF_CLOUD_TEAM_ID == '' || env.NRF_CLOUD_CELL_LOCATION_SERVICE_KEY
-          == ''
+          secrets.NRF_CLOUD_TEAM_ID == '' ||
+          secrets.NRF_CLOUD_CELL_LOCATION_SERVICE_KEY == ''
         run: echo "enableNrfCloudCellLocationService=false" >> $GITHUB_ENV
       - name: Set nRF Cloud Cell Location service key
         if: env.enableNrfCloudCellLocationService == 'true'
@@ -110,19 +92,19 @@ jobs:
         with:
           inlineScript: |
             echo "${{ secrets.NRF_CLOUD_CELL_LOCATION_SERVICE_KEY }}" > nrfcloudcelllocationservice.key
-            az keyvault secret set --vault-name ${{ env.keyVaultName }} --name nrfCloudCellLocationServiceKey --file nrfcloudcelllocationservice.key
+            az keyvault secret set --vault-name ${{ secrets.APP_NAME }} --name nrfCloudCellLocationServiceKey --file nrfcloudcelllocationservice.key
             rm nrfcloudcelllocationservice.key
 
       # nRF Cloud Assisted GPS Location API
       - name: Enable nRF Cloud Assisted GPS Location API
         if:
-          env.NRF_CLOUD_TEAM_ID != '' && env.NRF_CLOUD_AGPS_LOCATION_SERVICE_KEY
-          != ''
+          secrets.NRF_CLOUD_TEAM_ID != '' &&
+          secrets.NRF_CLOUD_AGPS_LOCATION_SERVICE_KEY != ''
         run: echo "enableNrfCloudAGPSLocationService=true" >> $GITHUB_ENV
       - name: Disable nRF Cloud Assisted GPS Location API
         if:
-          env.NRF_CLOUD_TEAM_ID == '' || env.NRF_CLOUD_AGPS_LOCATION_SERVICE_KEY
-          == ''
+          secrets.NRF_CLOUD_TEAM_ID == '' ||
+          secrets.NRF_CLOUD_AGPS_LOCATION_SERVICE_KEY == ''
         run: echo "enableNrfCloudAGPSLocationService=false" >> $GITHUB_ENV
       - name: Set nRF Cloud Assisted GPS Location service key
         if: env.enableNrfCloudAGPSLocationService == 'true'
@@ -130,19 +112,19 @@ jobs:
         with:
           inlineScript: |
             echo "${{ secrets.NRF_CLOUD_AGPS_LOCATION_SERVICE_KEY }}" > nrfcloudagpslocationservice.key
-            az keyvault secret set --vault-name ${{ env.keyVaultName }} --name nrfCloudAGPSLocationServiceKey --file nrfcloudagpslocationservice.key
+            az keyvault secret set --vault-name ${{ secrets.APP_NAME }} --name nrfCloudAGPSLocationServiceKey --file nrfcloudagpslocationservice.key
             rm nrfcloudagpslocationservice.key
 
       # nRF Cloud Predicted GPS Location API
       - name: Enable nRF Cloud Predicted GPS Location API
         if:
-          env.NRF_CLOUD_TEAM_ID != '' && env.NRF_CLOUD_PGPS_LOCATION_SERVICE_KEY
-          != ''
+          secrets.NRF_CLOUD_TEAM_ID != '' &&
+          secrets.NRF_CLOUD_PGPS_LOCATION_SERVICE_KEY != ''
         run: echo "enableNrfCloudPGPSLocationService=true" >> $GITHUB_ENV
       - name: Disable nRF Cloud Predicted GPS Location API
         if:
-          env.NRF_CLOUD_TEAM_ID == '' || env.NRF_CLOUD_PGPS_LOCATION_SERVICE_KEY
-          == ''
+          secrets.NRF_CLOUD_TEAM_ID == '' ||
+          secrets.NRF_CLOUD_PGPS_LOCATION_SERVICE_KEY == ''
         run: echo "enableNrfCloudPGPSLocationService=false" >> $GITHUB_ENV
       - name: Set nRF Cloud Predicted GPS Location service key
         if: env.enableNrfCloudPGPSLocationService == 'true'
@@ -150,36 +132,45 @@ jobs:
         with:
           inlineScript: |
             echo "${{ secrets.NRF_CLOUD_PGPS_LOCATION_SERVICE_KEY }}" > nrfcloudpgpslocationservice.key
-            az keyvault secret set --vault-name ${{ env.keyVaultName }} --name nrfCloudPGPSLocationServiceKey --file nrfcloudpgpslocationservice.key
+            az keyvault secret set --vault-name ${{ secrets.APP_NAME }} --name nrfCloudPGPSLocationServiceKey --file nrfcloudpgpslocationservice.key
             rm nrfcloudpgpslocationservice.key
+
+      # Memfault integration
+      - name: Enable Memfault integration
+        if: secrets.MEMFAULT_PROJECT_KEY != ''
+        run: echo "enableMemfaultIntegration=true" >> $GITHUB_ENV
+      - name: Disable Memfault integration
+        if: secrets.MEMFAULT_PROJECT_KEY == ''
+        run: echo "enableMemfaultIntegration=false" >> $GITHUB_ENV
 
       - name: Determine Version
         run: |
           git fetch --depth=1 origin +refs/tags/*:refs/tags/*
           TAG=`git tag --contains ${{ github.sha }} | tr -d '\n'`
-          VERSION=${TAG:-${{ github.sha }}}
-          echo Version: ${VERSION}
-          echo "VERSION=${VERSION}" >> $GITHUB_ENV
+          version=${TAG:-${{ github.sha }}}
+          echo Version: ${version}
+          echo "version=${version}" >> $GITHUB_ENV
 
       - name: Deploy solution
         uses: azure/CLI@v1
         with:
           inlineScript: |
             az deployment group create \
-              --resource-group ${{ env.RESOURCE_GROUP }} \
+              --resource-group ${{ secrets.RESOURCE_GROUP }} \
               --mode Complete \
-              --name cd-${{ env.VERSION }} \
-              --template-file azuredeploy.json \
+              --name cd-${{ env.version }} \
+              --template-file azuredeploy.bicep \
               --parameters \
-                appName=${APP_NAME:-nrfassettracker} \
-                storageAccountName=${{ env.STORAGE_ACCOUNT_NAME }} \
-                appRegistrationClientId=${{ env.APP_REG_CLIENT_ID }} \
-                b2cTenant=${{ env.B2C_TENANT }} \
+                appName=${{ secrets.APP_NAME }} \
+                storageAccountName=${{ secrets.STORAGE_ACCOUNT_NAME }} \
+                appRegistrationClientId=${{ secrets.APP_REG_CLIENT_ID }} \
+                b2cTenant=${{ secrets.B2C_TENANT }} \
                 enableUnwiredLabsCellLocation=${enableUnwiredLabsCellLocation} \
                 enableNrfCloudCellLocationService=${enableNrfCloudCellLocationService} \
                 enableNrfCloudAGPSLocationService=${enableNrfCloudAGPSLocationService} \
-                nrfCloudTeamId=${{ env.NRF_CLOUD_TEAM_ID }} \
-                keyVaultName=${{ env.keyVaultName }}
+                nrfCloudTeamId=${{ secrets.NRF_CLOUD_TEAM_ID }} \
+                keyVaultName=${{ secrets.APP_NAME }} \
+                enableMemfaultIntegration=${{ env.enableMemfaultIntegration }}
 
       - name: Pack Function App
         run: node scripts/pack-app.js
@@ -188,7 +179,7 @@ jobs:
         uses: azure/CLI@v1
         with:
           inlineScript: |
-            az functionapp deployment source config-zip -g ${{ env.RESOURCE_GROUP }} -n ${APP_NAME:-nrfassettracker}api --src dist/functionapp.zip
+            az functionapp deployment source config-zip -g ${{ secrets.RESOURCE_GROUP }} -n ${{ secrets.APP_NAME }}api --src dist/functionapp.zip
 
       - uses: actions/upload-artifact@v3
         with:
@@ -199,7 +190,7 @@ jobs:
         uses: azure/CLI@v1
         with:
           inlineScript: |
-            az storage blob service-properties update --account-name ${{ env.STORAGE_ACCOUNT_NAME }} --static-website --404-document index.html --index-document index.html
+            az storage blob service-properties update --account-name ${{ secrets.STORAGE_ACCOUNT_NAME }} --static-website --404-document index.html --index-document index.html
 
       - name: Determine Web App settings
         run: ./cli.sh react-config >> $GITHUB_ENV
@@ -209,7 +200,7 @@ jobs:
         uses: azure/CLI@v1
         with:
           inlineScript: |
-            PUBLIC_URL=`az storage account show -g ${{ env.RESOURCE_GROUP }} -n ${{ env.STORAGE_ACCOUNT_NAME }} --query 'primaryEndpoints.web' --output tsv | tr -d '\n'`
+            PUBLIC_URL=`az storage account show -g ${{ secrets.RESOURCE_GROUP }} -n ${{ secrets.STORAGE_ACCOUNT_NAME }} --query 'primaryEndpoints.web' --output tsv | tr -d '\n'`
             echo "web_app_url=${PUBLIC_URL}" >> $GITHUB_OUTPUT
             echo "PUBLIC_URL=${PUBLIC_URL}" >> $GITHUB_ENV
 
@@ -230,4 +221,20 @@ jobs:
         uses: azure/CLI@v1
         with:
           inlineScript: |
-            az storage blob upload-batch --account-name ${{ env.STORAGE_ACCOUNT_NAME }} --overwrite -s ./app/build -d '$web'
+            az storage blob upload-batch --account-name ${{ secrets.STORAGE_ACCOUNT_NAME }} --overwrite -s ./app/build -d '$web'
+
+      - name: Deploy Memfault integration Function App
+        if: env.enableMemfaultIntegration == 'yes'
+        working-directory: memfault-integration
+        run: |
+          npm ci
+          npx tsx scripts/pack-app.ts
+          az functionapp deployment source config-zip -g ${{ secrets.RESOURCE_GROUP }} -n ${{ secrets.APP_NAME }}-memfault-integration --src dist/functionapp.zip
+
+      - name: Set Memfault secrets
+        if: env.enableMemfaultIntegration == 'yes'
+        run: |
+          az keyvault secret set --vault-name ${{ secrets.APP_NAME }} --name memfaultProjectKey --value ${{ secrets.MEMFAULT_PROJECT_KEY }}
+          az keyvault secret set --vault-name ${{ secrets.APP_NAME }} --name memfaultOrganization --value ${{ secrets.MEMFAULT_ORGANIZATION }}
+          az keyvault secret set --vault-name ${{ secrets.APP_NAME }} --name memfaultProject --value ${{ secrets.MEMFAULT_PROJECT }}
+          az keyvault secret set --vault-name ${{ secrets.APP_NAME }} --name memfaultAuthToken --value ${{ secrets.MEMFAULT_AUTH_TOKEN }}
