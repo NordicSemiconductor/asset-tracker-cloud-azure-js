@@ -1,8 +1,5 @@
 import { verify } from '@nordicsemiconductor/nrfcloud-location-services-tests'
 import { Static, Type } from '@sinclair/typebox'
-import { Either, isLeft, isRight, left } from 'fp-ts/lib/Either.js'
-import { pipe } from 'fp-ts/lib/function.js'
-import * as TE from 'fp-ts/lib/TaskEither.js'
 import { agpsRequestSchema, AGPSType } from '../agps/types.js'
 import { ErrorInfo, ErrorType } from '../lib/ErrorInfo.js'
 import { validateWithJSONSchema } from '../lib/validateWithJSONSchema.js'
@@ -32,15 +29,15 @@ export const resolveAgpsRequest =
 	) =>
 	async (
 		agps: Static<typeof agpsRequestSchema>,
-	): Promise<Either<ErrorInfo, readonly string[]>> => {
+	): Promise<{ error: ErrorInfo } | readonly string[]> => {
 		debug?.({ agpsRequest: agps })
 		const valid = validateInput(agps)
-		if (isLeft(valid)) {
-			error?.(JSON.stringify(valid.left))
+		if ('error' in valid) {
+			error?.(JSON.stringify(valid.error))
 			return valid
 		}
 
-		const { mcc, mnc, cell, area, types } = valid.right
+		const { mcc, mnc, cell, area, types } = valid
 
 		// Split requests, so that request for Ephemerides is a separate one
 		const otherTypesInRequest = types.filter((t) => t !== AGPSType.Ephemerides)
@@ -49,71 +46,59 @@ export const resolveAgpsRequest =
 			requestTypes.push([AGPSType.Ephemerides])
 		if (otherTypesInRequest.length > 0) requestTypes.push(otherTypesInRequest)
 
-		const res = await pipe(
-			requestTypes,
-			TE.traverseArray((types) =>
-				pipe(
-					TE.right({
-						resource: 'location/agps',
-						payload: {
-							eci: cell,
-							tac: area,
-							requestType: 'custom',
-							mcc,
-							mnc,
-							customTypes: types,
-						},
-						headers: {
-							'Content-Type': 'application/octet-stream',
-						},
-					}),
-					TE.chain((request) =>
-						pipe(
-							client.head({
-								...request,
-								method: 'GET',
-								requestSchema: apiRequestSchema,
-							}),
-							TE.chain((headers) =>
-								client.getBinary({
-									...request,
-									headers: {
-										...request.headers,
-										Range: `bytes=0-${headers['content-length']}`,
-									},
-									requestSchema: apiRequestSchema,
-								}),
-							),
-							TE.chain((agpsData) =>
-								pipe(
-									agpsData,
-									verify,
-									TE.fromEither,
-									TE.mapLeft(
-										(error) =>
-											({
-												type: ErrorType.BadGateway,
-												message: `Could not verify A-GPS payload: ${error.message}!`,
-											} as ErrorInfo),
-									),
-									TE.map((agpsDataInfo) => {
-										debug?.({ agpsData: agpsDataInfo })
-										return agpsData.toString('hex')
-									}),
-								),
-							),
-						),
-					),
-				),
-			),
-		)()
+		const res = []
 
-		// If any request fails, mark operation as failed
-		if (isRight(res) && res.right.length !== requestTypes.length) {
-			return left({
-				type: ErrorType.BadGateway,
-				message: `Resolved ${res.right.length}, expected ${requestTypes.length}!`,
-			} as ErrorInfo)
+		for (const types of requestTypes) {
+			const request = {
+				resource: 'location/agps',
+				payload: {
+					eci: cell,
+					tac: area,
+					requestType: 'custom',
+					mcc,
+					mnc,
+					customTypes: types,
+				},
+				headers: {
+					'Content-Type': 'application/octet-stream',
+				},
+			}
+			const maybeHeaders = await client.head({
+				...request,
+				method: 'GET',
+				requestSchema: apiRequestSchema,
+			})
+
+			if ('error' in maybeHeaders) {
+				return { error: maybeHeaders.error }
+			}
+
+			const maybeAgpsData = await client.getBinary({
+				...request,
+				headers: {
+					...request.headers,
+					Range: `bytes=0-${maybeHeaders.headers['content-length']}`,
+				},
+				requestSchema: apiRequestSchema,
+			})
+
+			if ('error' in maybeAgpsData) {
+				return { error: maybeAgpsData.error }
+			}
+
+			const maybeValidAgpsData = verify(maybeAgpsData)
+
+			if ('error' in maybeValidAgpsData) {
+				return {
+					error: {
+						type: ErrorType.BadGateway,
+						message: `Could not verify A-GPS payload: ${maybeValidAgpsData.error.message}!`,
+					},
+				}
+			}
+
+			debug?.({ agpsData: maybeValidAgpsData })
+			res.push(maybeAgpsData.toString('hex'))
 		}
 
 		return res

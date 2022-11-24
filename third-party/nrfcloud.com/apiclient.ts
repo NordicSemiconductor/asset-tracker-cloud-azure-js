@@ -1,17 +1,5 @@
 import { Static, TObject, TProperties } from '@sinclair/typebox'
 import Ajv from 'ajv'
-import * as E from 'fp-ts/lib/Either.js'
-import { pipe } from 'fp-ts/lib/function.js'
-import J from 'fp-ts/lib/Json.js'
-import {
-	chain,
-	fromEither,
-	left,
-	map,
-	right,
-	TaskEither,
-	tryCatch,
-} from 'fp-ts/lib/TaskEither.js'
 import { IncomingHttpHeaders, OutgoingHttpHeaders } from 'http'
 import { request as nodeRequest, RequestOptions } from 'https'
 import jwt from 'jsonwebtoken'
@@ -34,20 +22,24 @@ const validate =
 		errorType: ErrorType
 		errorMessage: string
 	}) =>
-	(payload: J.Json): TaskEither<ErrorInfo, Static<typeof schema>> => {
+	(
+		payload: Record<string, any>,
+	): { error: ErrorInfo } | Static<typeof schema> => {
 		const v = ajv.compile(schema)
 		const valid = v(payload)
 		if (valid !== true) {
-			return left({
-				type: errorType,
-				message: errorMessage,
-				detail: {
-					errors: v.errors,
-					input: payload,
+			return {
+				error: {
+					type: errorType,
+					message: errorMessage,
+					detail: {
+						errors: v.errors,
+						input: payload,
+					},
 				},
-			})
+			}
 		}
-		return right(payload as Static<typeof schema>)
+		return payload as Static<typeof schema>
 	}
 
 const doRequest =
@@ -137,7 +129,7 @@ const reqJSON =
 		teamId: string
 		method: 'GET' | 'POST'
 	}) =>
-	<
+	async <
 		Request extends TObject<TProperties>,
 		Response extends TObject<TProperties>,
 	>({
@@ -152,56 +144,48 @@ const reqJSON =
 		headers?: OutgoingHttpHeaders
 		requestSchema: Request
 		responseSchema: Response
-	}): TaskEither<ErrorInfo, Static<typeof responseSchema>> =>
-		pipe(
-			validate({
-				schema: requestSchema,
-				errorMessage: 'Input validation failed!',
-				errorType: ErrorType.BadRequest,
-			})(payload),
-			chain((payload) =>
-				tryCatch<ErrorInfo, Buffer>(
-					doRequest(cfg)({
-						resource,
-						payload,
-						headers: {
-							...headers,
-							'Content-Type': 'application/json',
-						},
-					}),
-					(err) => {
-						return {
-							type: ErrorType.BadGateway,
-							message: (err as Error).message,
-						}
-					},
-				),
-			),
-			chain((buffer) =>
-				pipe(
-					buffer.toString('utf-8'),
-					J.parse,
-					E.mapLeft(
-						() =>
-							({
-								type: ErrorType.BadGateway,
-								message: `Failed to parse payload as JSON "${buffer.toString(
-									'utf-8',
-								)}"`,
-							} as ErrorInfo),
-					),
-					fromEither,
-				),
-			),
-			map((j) => j),
-			chain(
-				validate({
-					schema: responseSchema,
-					errorType: ErrorType.BadGateway,
-					errorMessage: 'Response validation failed!',
-				}),
-			),
-		)
+	}): Promise<{ error: ErrorInfo } | Static<typeof responseSchema>> => {
+		const maybeValidPayload = validate({
+			schema: requestSchema,
+			errorMessage: 'Input validation failed!',
+			errorType: ErrorType.BadRequest,
+		})(payload)
+
+		if ('error' in maybeValidPayload) {
+			return {
+				error: {
+					type: ErrorType.BadGateway,
+					message: (maybeValidPayload.error as Error).message,
+				},
+			}
+		}
+
+		const buffer = await doRequest(cfg)({
+			resource,
+			payload,
+			headers: {
+				...headers,
+				'Content-Type': 'application/json',
+			},
+		})()
+
+		try {
+			return validate({
+				schema: responseSchema,
+				errorType: ErrorType.BadGateway,
+				errorMessage: 'Response validation failed!',
+			})(JSON.parse(buffer.toString('utf-8')))
+		} catch (err) {
+			return {
+				error: {
+					type: ErrorType.BadGateway,
+					message: `Failed to parse payload as JSON "${buffer.toString(
+						'utf-8',
+					)}"`,
+				},
+			}
+		}
+	}
 
 const head =
 	({
@@ -213,7 +197,7 @@ const head =
 		serviceKey: string
 		teamId: string
 	}) =>
-	<Request extends TObject<TProperties>>({
+	async <Request extends TObject<TProperties>>({
 		resource,
 		payload,
 		headers,
@@ -225,65 +209,61 @@ const head =
 		payload: Record<string, any>
 		headers?: OutgoingHttpHeaders
 		requestSchema: Request
-	}): TaskEither<ErrorInfo, IncomingHttpHeaders> =>
-		pipe(
-			validate({
-				schema: requestSchema,
-				errorMessage: 'Input validation failed!',
-				errorType: ErrorType.BadRequest,
-			})(payload),
-			chain((payload) =>
-				tryCatch<ErrorInfo, IncomingHttpHeaders>(
-					async () =>
-						new Promise<IncomingHttpHeaders>((resolve, reject) => {
-							const options: RequestOptions = {
-								...jsonRequestOptions({
-									endpoint,
-									resource,
-									method,
-									payload,
-									teamId,
-									serviceKey,
-									headers,
-								}),
-								method: 'HEAD',
-							}
+	}): Promise<{ error: ErrorInfo } | { headers: IncomingHttpHeaders }> => {
+		const maybeValidPayload = validate({
+			schema: requestSchema,
+			errorMessage: 'Input validation failed!',
+			errorType: ErrorType.BadRequest,
+		})(payload)
 
-							console.debug(JSON.stringify({ head: { options } }))
+		if ('error' in maybeValidPayload) {
+			return {
+				error: {
+					type: ErrorType.BadGateway,
+					message: (maybeValidPayload.error as Error).message,
+				},
+			}
+		}
 
-							const req = nodeRequest(options, (res) => {
-								console.debug(
-									JSON.stringify({
-										head: {
-											response: {
-												statusCode: res.statusCode,
-												headers: res.headers,
-											},
-										},
-									}),
-								)
-								if (res.statusCode === undefined) {
-									return reject(new Error('No response received!'))
-								}
-								if (res.statusCode >= 400) {
-									return reject(new Error(`Error ${res.statusCode}`))
-								}
-								resolve(res.headers)
-							})
-							req.on('error', (e) => {
-								reject(new Error(e.message))
-							})
-							req.end()
-						}),
-					(err) => {
-						return {
-							type: ErrorType.BadGateway,
-							message: (err as Error).message,
-						}
-					},
-				),
-			),
-		)
+		return new Promise<{ headers: IncomingHttpHeaders }>((resolve, reject) => {
+			const options: RequestOptions = {
+				...jsonRequestOptions({
+					endpoint,
+					resource,
+					method,
+					payload,
+					teamId,
+					serviceKey,
+					headers,
+				}),
+				method: 'HEAD',
+			}
+
+			const req = nodeRequest(options, (res) => {
+				console.debug(
+					JSON.stringify({
+						head: {
+							response: {
+								statusCode: res.statusCode,
+								headers: res.headers,
+							},
+						},
+					}),
+				)
+				if (res.statusCode === undefined) {
+					return reject(new Error('No response received!'))
+				}
+				if (res.statusCode >= 400) {
+					return reject(new Error(`Error ${res.statusCode}`))
+				}
+				resolve({ headers: res.headers })
+			})
+			req.on('error', (e) => {
+				reject(new Error(e.message))
+			})
+			req.end()
+		})
+	}
 
 const reqBinary =
 	(cfg: {
@@ -292,7 +272,7 @@ const reqBinary =
 		teamId: string
 		method: 'GET' | 'POST'
 	}) =>
-	<Request extends TObject<TProperties>>({
+	async <Request extends TObject<TProperties>>({
 		resource,
 		payload,
 		headers,
@@ -302,29 +282,28 @@ const reqBinary =
 		payload: Record<string, any>
 		headers?: OutgoingHttpHeaders
 		requestSchema: Request
-	}): TaskEither<ErrorInfo, Buffer> =>
-		pipe(
-			validate({
-				schema: requestSchema,
-				errorMessage: 'Input validation failed!',
-				errorType: ErrorType.BadRequest,
-			})(payload),
-			chain((payload) =>
-				tryCatch<ErrorInfo, Buffer>(
-					doRequest(cfg)({
-						resource,
-						payload,
-						headers: { ...headers, Accept: 'application/octet-stream' },
-					}),
-					(err) => {
-						return {
-							type: ErrorType.BadGateway,
-							message: (err as Error).message,
-						}
-					},
-				),
-			),
-		)
+	}): Promise<{ error: ErrorInfo } | Buffer> => {
+		const maybeValidPayload = validate({
+			schema: requestSchema,
+			errorMessage: 'Input validation failed!',
+			errorType: ErrorType.BadRequest,
+		})(payload)
+
+		if ('error' in maybeValidPayload) {
+			return {
+				error: {
+					type: ErrorType.BadGateway,
+					message: (maybeValidPayload.error as Error).message,
+				},
+			}
+		}
+
+		return doRequest(cfg)({
+			resource,
+			payload,
+			headers: { ...headers, Accept: 'application/octet-stream' },
+		})()
+	}
 
 export const apiClient = ({
 	endpoint,
@@ -350,7 +329,7 @@ export const apiClient = ({
 		headers?: Record<string, string>
 		requestSchema: Request
 		responseSchema: Response
-	}) => TaskEither<ErrorInfo, Static<typeof responseSchema>>
+	}) => Promise<{ error: ErrorInfo } | Static<typeof responseSchema>>
 	get: <
 		Request extends TObject<TProperties>,
 		Response extends TObject<TProperties>,
@@ -366,7 +345,7 @@ export const apiClient = ({
 		headers?: Record<string, string>
 		requestSchema: Request
 		responseSchema: Response
-	}) => TaskEither<ErrorInfo, Static<typeof responseSchema>>
+	}) => Promise<{ error: ErrorInfo } | Static<typeof responseSchema>>
 	head: <Request extends TObject<TProperties>>({
 		resource,
 		payload,
@@ -378,7 +357,7 @@ export const apiClient = ({
 		payload: Record<string, any>
 		headers?: Record<string, string>
 		requestSchema: Request
-	}) => TaskEither<ErrorInfo, OutgoingHttpHeaders>
+	}) => Promise<{ error: ErrorInfo } | { headers: OutgoingHttpHeaders }>
 	getBinary: <Request extends TObject<TProperties>>({
 		resource,
 		payload,
@@ -389,7 +368,7 @@ export const apiClient = ({
 		payload: Record<string, any>
 		headers?: Record<string, string>
 		requestSchema: Request
-	}) => TaskEither<ErrorInfo, Buffer>
+	}) => Promise<{ error: ErrorInfo } | Buffer>
 } => ({
 	post: reqJSON({
 		endpoint,

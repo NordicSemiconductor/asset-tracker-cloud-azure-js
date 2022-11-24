@@ -1,5 +1,4 @@
 import { Static, Type } from '@sinclair/typebox'
-import { Either, isLeft, right } from 'fp-ts/lib/Either.js'
 import { ErrorInfo } from '../lib/ErrorInfo.js'
 import { validateWithJSONSchema } from '../lib/validateWithJSONSchema.js'
 import {
@@ -65,15 +64,15 @@ export const resolvePgpsRequest =
 	) =>
 	async (
 		pgps: Static<typeof pgpsRequestSchema>,
-	): Promise<Either<ErrorInfo, URL>> => {
+	): Promise<{ error: ErrorInfo } | URL> => {
 		debug?.({ pgpsRequest: pgps })
 		const valid = validateInput(pgps)
-		if (isLeft(valid)) {
-			error?.(JSON.stringify(valid.left))
+		if ('error' in valid) {
+			error?.(JSON.stringify(valid.error))
 			return valid
 		}
 
-		const { n, int, day, time } = valid.right
+		const { n, int, day, time } = valid
 
 		const result = await client.get({
 			resource: 'location/pgps',
@@ -85,12 +84,12 @@ export const resolvePgpsRequest =
 			},
 			requestSchema: apiRequestSchema,
 			responseSchema: apiResponseSchema,
-		})()
+		})
 
-		if (isLeft(result)) {
-			error?.(JSON.stringify(result.left))
+		if ('error' in result) {
+			error?.(JSON.stringify(result.error))
 			return result
 		}
 
-		return right(new URL(`https://${result.right.host}/${result.right.path}`))
+		return new URL(`https://${result.host}/${result.path}`)
 	}

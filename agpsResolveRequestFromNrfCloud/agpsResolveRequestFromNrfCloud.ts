@@ -3,7 +3,6 @@ import { AzureFunction, Context } from '@azure/functions'
 import { DefaultAzureCredential } from '@azure/identity'
 import { SecretClient } from '@azure/keyvault-secrets'
 import { Static } from '@sinclair/typebox'
-import { isLeft } from 'fp-ts/lib/Either.js'
 import { URL } from 'url'
 import { cacheKey } from '../agps/cacheKey.js'
 import { agpsRequestSchema } from '../agps/types.js'
@@ -131,15 +130,15 @@ const agpsResolveRequestFromNrfCloud: AzureFunction = async (
 		updatedAt: new Date().toISOString(),
 		source: 'nrfcloud',
 	} as Record<string, any>
-	if (isLeft(res)) {
+	if ('error' in res) {
 		logError(context)(`Resolution failed.`)
-		logError(context)(res.left.message)
+		logError(context)(res.error.message)
 		item.unresolved = true
 	} else {
 		log(context)(`Resolved`)
-		log(context)({ dataHex: res.right })
+		log(context)({ dataHex: res })
 		item.unresolved = false
-		item.dataHex = res.right
+		item.dataHex = res
 	}
 	log(context)({
 		item,
