@@ -1,4 +1,3 @@
-import { Either, left, right } from 'fp-ts/lib/Either.js'
 import { request as nodeRequest, RequestOptions } from 'https'
 import { URL } from 'url'
 
@@ -12,7 +11,9 @@ export const resolveFromAPI =
 			nw: 'nbiot' | 'lte'
 		},
 		debug?: (...args: any[]) => void,
-	): Promise<Either<Error, { lat: number; lng: number; accuracy: number }>> => {
+	): Promise<
+		{ error: Error } | { lat: number; lng: number; accuracy: number }
+	> => {
 		try {
 			const { hostname, pathname: path } = new URL(endpoint)
 
@@ -97,14 +98,14 @@ export const resolveFromAPI =
 			})
 
 			if (status === 'ok' && lat && lon) {
-				return right({
+				return {
 					lat,
 					lng: lon,
 					accuracy,
-				})
+				}
 			}
-			return left(new Error(`Failed to resolve.`))
+			return { error: new Error(`Failed to resolve.`) }
 		} catch (err) {
-			return left(err as Error)
+			return { error: err as Error }
 		}
 	}

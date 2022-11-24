@@ -3,7 +3,6 @@ import { AzureFunction, Context } from '@azure/functions'
 import { DefaultAzureCredential } from '@azure/identity'
 import { SecretClient } from '@azure/keyvault-secrets'
 import { Static } from '@sinclair/typebox'
-import { isLeft } from 'fp-ts/lib/Either.js'
 import { URL } from 'url'
 import { fromEnv } from '../lib/fromEnv.js'
 import { log, logError } from '../lib/log.js'
@@ -136,15 +135,15 @@ const pgpsResolveRequestFromNrfCloud: AzureFunction = async (
 		updatedAt: new Date().toISOString(),
 		source: 'nrfcloud',
 	} as Record<string, any>
-	if (isLeft(res)) {
+	if ('error' in res) {
 		logError(context)(`Resolution failed.`)
-		logError(context)(res.left.message)
+		logError(context)(res.error.message)
 		item.unresolved = true
 	} else {
 		log(context)(`Resolved`)
-		log(context)(res.right)
+		log(context)(res)
 		item.unresolved = false
-		item.url = res.right
+		item.url = res
 	}
 	log(context)({
 		item,

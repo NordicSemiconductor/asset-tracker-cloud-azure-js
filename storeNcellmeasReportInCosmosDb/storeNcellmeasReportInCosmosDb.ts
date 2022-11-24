@@ -1,7 +1,6 @@
 import { AzureFunction, Context } from '@azure/functions'
 import { Static } from '@sinclair/typebox'
 import iothub from 'azure-iothub'
-import { isRight } from 'fp-ts/lib/Either.js'
 import { fromEnv } from '../lib/fromEnv.js'
 import { log, logError } from '../lib/log.js'
 import { validateWithJSONSchema } from '../lib/validateWithJSONSchema.js'
@@ -60,31 +59,31 @@ const storeNcellmeasReportInCosmosDb: AzureFunction = async (
 		log(context)(`Telemetry message does not have ncellmeas property set.`)
 	}
 	const valid = validateNcellmeasReport(event)
-	if (isRight(valid)) {
-		let nw = deviceNetwork[deviceId]
-		if (nw === undefined) {
-			const devices = registry.createQuery(
-				`SELECT * FROM devices WHERE deviceId='${deviceId}'`,
-			)
-			const res = await devices.nextAsTwin()
-			nw = res.result[0].properties.reported.roam?.v?.nw
-		}
-		if (nw === undefined) {
-			logError(context)(
-				`Could not determine network mode for device ${deviceId}.`,
-			)
-		}
-		const document: StoredReport = {
-			report: valid.right,
-			deviceId,
-			nw: nw ?? 'LTE-M',
-			timestamp: context.bindingData.systemProperties['iothub-enqueuedtime'],
-		}
-		context.bindings.report = JSON.stringify(document)
-		log(context)({ document })
-	} else {
-		logError(context)(JSON.stringify(valid.left))
+	if ('error' in valid) {
+		logError(context)(JSON.stringify(valid.error))
+		return
 	}
+	let nw = deviceNetwork[deviceId]
+	if (nw === undefined) {
+		const devices = registry.createQuery(
+			`SELECT * FROM devices WHERE deviceId='${deviceId}'`,
+		)
+		const res = await devices.nextAsTwin()
+		nw = res.result[0].properties.reported.roam?.v?.nw
+	}
+	if (nw === undefined) {
+		logError(context)(
+			`Could not determine network mode for device ${deviceId}.`,
+		)
+	}
+	const document: StoredReport = {
+		report: valid,
+		deviceId,
+		nw: nw ?? 'LTE-M',
+		timestamp: context.bindingData.systemProperties['iothub-enqueuedtime'],
+	}
+	context.bindings.report = JSON.stringify(document)
+	log(context)({ document })
 }
 
 export default storeNcellmeasReportInCosmosDb

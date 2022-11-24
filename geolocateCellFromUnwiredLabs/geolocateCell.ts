@@ -6,7 +6,6 @@ import {
 	cellId,
 	NetworkMode,
 } from '@nordicsemiconductor/cell-geolocation-helpers'
-import { isLeft } from 'fp-ts/lib/Either.js'
 import { fromEnv } from '../lib/fromEnv.js'
 import { result } from '../lib/http.js'
 import { log, logError } from '../lib/log.js'
@@ -106,8 +105,8 @@ const geolocateCell: AzureFunction = async (
 				},
 				log(context),
 			)
-			if (isLeft(maybeLocation)) {
-				logError(context)({ error: maybeLocation.left.message })
+			if ('error' in maybeLocation) {
+				logError(context)({ error: maybeLocation.error.message })
 				context.res = result(context)(
 					{ error: `Could not resolve cell ${id}` },
 					404,
@@ -120,10 +119,10 @@ const geolocateCell: AzureFunction = async (
 				context.bindings.cellGeolocation = JSON.stringify({
 					cellId: id,
 					...cell,
-					...maybeLocation.right,
+					...maybeLocation,
 				})
-				log(context)({ location: maybeLocation.right })
-				context.res = result(context)(maybeLocation.right)
+				log(context)({ location: maybeLocation })
+				context.res = result(context)(maybeLocation)
 			}
 		}
 	} catch (error) {

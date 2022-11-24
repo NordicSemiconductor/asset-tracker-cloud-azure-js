@@ -2,7 +2,6 @@ import { CosmosClient, ItemResponse } from '@azure/cosmos'
 import { AzureFunction, Context, HttpRequest } from '@azure/functions'
 import { NetworkMode } from '@nordicsemiconductor/cell-geolocation-helpers'
 import { Static, TObject, TProperties } from '@sinclair/typebox'
-import { isLeft } from 'fp-ts/lib/Either.js'
 import { URL } from 'url'
 import { fromEnv } from '../lib/fromEnv.js'
 import { result } from '../lib/http.js'
@@ -195,13 +194,13 @@ const geolocateReport: AzureFunction = async (
 			payload,
 			requestSchema: locateRequestSchema as unknown as TObject<TProperties>,
 			responseSchema: locateResultSchema,
-		})()
+		})
 
-		if (isLeft(maybeCellGeoLocation)) {
-			logError(context)({ error: maybeCellGeoLocation.left.message })
+		if ('error' in maybeCellGeoLocation) {
+			logError(context)({ error: maybeCellGeoLocation.error.message })
 			context.res = result(context)(
 				{
-					error: `Could not resolve report ${reportId}: ${maybeCellGeoLocation.left.message}`,
+					error: `Could not resolve report ${reportId}: ${maybeCellGeoLocation.error.message}`,
 				},
 				404,
 			)
@@ -209,9 +208,9 @@ const geolocateReport: AzureFunction = async (
 			await markAsFailed(reportId, cacheEntry)
 		} else {
 			const location = {
-				lat: maybeCellGeoLocation.right.lat,
-				lng: maybeCellGeoLocation.right.lon,
-				accuracy: maybeCellGeoLocation.right.uncertainty,
+				lat: maybeCellGeoLocation.lat,
+				lng: maybeCellGeoLocation.lon,
+				accuracy: maybeCellGeoLocation.uncertainty,
 			}
 			log(context)({ location })
 			// Mark resolution as resolved

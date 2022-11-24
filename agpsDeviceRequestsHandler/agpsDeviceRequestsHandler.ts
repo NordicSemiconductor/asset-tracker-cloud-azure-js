@@ -5,7 +5,6 @@ import {
 	StorageSharedKeyCredential,
 } from '@azure/storage-queue'
 import { Static } from '@sinclair/typebox'
-import { isRight } from 'fp-ts/lib/Either.js'
 import { agpsRequestSchema } from '../agps/types.js'
 import { fromEnv } from '../lib/fromEnv.js'
 import { log, logError } from '../lib/log.js'
@@ -92,14 +91,14 @@ const agpsDeviceRequestsHandler: AzureFunction = async (
 	}[] = []
 	agpsRequests.forEach(({ request, deviceId }) => {
 		const valid = validateAgpsRequest(request)
-		if (isRight(valid)) {
-			deviceRequests.push({
-				request: valid.right,
-				deviceId,
-			})
-		} else {
-			logError(context)(JSON.stringify(valid.left))
+		if ('error' in valid) {
+			logError(context)(JSON.stringify(valid.error))
+			return
 		}
+		deviceRequests.push({
+			request: valid,
+			deviceId,
+		})
 	})
 	log(context)({ deviceRequests })
 
