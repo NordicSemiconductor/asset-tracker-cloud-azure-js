@@ -1,8 +1,8 @@
 import { AzureNamedKeyCredential, TableClient } from '@azure/data-tables'
 import { AzureFunction, Context, HttpRequest } from '@azure/functions'
 import { setLogLevel } from '@azure/logger'
+import { randomUUID } from 'node:crypto'
 import { URL } from 'url'
-import { v4 } from 'uuid'
 import { fromEnv } from '../lib/fromEnv.js'
 import { result } from '../lib/http.js'
 import { log, logError } from '../lib/log.js'
@@ -38,7 +38,7 @@ const mockHTTPAPI: AzureFunction = async (
 			`${path}${encodeQuery(req.query as Record<string, string>)}`,
 		)
 		const methodPathQuery = `${req.method} ${pathWithQuery}`
-		const requestId = v4()
+		const requestId = randomUUID()
 		const request = {
 			partitionKey: requestId,
 			rowKey: encodeURIComponent(methodPathQuery),

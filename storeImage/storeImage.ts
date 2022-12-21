@@ -3,7 +3,7 @@ import {
 	BlobServiceClient,
 	StorageSharedKeyCredential,
 } from '@azure/storage-blob'
-import { v4 } from 'uuid'
+import { randomUUID } from 'node:crypto'
 import { fromEnv } from '../lib/fromEnv.js'
 import { result } from '../lib/http.js'
 import { log } from '../lib/log.js'
@@ -39,7 +39,7 @@ const storeImage: AzureFunction = async (
 	})
 
 	const image = Buffer.from(body, 'base64')
-	const blobName = `${v4()}.jpg`
+	const blobName = `${randomUUID()}.jpg`
 	const blockBlobClient = containerClient.getBlockBlobClient(blobName)
 	const uploadBlobResponse = await blockBlobClient.upload(image, image.length, {
 		blobHTTPHeaders: {

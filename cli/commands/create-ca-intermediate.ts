@@ -1,6 +1,6 @@
 import { ProvisioningServiceClient } from 'azure-iot-provisioning-service'
 import { readFile } from 'fs/promises'
-import { v4 } from 'uuid'
+import { randomUUID } from 'node:crypto'
 import { CAIntermediateFileLocations } from '../iot/certificates/caFileLocations.js'
 import {
 	defaultIntermediateCAValidityInDays,
@@ -37,7 +37,7 @@ export const createCAIntermediateCommand = ({
 		},
 	],
 	action: async ({ expires, debug }: { expires?: string; debug?: boolean }) => {
-		const id = v4()
+		const id = randomUUID()
 
 		const certsDir = await certsDirPromise()
 		const caIntermediateFiles = CAIntermediateFileLocations({ certsDir, id })

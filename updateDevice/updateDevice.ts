@@ -1,7 +1,7 @@
 import { AzureFunction, Context, HttpRequest } from '@azure/functions'
 import iothub from 'azure-iothub'
+import { randomUUID } from 'node:crypto'
 import * as url from 'url'
-import { v4 } from 'uuid'
 import { ErrorInfo, ErrorType, toStatusCode } from '../lib/ErrorInfo.js'
 import { fromEnv } from '../lib/fromEnv.js'
 import { result } from '../lib/http.js'
@@ -54,7 +54,7 @@ const updateDevice: AzureFunction = async (
 				}
 				// See https://developer.nordicsemi.com/nRF_Connect_SDK/doc/latest/nrf/include/net/azure_fota.html
 				firmware.fwFragmentSize = firmware.fwFragmentSize ?? 1800
-				firmware.jobId = firmware.jobId ?? v4()
+				firmware.jobId = firmware.jobId ?? randomUUID()
 			}
 
 			await registry.updateTwin(

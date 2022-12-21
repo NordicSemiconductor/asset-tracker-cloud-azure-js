@@ -3,7 +3,7 @@ import {
 	BlobServiceClient,
 	StorageSharedKeyCredential,
 } from '@azure/storage-blob'
-import { v4 } from 'uuid'
+import { randomUUID } from 'node:crypto'
 import { fromEnv } from '../lib/fromEnv.js'
 import { result } from '../lib/http.js'
 import { log } from '../lib/log.js'
@@ -36,7 +36,7 @@ const storeDeviceUpgrade: AzureFunction = async (
 		bodyLength: body.length,
 	})
 	try {
-		const id = v4()
+		const id = randomUUID()
 		const blobName = `${id}.bin`
 		const blockBlobClient = containerClient.getBlockBlobClient(blobName)
 		const file = Buffer.from(body, 'base64')
