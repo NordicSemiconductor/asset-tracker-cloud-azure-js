@@ -2,9 +2,9 @@ import { flash } from '@nordicsemiconductor/firmware-ci-device-helpers'
 import { Octokit } from '@octokit/rest'
 import * as fs from 'fs'
 import * as https from 'https'
+import { randomUUID } from 'node:crypto'
 import * as os from 'os'
 import * as path from 'path'
-import { v4 } from 'uuid'
 import { progress, success } from '../logging.js'
 import { CommandDefinition } from './CommandDefinition.js'
 
@@ -53,7 +53,7 @@ const getLatestFirmware = async ({
 
 	if (hexfile === undefined) throw new Error(`Failed to detect latest release.`)
 
-	const downloadTarget = path.join(os.tmpdir(), `${v4()}.hex`)
+	const downloadTarget = path.join(os.tmpdir(), `${randomUUID()}.hex`)
 	progress(`Downloading`, hexfile.name)
 
 	await new Promise((resolve) => {

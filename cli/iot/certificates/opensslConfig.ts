@@ -1,7 +1,7 @@
+import { randomUUID } from 'node:crypto'
 import { mkdtempSync, writeFileSync } from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
-import { v4 } from 'uuid'
 
 /**
  * OpenSSL CA configuration
@@ -149,7 +149,7 @@ export const opensslConfig = ({
 	const tempDir = mkdtempSync(
 		path.join(os.tmpdir(), 'nrf-asset-tracker-azure-certs-'),
 	)
-	const configFile = path.join(tempDir, `openssl-${v4()}.conf`)
+	const configFile = path.join(tempDir, `openssl-${randomUUID()}.conf`)
 	writeFileSync(configFile, config, 'utf-8')
 	return configFile
 }

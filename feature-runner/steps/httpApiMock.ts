@@ -7,7 +7,7 @@ import {
 import * as chai from 'chai'
 import { expect } from 'chai'
 import chaiSubset from 'chai-subset'
-import { v4 } from 'uuid'
+import { randomUUID } from 'node:crypto'
 import { sortQueryString } from '../../mock-http-api/sortQueryString.js'
 import { splitMockResponse } from '../../mock-http-api/splitMockResponse.js'
 chai.use(chaiSubset)
@@ -31,7 +31,7 @@ export const httpApiMockStepRunners = ({
 			const { body, headers } = splitMockResponse(step.interpolatedArgument)
 			const methodPathQuery = `${method} ${sortQueryString(path)}`
 			await responsesClient.createEntity({
-				partitionKey: v4(),
+				partitionKey: randomUUID(),
 				rowKey: encodeURIComponent(methodPathQuery),
 				methodPathQuery,
 				statusCode,

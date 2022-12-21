@@ -1,6 +1,6 @@
 import { IotDpsClient } from '@azure/arm-deviceprovisioningservices'
 import { readFile, writeFile } from 'fs/promises'
-import { v4 } from 'uuid'
+import { randomUUID } from 'node:crypto'
 import { CARootFileLocations } from '../iot/certificates/caFileLocations.js'
 import { certificateName as cn } from '../iot/certificates/certificateName.js'
 import {
@@ -40,7 +40,7 @@ export const createCARootCommand = ({
 		},
 	],
 	action: async ({ expires, debug }: { expires?: string; debug?: boolean }) => {
-		const certificateName = cn(`nrfassettracker-root-${v4()}`)
+		const certificateName = cn(`nrfassettracker-root-${randomUUID()}`)
 
 		const certsDir = await certsDirPromise()
 

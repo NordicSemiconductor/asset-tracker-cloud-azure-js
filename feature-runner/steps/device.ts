@@ -10,9 +10,9 @@ import chaiSubset from 'chai-subset'
 import { readFile, writeFile } from 'fs/promises'
 import { MqttClient } from 'mqtt'
 import fetch from 'node-fetch'
+import { randomUUID } from 'node:crypto'
 import os from 'node:os'
 import path from 'node:path'
-import { v4 } from 'uuid'
 import { CAIntermediateFileLocations } from '../../cli/iot/certificates/caFileLocations.js'
 import { createSimulatorKeyAndCSR } from '../../cli/iot/certificates/createSimulatorKeyAndCSR.js'
 import {
@@ -92,7 +92,7 @@ export const deviceStepRunners = ({
 			const reported = JSON.parse(step.interpolatedArgument)
 			const connection = connections[deviceId]
 			connection.publish(
-				deviceTopics.updateTwinReported(v4()),
+				deviceTopics.updateTwinReported(randomUUID()),
 				JSON.stringify(reported),
 			)
 		}),
@@ -185,7 +185,7 @@ export const deviceStepRunners = ({
 			const connection = connections[deviceId]
 			const state: Record<string, any> = await new Promise(
 				(resolve, reject) => {
-					const getTwinPropertiesRequestId = v4()
+					const getTwinPropertiesRequestId = randomUUID()
 					const i = setTimeout(reject, 20000)
 					connection.publish(
 						deviceTopics.getTwinProperties(getTwinPropertiesRequestId),
