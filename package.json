@@ -51,7 +51,7 @@
     "@azure/arm-resources-subscriptions": "2.0.2",
     "@azure/data-tables": "13.2.1",
     "@azure/logger": "1.0.3",
-    "@nordicsemiconductor/asset-tracker-cloud-code-style": "11.0.177",
+    "@nordicsemiconductor/asset-tracker-cloud-code-style": "11.0.179",
     "@nordicsemiconductor/e2e-bdd-test-runner": "15.1.234",
     "@nordicsemiconductor/firmware-ci-device-helpers": "13.3.42",
     "@swc/jest": "0.2.24",
