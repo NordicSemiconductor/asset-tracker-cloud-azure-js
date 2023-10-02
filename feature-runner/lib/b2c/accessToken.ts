@@ -39,11 +39,13 @@ export const getUserAccessToken = async ({
 	password,
 	b2cTenant,
 	clientId,
+	b2cUserFlowName,
 }: {
 	email: string
 	password: string
 	b2cTenant: string
 	clientId: string
+	b2cUserFlowName: string
 }): Promise<string> => {
 	const apiScope = `https://${b2cTenant}.onmicrosoft.com/api`
 	const scopes = [
@@ -51,8 +53,10 @@ export const getUserAccessToken = async ({
 		`${apiScope}/nrfassettracker.admin`,
 	]
 
+	// https://<b2cTenant>.b2clogin.com/<b2cTenant>.onmicrosoft.com/<policy-name>/oauth2/v2.0/token
+	// <policy-name> is the user flow name
 	const res = await fetch(
-		`https://${b2cTenant}.b2clogin.com/${b2cTenant}.onmicrosoft.com/B2C_1_developer/oauth2/v2.0/token`,
+		`https://${b2cTenant}.b2clogin.com/${b2cTenant}.onmicrosoft.com/${b2cUserFlowName}/oauth2/v2.0/token`,
 		{
 			method: 'POST',
 			body: new URLSearchParams({
@@ -65,6 +69,7 @@ export const getUserAccessToken = async ({
 			}),
 		},
 	)
+
 	await handleErrorResponse(res)
 	const data: any = await res.json()
 	return data.access_token

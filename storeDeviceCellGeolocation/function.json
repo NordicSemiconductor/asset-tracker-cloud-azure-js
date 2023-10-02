@@ -13,10 +13,10 @@
       "name": "deviceCellGeolocation",
       "type": "cosmosDB",
       "databaseName": "cellGeolocation",
-      "collectionName": "deviceCellGeolocations",
+      "containerName": "deviceCellGeolocations",
       "createIfNotExists": true,
       "partitionKey": "/cellId",
-      "connectionStringSetting": "COSMOSDB_CONNECTION_STRING",
+      "connection": "COSMOSDB_CONNECTION_STRING",
       "direction": "out"
     }
   ],

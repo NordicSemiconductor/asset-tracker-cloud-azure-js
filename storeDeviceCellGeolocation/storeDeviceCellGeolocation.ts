@@ -1,10 +1,11 @@
 import { CosmosClient } from '@azure/cosmos'
 import { AzureFunction, Context } from '@azure/functions'
 import {
-	cellId,
 	NetworkMode,
+	cellId,
 } from '@nordicsemiconductor/cell-geolocation-helpers'
 import { exponential } from 'backoff'
+import { randomUUID } from 'crypto'
 import { batchToDoc } from '../lib/batchToDoc.js'
 import { fromEnv } from '../lib/fromEnv.js'
 import {
@@ -70,7 +71,7 @@ const queryCellGeolocation: AzureFunction = async (
 			gnssUpdates.map(
 				async ({ ts, v }) =>
 					new Promise((resolve) => {
-						const sql = `SELECT 
+						const sql = `SELECT
 			 c.deviceUpdate.properties.reported.roam.v.cell AS cell,
 			 c.deviceUpdate.properties.reported.roam.v.mccmnc AS mccmnc,
 			 c.deviceUpdate.properties.reported.roam.v.area AS area
@@ -143,7 +144,12 @@ const queryCellGeolocation: AzureFunction = async (
 	}
 
 	// Persist in CosmosDB
-	context.bindings.deviceCellGeolocation = JSON.stringify(roamingPositions)
+	context.bindings.deviceCellGeolocation = JSON.stringify(
+		roamingPositions.map((r) => ({
+			id: randomUUID(),
+			...r,
+		})),
+	)
 }
 
 export default queryCellGeolocation

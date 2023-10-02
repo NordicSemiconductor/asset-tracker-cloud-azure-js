@@ -11,11 +11,13 @@ import { b2cClient } from '../lib/b2c/b2cClient.js'
 export const b2cSteps = async ({
 	b2cTenant,
 	b2cTenantId,
+	b2cUserFlowName,
 	clientSecret,
 	clientId,
 }: {
 	b2cTenant: string
 	b2cTenantId: string
+	b2cUserFlowName: string
 	clientId: string
 	clientSecret: string
 }): Promise<StepRunner<any>[]> => {
@@ -39,6 +41,7 @@ export const b2cSteps = async ({
 				b2cTenant,
 				password,
 				email,
+				b2cUserFlowName,
 			})
 			runner.store[storageName] = token
 			return token
