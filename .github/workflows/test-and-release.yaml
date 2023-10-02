@@ -30,6 +30,7 @@ jobs:
       APP_REG_CLIENT_ID: ${{ secrets.APP_REG_CLIENT_ID }}
       B2C_CLIENT_SECRET: ${{ secrets.B2C_CLIENT_SECRET }}
       B2C_TENANT_ID: ${{ secrets.B2C_TENANT_ID }}
+      B2C_USER_FLOW_NAME: B2C_1_developer
       RESOURCE_GROUP: ${{ secrets.RESOURCE_GROUP }}
       MOCK_HTTP_API_STORAGE_ACCOUNT_NAME: mockhttpapi
       NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
@@ -160,7 +161,7 @@ jobs:
         id: certs-cache
         with:
           path: ./certificates
-          key: certificates
+          key: certificates2023
 
       - name: Create Intermediate CA certificate
         if: steps.certs-cache.outputs.cache-hit != 'true'

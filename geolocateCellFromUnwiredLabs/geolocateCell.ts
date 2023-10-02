@@ -3,9 +3,10 @@ import { AzureFunction, Context, HttpRequest } from '@azure/functions'
 import { DefaultAzureCredential } from '@azure/identity'
 import { SecretClient } from '@azure/keyvault-secrets'
 import {
-	cellId,
 	NetworkMode,
+	cellId,
 } from '@nordicsemiconductor/cell-geolocation-helpers'
+import { randomUUID } from 'crypto'
 import { fromEnv } from '../lib/fromEnv.js'
 import { result } from '../lib/http.js'
 import { log, logError } from '../lib/log.js'
@@ -106,17 +107,21 @@ const geolocateCell: AzureFunction = async (
 				log(context),
 			)
 			if ('error' in maybeLocation) {
-				logError(context)({ error: maybeLocation.error.message })
+				logError(context)('maybeLocation', {
+					error: maybeLocation.error.message,
+				})
 				context.res = result(context)(
 					{ error: `Could not resolve cell ${id}` },
 					404,
 				)
 				context.bindings.cellGeolocation = JSON.stringify({
+					id: randomUUID(),
 					cellId: id,
 					...cell,
 				})
 			} else {
 				context.bindings.cellGeolocation = JSON.stringify({
+					id: randomUUID(),
 					cellId: id,
 					...cell,
 					...maybeLocation,

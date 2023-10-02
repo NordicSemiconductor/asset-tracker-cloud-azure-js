@@ -544,7 +544,7 @@
               },
               {
                 "name": "FUNCTIONS_EXTENSION_VERSION",
-                "value": "~3"
+                "value": "~4"
               },
               {
                 "name": "APPINSIGHTS_INSTRUMENTATIONKEY",
@@ -556,7 +556,7 @@
               },
               {
                 "name": "WEBSITE_NODE_DEFAULT_VERSION",
-                "value": "~14"
+                "value": "~18"
               },
               {
                 "name": "WEBSITE_RUN_FROM_PACKAGE",

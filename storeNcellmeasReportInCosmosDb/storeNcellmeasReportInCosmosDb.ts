@@ -1,6 +1,7 @@
 import { AzureFunction, Context } from '@azure/functions'
 import { Static } from '@sinclair/typebox'
 import iothub from 'azure-iothub'
+import { randomUUID } from 'node:crypto'
 import { fromEnv } from '../lib/fromEnv.js'
 import { log, logError } from '../lib/log.js'
 import { validateWithJSONSchema } from '../lib/validateWithJSONSchema.js'
@@ -76,7 +77,8 @@ const storeNcellmeasReportInCosmosDb: AzureFunction = async (
 			`Could not determine network mode for device ${deviceId}.`,
 		)
 	}
-	const document: StoredReport = {
+	const document: StoredReport & { id: string } = {
+		id: randomUUID(),
 		report: valid,
 		deviceId,
 		nw: nw ?? 'LTE-M',
