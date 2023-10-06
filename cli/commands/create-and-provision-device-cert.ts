@@ -193,7 +193,7 @@ export const createAndProvisionDeviceCertCommand = ({
 				os.EOL,
 			),
 			caCert: await readFile(
-				path.resolve(process.cwd(), 'data', 'BaltimoreCyberTrustRoot.pem'),
+				path.resolve(process.cwd(), 'data', 'DigiCertGlobalRootG2.pem'),
 				'utf-8',
 			),
 			secondaryCaCert: {
