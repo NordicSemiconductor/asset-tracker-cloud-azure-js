@@ -29,10 +29,25 @@ export const connectDevice = async ({
 		certsDir,
 		id: intermediateCertId,
 	})
-	const [deviceKey, deviceCert, intermediateCA, digiCert] = await Promise.all([
+	const [
+		deviceKey,
+		deviceCert,
+		intermediateCA,
+		baltimore,
+		digiCertG5,
+		digiCert,
+	] = await Promise.all([
 		fs.readFile(deviceFiles.privateKey, 'utf-8'),
 		fs.readFile(deviceFiles.cert, 'utf-8'),
 		fs.readFile(intermediateCAFiles.cert, 'utf-8'),
+		fs.readFile(
+			path.join(process.cwd(), 'data', 'BaltimoreCyberTrustRoot.pem'),
+			'utf-8',
+		),
+		fs.readFile(
+			path.resolve(process.cwd(), 'data', 'DigiCertTLSECCP384RootG5.crt.pem'),
+			'utf-8',
+		),
 		fs.readFile(
 			path.join(process.cwd(), 'data', 'DigiCertGlobalRootG2.pem'),
 			'utf-8',
@@ -79,7 +94,7 @@ export const connectDevice = async ({
 			username: `${iotHub}/${deviceId}/?api-version=2020-09-30`,
 			protocolVersion: 4,
 			clean: true,
-			ca: digiCert,
+			ca: [baltimore, digiCertG5, digiCert].join(os.EOL),
 		})
 		client.on('connect', async () => {
 			log?.('Connected', deviceId)

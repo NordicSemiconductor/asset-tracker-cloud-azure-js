@@ -7,9 +7,6 @@
   "scripts": {
     "test": "jest",
     "test:e2e": "node --unhandled-rejections=strict dist/feature-runner/run-features.js ./features --print-results --progress",
-    "pud": "npx tsx feature-runner/run-features.ts ./features --print-results --progress",
-    "deploy": "npx tsc && node scripts/pack-app.js && az functionapp deployment source config-zip -g ${RESOURCE_GROUP} -n ${APP_NAME}api --src dist/functionapp.zip",
-    "deploy1": "npx tsc && node scripts/pack-app1.js && az functionapp deployment source config-zip -g ${RESOURCE_GROUP} -n ${APP_NAME}api --src dist/functionapp.zip",
     "prepare": "husky install && check-node-version --package"
   },
   "repository": {
