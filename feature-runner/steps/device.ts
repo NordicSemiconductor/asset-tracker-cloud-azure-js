@@ -52,6 +52,24 @@ export const deviceStepRunners = ({
 				certsDir,
 				id: intermediateCertId,
 			})
+			const caCerts = await Promise.all([
+				readFile(
+					path.resolve(process.cwd(), 'data', 'BaltimoreCyberTrustRoot.pem'),
+					'utf-8',
+				),
+				readFile(
+					path.resolve(
+						process.cwd(),
+						'data',
+						'DigiCertTLSECCP384RootG5.crt.pem',
+					),
+					'utf-8',
+				),
+				readFile(
+					path.resolve(process.cwd(), 'data', 'DigiCertGlobalRootG2.pem'),
+					'utf-8',
+				),
+			])
 			const simulatorJSON: DeviceCertificateJSON = {
 				clientId: deviceId,
 				idScope,
@@ -60,10 +78,7 @@ export const deviceStepRunners = ({
 					await readFile(deviceFiles.cert, 'utf-8'),
 					await readFile(intermediateCAFiles.cert, 'utf-8'),
 				].join(os.EOL),
-				caCert: await readFile(
-					path.resolve(process.cwd(), 'data', 'BaltimoreCyberTrustRoot.pem'),
-					'utf-8',
-				),
+				caCert: caCerts.join(os.EOL),
 			}
 			await writeFile(
 				deviceFiles.json,
