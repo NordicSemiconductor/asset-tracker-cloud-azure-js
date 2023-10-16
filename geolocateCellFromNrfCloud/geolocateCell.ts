@@ -3,11 +3,10 @@ import { AzureFunction, Context, HttpRequest } from '@azure/functions'
 import { DefaultAzureCredential } from '@azure/identity'
 import { SecretClient } from '@azure/keyvault-secrets'
 import {
-	NetworkMode,
 	cellId,
+	NetworkMode,
 } from '@nordicsemiconductor/cell-geolocation-helpers'
 import { Static, TObject, TProperties } from '@sinclair/typebox'
-import { randomUUID } from 'crypto'
 import { URL } from 'url'
 import { fromEnv } from '../lib/fromEnv.js'
 import { result } from '../lib/http.js'
@@ -96,7 +95,7 @@ const geolocateCell: AzureFunction = async (
 
 	try {
 		const container = await cosmosDbContainerPromise
-		const sql = `SELECT c.lat AS lat, c.lng AS lng, c.accuracy FROM c WHERE c.cellId='${id}'`
+		const sql = `SELECT c.lat AS lat, c.lng AS lng, c.accuracy FROM c WHERE c.id='${id}'`
 		log(context)({ sql })
 		const locations = (await container.items.query(sql).fetchAll()).resources
 
@@ -143,8 +142,7 @@ const geolocateCell: AzureFunction = async (
 					404,
 				)
 				context.bindings.cellGeolocation = JSON.stringify({
-					id: randomUUID(),
-					cellId: id,
+					id,
 					...cell,
 				})
 			} else {
@@ -154,8 +152,7 @@ const geolocateCell: AzureFunction = async (
 					accuracy: maybeCellGeoLocation.uncertainty,
 				}
 				context.bindings.cellGeolocation = JSON.stringify({
-					id: randomUUID(),
-					cellId: id,
+					id,
 					...cell,
 					...location,
 				})
