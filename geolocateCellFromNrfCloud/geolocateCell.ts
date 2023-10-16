@@ -3,11 +3,10 @@ import { AzureFunction, Context, HttpRequest } from '@azure/functions'
 import { DefaultAzureCredential } from '@azure/identity'
 import { SecretClient } from '@azure/keyvault-secrets'
 import {
-	NetworkMode,
 	cellId,
+	NetworkMode,
 } from '@nordicsemiconductor/cell-geolocation-helpers'
 import { Static, TObject, TProperties } from '@sinclair/typebox'
-import { randomUUID } from 'crypto'
 import { URL } from 'url'
 import { fromEnv } from '../lib/fromEnv.js'
 import { result } from '../lib/http.js'
@@ -143,7 +142,7 @@ const geolocateCell: AzureFunction = async (
 					404,
 				)
 				context.bindings.cellGeolocation = JSON.stringify({
-					id: randomUUID(),
+					id,
 					cellId: id,
 					...cell,
 				})
@@ -154,7 +153,7 @@ const geolocateCell: AzureFunction = async (
 					accuracy: maybeCellGeoLocation.uncertainty,
 				}
 				context.bindings.cellGeolocation = JSON.stringify({
-					id: randomUUID(),
+					id,
 					cellId: id,
 					...cell,
 					...location,
