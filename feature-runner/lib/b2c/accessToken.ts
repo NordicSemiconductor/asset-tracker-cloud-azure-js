@@ -1,7 +1,6 @@
 // @microsoft/microsoft-graph-client does not support clients using secrets, yet:
 // https://github.com/microsoftgraph/msgraph-sdk-javascript/issues/237#issuecomment-644322566
 
-import fetch from 'node-fetch'
 import { URLSearchParams } from 'url'
 import { handleErrorResponse } from './handleResponse.js'
 

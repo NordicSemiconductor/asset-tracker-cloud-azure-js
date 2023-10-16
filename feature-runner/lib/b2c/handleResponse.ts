@@ -1,5 +1,3 @@
-import { Response } from 'node-fetch'
-
 export const handleErrorResponse = async (res: Response): Promise<void> => {
 	if (res.status >= 400) {
 		const error: any = await res.json()
