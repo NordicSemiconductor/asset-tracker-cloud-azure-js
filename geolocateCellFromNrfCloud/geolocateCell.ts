@@ -1,7 +1,5 @@
 import { CosmosClient } from '@azure/cosmos'
 import { AzureFunction, Context, HttpRequest } from '@azure/functions'
-import { DefaultAzureCredential } from '@azure/identity'
-import { SecretClient } from '@azure/keyvault-secrets'
 import {
 	cellId,
 	NetworkMode,
@@ -17,6 +15,7 @@ import {
 	locateRequestSchema,
 	locateResultSchema,
 } from '../third-party/nrfcloud.com/types.js'
+import { nrfCloudServiceKeyPromise as fetchServiceKey } from '../third-party/nrfcloud.com/config.js'
 
 const config = () =>
 	fromEnv({
@@ -37,19 +36,6 @@ const cosmosDbContainerPromise = (async () => {
 	})
 
 	return cosmosClient.database('cellGeolocation').container('nrfCloudCache')
-})()
-
-const nrfCloudCellLocationServiceKeyPromise = (async () => {
-	const { keyVaultName } = config()
-	const credentials = new DefaultAzureCredential()
-	const keyVaultClient = new SecretClient(
-		`https://${keyVaultName}.vault.azure.net`,
-		credentials,
-	)
-	const latestSecret = await keyVaultClient.getSecret(
-		'nrfCloudCellLocationServiceKey',
-	)
-	return latestSecret.value as string
 })()
 
 const geolocateCell: AzureFunction = async (
@@ -108,10 +94,10 @@ const geolocateCell: AzureFunction = async (
 				context.res = result(context)({ error: `Unknown cell ${id}` }, 404)
 			}
 		} else {
-			const { endpoint, teamId } = config()
+			const { endpoint, teamId, keyVaultName } = config()
 			const c = apiClient({
 				endpoint: new URL(endpoint),
-				serviceKey: await nrfCloudCellLocationServiceKeyPromise,
+				serviceKey: await fetchServiceKey(keyVaultName)(),
 				teamId,
 			})
 

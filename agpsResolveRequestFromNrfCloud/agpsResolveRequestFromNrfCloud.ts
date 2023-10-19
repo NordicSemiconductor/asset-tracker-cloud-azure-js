@@ -1,7 +1,5 @@
 import { Container, CosmosClient } from '@azure/cosmos'
 import { AzureFunction, Context } from '@azure/functions'
-import { DefaultAzureCredential } from '@azure/identity'
-import { SecretClient } from '@azure/keyvault-secrets'
 import { Static } from '@sinclair/typebox'
 import { URL } from 'url'
 import { cacheKey } from '../agps/cacheKey.js'
@@ -11,6 +9,7 @@ import { log, logError } from '../lib/log.js'
 import { parseConnectionString } from '../lib/parseConnectionString.js'
 import { apiClient } from '../third-party/nrfcloud.com/apiclient.js'
 import { resolveAgpsRequest } from './agps.js'
+import { nrfCloudServiceKeyPromise as fetchServiceKey } from '../third-party/nrfcloud.com/config.js'
 
 const config = () =>
 	fromEnv({
@@ -35,23 +34,8 @@ const config = () =>
 		...process.env,
 	})
 
-let nrfCloudAGPSLocationServiceKeyPromise: Promise<string>
+let nrfCloudServiceKeyPromise: Promise<string>
 
-const fetchNrfCloudAGPSLocationServiceKey = async ({
-	keyVaultName,
-}: {
-	keyVaultName: string
-}) => {
-	const credentials = new DefaultAzureCredential()
-	const keyVaultClient = new SecretClient(
-		`https://${keyVaultName}.vault.azure.net`,
-		credentials,
-	)
-	const latestSecret = await keyVaultClient.getSecret(
-		'nrfCloudAGPSLocationServiceKey',
-	)
-	return latestSecret.value as string
-}
 /**
  * Resolve A-GNSS requests from nRF Cloud
  */
@@ -76,13 +60,12 @@ const agpsResolveRequestFromNrfCloud: AzureFunction = async (
 			agpsRequestsContainerName,
 		} = config()
 
-		if (nrfCloudAGPSLocationServiceKeyPromise === undefined)
-			nrfCloudAGPSLocationServiceKeyPromise =
-				fetchNrfCloudAGPSLocationServiceKey({ keyVaultName })
+		if (nrfCloudServiceKeyPromise === undefined)
+			nrfCloudServiceKeyPromise = fetchServiceKey(keyVaultName)()
 		resolver = resolveAgpsRequest(
 			apiClient({
 				endpoint: new URL(endpoint),
-				serviceKey: await nrfCloudAGPSLocationServiceKeyPromise,
+				serviceKey: await nrfCloudServiceKeyPromise,
 				teamId,
 			}),
 			log(context),
