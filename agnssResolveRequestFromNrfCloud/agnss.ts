@@ -1,6 +1,6 @@
 import { verify } from '@nordicsemiconductor/nrfcloud-location-services-tests'
 import { Static, Type } from '@sinclair/typebox'
-import { agpsRequestSchema, AGPSType } from '../agps/types.js'
+import { agnssRequestSchema, AGNSSType } from '../agnss/types.js'
 import { ErrorInfo, ErrorType } from '../lib/ErrorInfo.js'
 import { validateWithJSONSchema } from '../lib/validateWithJSONSchema.js'
 import { apiClient } from '../third-party/nrfcloud.com/apiclient.js'
@@ -14,24 +14,24 @@ const apiRequestSchema = Type.Object(
 		requestType: Type.RegEx(/^custom$/),
 		mcc: Type.Integer({ minimum: 100, maximum: 999 }),
 		mnc: Type.Integer({ minimum: 0, maximum: 99 }),
-		customTypes: Type.Array(Type.Enum(AGPSType), { minItems: 1 }),
+		customTypes: Type.Array(Type.Enum(AGNSSType), { minItems: 1 }),
 	},
 	{ additionalProperties: false },
 )
 
-const validateInput = validateWithJSONSchema(agpsRequestSchema)
+const validateInput = validateWithJSONSchema(agnssRequestSchema)
 
-export const resolveAgpsRequest =
+export const resolveAgnssRequest =
 	(
 		client: ReturnType<typeof apiClient>,
 		debug?: (...args: any[]) => void,
 		error?: (...args: any[]) => void,
 	) =>
 	async (
-		agps: Static<typeof agpsRequestSchema>,
+		agnss: Static<typeof agnssRequestSchema>,
 	): Promise<{ error: ErrorInfo } | readonly string[]> => {
-		debug?.({ agpsRequest: agps })
-		const valid = validateInput(agps)
+		debug?.({ agnssRequest: agnss })
+		const valid = validateInput(agnss)
 		if ('error' in valid) {
 			error?.(JSON.stringify(valid.error))
 			return valid
@@ -40,17 +40,17 @@ export const resolveAgpsRequest =
 		const { mcc, mnc, cell, area, types } = valid
 
 		// Split requests, so that request for Ephemerides is a separate one
-		const otherTypesInRequest = types.filter((t) => t !== AGPSType.Ephemerides)
+		const otherTypesInRequest = types.filter((t) => t !== AGNSSType.Ephemerides)
 		const requestTypes = []
-		if (types.includes(AGPSType.Ephemerides))
-			requestTypes.push([AGPSType.Ephemerides])
+		if (types.includes(AGNSSType.Ephemerides))
+			requestTypes.push([AGNSSType.Ephemerides])
 		if (otherTypesInRequest.length > 0) requestTypes.push(otherTypesInRequest)
 
 		const res = []
 
 		for (const types of requestTypes) {
 			const request = {
-				resource: 'location/agps',
+				resource: 'location/agnss',
 				payload: {
 					eci: cell,
 					tac: area,
@@ -73,7 +73,7 @@ export const resolveAgpsRequest =
 				return { error: maybeHeaders.error }
 			}
 
-			const maybeAgpsData = await client.getBinary({
+			const maybeAgnssData = await client.getBinary({
 				...request,
 				headers: {
 					...request.headers,
@@ -82,23 +82,23 @@ export const resolveAgpsRequest =
 				requestSchema: apiRequestSchema,
 			})
 
-			if ('error' in maybeAgpsData) {
-				return { error: maybeAgpsData.error }
+			if ('error' in maybeAgnssData) {
+				return { error: maybeAgnssData.error }
 			}
 
-			const maybeValidAgpsData = verify(maybeAgpsData)
+			const maybeValidAgnssData = verify(maybeAgnssData)
 
-			if ('error' in maybeValidAgpsData) {
+			if ('error' in maybeValidAgnssData) {
 				return {
 					error: {
 						type: ErrorType.BadGateway,
-						message: `Could not verify A-GNSS payload: ${maybeValidAgpsData.error.message}!`,
+						message: `Could not verify A-GNSS payload: ${maybeValidAgnssData.error.message}!`,
 					},
 				}
 			}
 
-			debug?.({ agpsData: maybeValidAgpsData })
-			res.push(maybeAgpsData.toString('hex'))
+			debug?.({ agnssData: maybeValidAgnssData })
+			res.push(maybeAgnssData.toString('hex'))
 		}
 
 		return res

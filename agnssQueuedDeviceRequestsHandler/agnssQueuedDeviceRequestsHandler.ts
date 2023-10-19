@@ -8,46 +8,46 @@ import {
 import { Static } from '@sinclair/typebox'
 import iothubCommon from 'azure-iot-common'
 import iothub from 'azure-iothub'
-import { cacheKey } from '../agps/cacheKey.js'
-import { agpsRequestSchema } from '../agps/types.js'
+import { cacheKey } from '../agnss/cacheKey.js'
+import { agnssRequestSchema } from '../agnss/types.js'
 import { fromEnv } from '../lib/fromEnv.js'
 import { log, logError } from '../lib/log.js'
 import { parseConnectionString } from '../lib/parseConnectionString.js'
 
 const config = () =>
 	fromEnv({
-		binHoursString: 'AGPS_BIN_HOURS',
+		binHoursString: 'AGNSS_BIN_HOURS',
 		iotHubConnectionString: 'IOTHUB_CONNECTION_STRING',
 		cosmosDbConnectionString: 'COSMOSDB_CONNECTION_STRING',
 		storageAccountName: 'STORAGE_ACCOUNT_NAME',
 		storageAccessKey: 'STORAGE_ACCESS_KEY',
-		maxResolutionTimeInMinutes: 'AGPS_MAX_RESOLUTION_TIME_IN_MINUTES',
+		maxResolutionTimeInMinutes: 'AGNSS_MAX_RESOLUTION_TIME_IN_MINUTES',
 		initialDelayString: 'INITIAL_DELAY',
 		delayFactorString: 'DELAY_FACTOR',
-		agpsRequestsDatabaseName: 'AGPS_REQUESTS_DATABASE_NAME',
-		agpsRequestsContainerName: 'AGPS_REQUESTS_CONTAINER_NAME',
-		agpsRequestsQueueName: 'AGPS_REQUESTS_QUEUE_NAME',
-		agpsRequestsNrfCloudQueueName: 'AGPS_REQUESTS_NRFCLOUD_QUEUE_NAME',
+		agnssRequestsDatabaseName: 'AGNSS_REQUESTS_DATABASE_NAME',
+		agnssRequestsContainerName: 'AGNSS_REQUESTS_CONTAINER_NAME',
+		agnssRequestsQueueName: 'AGNSS_REQUESTS_QUEUE_NAME',
+		agnssRequestsNrfCloudQueueName: 'AGNSS_REQUESTS_NRFCLOUD_QUEUE_NAME',
 	})({
-		AGPS_BIN_HOURS: '1',
-		AGPS_MAX_RESOLUTION_TIME_IN_MINUTES: '3',
+		AGNSS_BIN_HOURS: '1',
+		AGNSS_MAX_RESOLUTION_TIME_IN_MINUTES: '3',
 		INITIAL_DELAY: '5',
 		DELAY_FACTOR: '1.5',
 		...process.env,
 	})
 
 // Keep a local cache in case many devices requests the same location
-export type AGPSDataCache = Static<typeof agpsRequestSchema> & {
+export type AGNSSDataCache = Static<typeof agnssRequestSchema> & {
 	source: string
 	dataHex?: string[]
 	unresolved?: boolean
 	updatedAt: Date
 }
-const resolvedRequests: Record<string, AGPSDataCache> = {}
+const resolvedRequests: Record<string, AGNSSDataCache> = {}
 
-type QueuedAGPSRequest = {
+type QueuedAGNSSRequest = {
 	deviceId: string
-	request: Static<typeof agpsRequestSchema>
+	request: Static<typeof agnssRequestSchema>
 	timestamp: string
 	delayInSeconds?: number
 }
@@ -57,16 +57,16 @@ type QueuedAGPSRequest = {
  * a DB or kicking off the resoluting via a third-party API (currently only
  * nRF Cloud Assisted GPS Location Service is implemented.)
  */
-const agpsQueuedDeviceRequestsHandler: AzureFunction = async (
+const agnssQueuedDeviceRequestsHandler: AzureFunction = async (
 	context: Context,
-	{ deviceId, request, delayInSeconds, timestamp }: QueuedAGPSRequest,
+	{ deviceId, request, delayInSeconds, timestamp }: QueuedAGNSSRequest,
 ): Promise<void> => {
 	log(context)({ request, deviceId, delayInSeconds, timestamp, context })
 
 	let binHours: number
 	let iotHubClient: iothub.Client
 	let cosmosDbContainer: Container
-	let agpsRequestsQueueClient: QueueClient
+	let agnssRequestsQueueClient: QueueClient
 	const resolverQueues: QueueClient[] = []
 	let maxResolutionTimeInSeconds: number
 	let delayFactor: number
@@ -82,10 +82,10 @@ const agpsQueuedDeviceRequestsHandler: AzureFunction = async (
 			delayFactorString,
 			initialDelayString,
 			cosmosDbConnectionString,
-			agpsRequestsDatabaseName,
-			agpsRequestsQueueName,
-			agpsRequestsContainerName,
-			agpsRequestsNrfCloudQueueName,
+			agnssRequestsDatabaseName,
+			agnssRequestsQueueName,
+			agnssRequestsContainerName,
+			agnssRequestsNrfCloudQueueName,
 		} = config()
 
 		binHours = parseInt(binHoursString, 10)
@@ -100,21 +100,21 @@ const agpsQueuedDeviceRequestsHandler: AzureFunction = async (
 		})
 
 		cosmosDbContainer = cosmosClient
-			.database(agpsRequestsDatabaseName)
-			.container(agpsRequestsContainerName)
+			.database(agnssRequestsDatabaseName)
+			.container(agnssRequestsContainerName)
 
-		agpsRequestsQueueClient = new QueueServiceClient(
+		agnssRequestsQueueClient = new QueueServiceClient(
 			`https://${storageAccountName}.queue.core.windows.net`,
 			new StorageSharedKeyCredential(storageAccountName, storageAccessKey),
-		).getQueueClient(agpsRequestsQueueName)
-		await agpsRequestsQueueClient.create()
+		).getQueueClient(agnssRequestsQueueName)
+		await agnssRequestsQueueClient.create()
 
-		const nrfCloudAgpsRequestsQueueClient = new QueueServiceClient(
+		const nrfCloudAgnssRequestsQueueClient = new QueueServiceClient(
 			`https://${storageAccountName}.queue.core.windows.net`,
 			new StorageSharedKeyCredential(storageAccountName, storageAccessKey),
-		).getQueueClient(agpsRequestsNrfCloudQueueName)
-		await nrfCloudAgpsRequestsQueueClient.create()
-		resolverQueues.push(nrfCloudAgpsRequestsQueueClient)
+		).getQueueClient(agnssRequestsNrfCloudQueueName)
+		await nrfCloudAgnssRequestsQueueClient.create()
+		resolverQueues.push(nrfCloudAgnssRequestsQueueClient)
 
 		maxResolutionTimeInSeconds = parseInt(maxResolutionTimeInMinutes, 10) * 60
 		delayFactor = parseFloat(delayFactorString)
@@ -179,11 +179,11 @@ const agpsQueuedDeviceRequestsHandler: AzureFunction = async (
 		)
 		await Promise.all(
 			(resolvedRequests[requestCacheKey]?.dataHex ?? []).map(
-				async (agpsdata) => {
-					const payload = Buffer.from(agpsdata, 'hex')
+				async (agnssdata) => {
+					const payload = Buffer.from(agnssdata, 'hex')
 					log(context)(`Sending ${payload.length} bytes to ${deviceId}`)
 					const m = new iothubCommon.Message(payload)
-					m.properties.add('agps', 'result')
+					m.properties.add('agnss', 'result')
 					return iotHubClient.send(deviceId, m)
 				},
 			),
@@ -222,7 +222,7 @@ const agpsQueuedDeviceRequestsHandler: AzureFunction = async (
 	const visibilityTimeout = Math.floor(
 		Math.min(900, (delayInSeconds ?? initialDelay) * delayFactor),
 	)
-	await agpsRequestsQueueClient.sendMessage(
+	await agnssRequestsQueueClient.sendMessage(
 		Buffer.from(
 			JSON.stringify({
 				deviceId,
@@ -240,4 +240,4 @@ const agpsQueuedDeviceRequestsHandler: AzureFunction = async (
 	log(context)(requestCacheKey, `re-scheduled request for`, deviceId)
 }
 
-export default agpsQueuedDeviceRequestsHandler
+export default agnssQueuedDeviceRequestsHandler

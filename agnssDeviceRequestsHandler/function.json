@@ -7,7 +7,7 @@
       "eventHubName": "%IOTHUB_EVENTS_EVENT_HUB_NAME%",
       "connection": "IOTHUB_EVENTS_CONNECTION_STRING",
       "cardinality": "many",
-      "consumerGroup": "%AGPS_REQUESTS_IOT_EVENTS_CONSUMER_GROUP_NAME%"
+      "consumerGroup": "%AGNSS_REQUESTS_IOT_EVENTS_CONSUMER_GROUP_NAME%"
     }
   ],
   "scriptFile": "./handler.mjs"

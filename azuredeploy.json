@@ -102,22 +102,22 @@
         "description": "Endpoint to use for the nRF Cloud API"
       }
     },
-    "agpsBinHours": {
+    "agnssBinHours": {
       "type": "string",
       "defaultValue": "1",
       "metadata": {
         "description": "Number of hours to bin A-GNSS requests"
       }
     },
-    "agpsRequestDatabaseName": {
+    "agnssRequestDatabaseName": {
       "type": "string",
       "minLength": 3,
       "metadata": {
         "description": "Name for the database that stores A-GNSS requests"
       },
-      "defaultValue": "agpsRequests"
+      "defaultValue": "agnssRequests"
     },
-    "agpsRequestContainerName": {
+    "agnssRequestContainerName": {
       "type": "string",
       "minLength": 3,
       "metadata": {
@@ -125,29 +125,29 @@
       },
       "defaultValue": "cache"
     },
-    "agpsRequestQueueName": {
+    "agnssRequestQueueName": {
       "type": "string",
       "minLength": 3,
       "metadata": {
         "description": "Name for the queue that stores A-GNSS requests"
       },
-      "defaultValue": "agpsrequests"
+      "defaultValue": "agnssrequests"
     },
-    "agpsRequestNrfCloudQueueName": {
+    "agnssRequestNrfCloudQueueName": {
       "type": "string",
       "minLength": 3,
       "metadata": {
         "description": "Name for the queue that stores A-GNSS requests to be resolved using the nRF Cloud API"
       },
-      "defaultValue": "nrfcloudagpsrequests"
+      "defaultValue": "nrfcloudagnssrequests"
     },
-    "agpsRequestIotEventsConsumerGroupName": {
+    "agnssRequestIotEventsConsumerGroupName": {
       "type": "string",
       "minLength": 3,
       "metadata": {
         "description": "Consumer group name for A-GNSS device requests"
       },
-      "defaultValue": "agpsRequests"
+      "defaultValue": "agnssRequests"
     },
     "pgpsBinHours": {
       "type": "string",
@@ -334,7 +334,7 @@
     {
       "type": "Microsoft.Devices/iotHubs/eventhubEndpoints/ConsumerGroups",
       "apiVersion": "2020-03-01",
-      "name": "[concat(parameters('appName'), 'IotHub', '/events/', parameters('agpsRequestIotEventsConsumerGroupName'))]",
+      "name": "[concat(parameters('appName'), 'IotHub', '/events/', parameters('agnssRequestIotEventsConsumerGroupName'))]",
       "dependsOn": [
         "[resourceId('Microsoft.Devices/IotHubs', concat(parameters('appName'), 'IotHub'))]"
       ]
@@ -554,28 +554,28 @@
                 "value": "[parameters('keyVaultName')]"
               },
               {
-                "name": "AGPS_BIN_HOURS",
-                "value": "[parameters('agpsBinHours')]"
+                "name": "AGNSS_BIN_HOURS",
+                "value": "[parameters('agnssBinHours')]"
               },
               {
-                "name": "AGPS_REQUESTS_IOT_EVENTS_CONSUMER_GROUP_NAME",
-                "value": "[parameters('agpsRequestIotEventsConsumerGroupName')]"
+                "name": "AGNSS_REQUESTS_IOT_EVENTS_CONSUMER_GROUP_NAME",
+                "value": "[parameters('agnssRequestIotEventsConsumerGroupName')]"
               },
               {
-                "name": "AGPS_REQUESTS_DATABASE_NAME",
-                "value": "[parameters('agpsRequestDatabaseName')]"
+                "name": "AGNSS_REQUESTS_DATABASE_NAME",
+                "value": "[parameters('agnssRequestDatabaseName')]"
               },
               {
-                "name": "AGPS_REQUESTS_CONTAINER_NAME",
-                "value": "[parameters('agpsRequestContainerName')]"
+                "name": "AGNSS_REQUESTS_CONTAINER_NAME",
+                "value": "[parameters('agnssRequestContainerName')]"
               },
               {
-                "name": "AGPS_REQUESTS_QUEUE_NAME",
-                "value": "[parameters('agpsRequestQueueName')]"
+                "name": "AGNSS_REQUESTS_QUEUE_NAME",
+                "value": "[parameters('agnssRequestQueueName')]"
               },
               {
-                "name": "AGPS_REQUESTS_NRFCLOUD_QUEUE_NAME",
-                "value": "[parameters('agpsRequestNrfCloudQueueName')]"
+                "name": "AGNSS_REQUESTS_NRFCLOUD_QUEUE_NAME",
+                "value": "[parameters('agnssRequestNrfCloudQueueName')]"
               },
               {
                 "name": "PGPS_BIN_HOURS",
@@ -830,20 +830,20 @@
               }
             ]
           ],
-          "defaultTtl": "[mul(mul(int(parameters('agpsBinHours')), 60), 60)]"
+          "defaultTtl": "[mul(mul(int(parameters('agnssBinHours')), 60), 60)]"
         }
       }
     },
     {
       "type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases",
       "apiVersion": "2020-03-01",
-      "name": "[concat(parameters('appName'), '/', parameters('agpsRequestDatabaseName'))]",
+      "name": "[concat(parameters('appName'), '/', parameters('agnssRequestDatabaseName'))]",
       "dependsOn": [
         "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('appName'))]"
       ],
       "properties": {
         "resource": {
-          "id": "[parameters('agpsRequestDatabaseName')]"
+          "id": "[parameters('agnssRequestDatabaseName')]"
         },
         "options": {}
       }
@@ -851,14 +851,14 @@
     {
       "type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers",
       "apiVersion": "2020-03-01",
-      "name": "[concat(parameters('appName'), '/',parameters('agpsRequestDatabaseName'),'/', parameters('agpsRequestContainerName'))]",
+      "name": "[concat(parameters('appName'), '/',parameters('agnssRequestDatabaseName'),'/', parameters('agnssRequestContainerName'))]",
       "dependsOn": [
-        "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlDatabases', parameters('appName'), parameters('agpsRequestDatabaseName'))]",
+        "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlDatabases', parameters('appName'), parameters('agnssRequestDatabaseName'))]",
         "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('appName'))]"
       ],
       "properties": {
         "resource": {
-          "id": "[parameters('agpsRequestContainerName')]",
+          "id": "[parameters('agnssRequestContainerName')]",
           "indexingPolicy": {
             "indexingMode": "consistent",
             "automatic": true,
@@ -892,7 +892,7 @@
     {
       "type": "Microsoft.Storage/storageAccounts/queueServices/queues",
       "apiVersion": "2021-04-01",
-      "name": "[concat(parameters('storageAccountName'), '/default/', parameters('agpsRequestQueueName'))]",
+      "name": "[concat(parameters('storageAccountName'), '/default/', parameters('agnssRequestQueueName'))]",
       "dependsOn": [
         "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]"
       ],
@@ -901,7 +901,7 @@
     {
       "type": "Microsoft.Storage/storageAccounts/queueServices/queues",
       "apiVersion": "2021-04-01",
-      "name": "[concat(parameters('storageAccountName'), '/default/', parameters('agpsRequestNrfCloudQueueName'))]",
+      "name": "[concat(parameters('storageAccountName'), '/default/', parameters('agnssRequestNrfCloudQueueName'))]",
       "dependsOn": [
         "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]"
       ],
