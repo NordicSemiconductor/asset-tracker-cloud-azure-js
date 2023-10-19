@@ -1,4 +1,3 @@
-import fetch from 'node-fetch'
 import { handleErrorResponse } from './handleResponse.js'
 
 export type User = {
@@ -111,7 +110,7 @@ export const b2cClient = ({
 			body: JSON.stringify(args),
 		})
 		await handleErrorResponse(res)
-		return (await res.json()) as any
+		return await res.json()
 	}
 	return {
 		listUsers: async () => {
@@ -122,7 +121,7 @@ export const b2cClient = ({
 				},
 			)
 			await handleErrorResponse(res)
-			return ((await res.json()) as any).value
+			return (await res.json()).value
 		},
 		createUser,
 		createUserForEmailAndPassword: async ({

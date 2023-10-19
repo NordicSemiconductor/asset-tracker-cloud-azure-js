@@ -13,9 +13,9 @@
       "name": "report",
       "type": "cosmosDB",
       "databaseName": "%NCELLMEAS_REPORTS_DATABASE_NAME%",
-      "collectionName": "%NCELLMEAS_REPORTS_CONTAINER_NAME%",
+      "containerName": "%NCELLMEAS_REPORTS_CONTAINER_NAME%",
       "createIfNotExists": true,
-      "connectionStringSetting": "COSMOSDB_CONNECTION_STRING",
+      "connection": "COSMOSDB_CONNECTION_STRING",
       "direction": "out"
     }
   ],

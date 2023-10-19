@@ -95,7 +95,7 @@ const geolocateCell: AzureFunction = async (
 
 	try {
 		const container = await cosmosDbContainerPromise
-		const sql = `SELECT c.lat AS lat, c.lng AS lng, c.accuracy FROM c WHERE c.cellId='${id}'`
+		const sql = `SELECT c.lat AS lat, c.lng AS lng, c.accuracy FROM c WHERE c.id='${id}'`
 		log(context)({ sql })
 		const locations = (await container.items.query(sql).fetchAll()).resources
 
@@ -142,7 +142,7 @@ const geolocateCell: AzureFunction = async (
 					404,
 				)
 				context.bindings.cellGeolocation = JSON.stringify({
-					cellId: id,
+					id,
 					...cell,
 				})
 			} else {
@@ -152,7 +152,7 @@ const geolocateCell: AzureFunction = async (
 					accuracy: maybeCellGeoLocation.uncertainty,
 				}
 				context.bindings.cellGeolocation = JSON.stringify({
-					cellId: id,
+					id,
 					...cell,
 					...location,
 				})

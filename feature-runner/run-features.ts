@@ -67,6 +67,7 @@ program
 				resourceGroup,
 				appName,
 				mockHTTPStorageAccountName,
+				b2cUserFlowName,
 			} = fromEnv({
 				b2cTenant: 'B2C_TENANT',
 				clientId: 'APP_REG_CLIENT_ID',
@@ -75,6 +76,7 @@ program
 				resourceGroup: 'RESOURCE_GROUP',
 				appName: 'APP_NAME',
 				mockHTTPStorageAccountName: 'MOCK_HTTP_API_STORAGE_ACCOUNT_NAME',
+				b2cUserFlowName: 'B2C_USER_FLOW_NAME',
 			})(process.env)
 
 			const { credentials, subscriptionId } = await cliCredentials()
@@ -155,6 +157,7 @@ program
 				'API endpoint': apiEndpointUrl,
 				'AD B2C Tenant': b2cTenant,
 				'AD B2C Tenant ID': b2cTenantId,
+				'AD B2C User Flow Name': b2cUserFlowName,
 				'AD B2C Client ID': clientId,
 				'AD B2C Client Secret': `${clientSecret.slice(
 					0,
@@ -208,6 +211,7 @@ program
 						clientId,
 						clientSecret,
 						b2cTenantId,
+						b2cUserFlowName,
 					}),
 				)
 				.addStepRunners(restStepRunners())

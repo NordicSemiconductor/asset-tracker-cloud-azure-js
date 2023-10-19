@@ -1,4 +1,5 @@
 import { AzureFunction, Context } from '@azure/functions'
+import { randomUUID } from 'node:crypto'
 import { batchToDoc } from '../lib/batchToDoc.js'
 import { BatchDeviceUpdate, DeviceUpdate } from '../lib/iotMessages.js'
 import { log } from '../lib/log.js'
@@ -34,16 +35,20 @@ const storeDeviceUpdateInCosmosDB: AzureFunction = async (
 		return
 	}
 
-	type Document = typeof baseDoc & { deviceUpdate: DeviceUpdate }
+	type Document = typeof baseDoc & { deviceUpdate: DeviceUpdate } & {
+		id: string
+	}
 	let document: Document | Document[]
 
 	if (isBatch) {
 		document = batchToDoc(update as BatchDeviceUpdate).map((deviceUpdate) => ({
+			id: randomUUID(),
 			...baseDoc,
 			deviceUpdate,
 		}))
 	} else {
 		document = {
+			id: randomUUID(),
 			...baseDoc,
 			deviceUpdate: update as DeviceUpdate,
 		}

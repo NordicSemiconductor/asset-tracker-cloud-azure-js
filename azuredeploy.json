@@ -385,14 +385,6 @@
     },
     {
       "type": "Microsoft.Devices/iotHubs/eventhubEndpoints/ConsumerGroups",
-      "apiVersion": "2020-03-01",
-      "name": "[concat(parameters('appName'), 'IotHub', '/events/', parameters('cellGeoLocationIotEventsConsumerGroupName'))]",
-      "dependsOn": [
-        "[resourceId('Microsoft.Devices/IotHubs', concat(parameters('appName'), 'IotHub'))]"
-      ]
-    },
-    {
-      "type": "Microsoft.Devices/iotHubs/eventhubEndpoints/ConsumerGroups",
       "condition": "[parameters('enableNrfCloudCellLocationService')]",
       "apiVersion": "2020-03-01",
       "name": "[concat(parameters('appName'), 'IotHub', '/events/', parameters('ncellmeasReportsIotEventsConsumerGroupName'))]",
@@ -544,7 +536,7 @@
               },
               {
                 "name": "FUNCTIONS_EXTENSION_VERSION",
-                "value": "~3"
+                "value": "~4"
               },
               {
                 "name": "APPINSIGHTS_INSTRUMENTATIONKEY",
@@ -556,7 +548,7 @@
               },
               {
                 "name": "WEBSITE_NODE_DEFAULT_VERSION",
-                "value": "~14"
+                "value": "~18"
               },
               {
                 "name": "WEBSITE_RUN_FROM_PACKAGE",
@@ -652,10 +644,6 @@
               {
                 "name": "PGPS_REQUESTS_NRFCLOUD_QUEUE_NAME",
                 "value": "[parameters('pgpsRequestNrfCloudQueueName')]"
-              },
-              {
-                "name": "CELL_GEOLOCATION_IOT_EVENTS_CONSUMER_GROUP_NAME",
-                "value": "[parameters('cellGeoLocationIotEventsConsumerGroupName')]"
               },
               {
                 "name": "SignalRConnectionString",
@@ -843,50 +831,6 @@
           "id": "cellGeolocation"
         },
         "options": {}
-      }
-    },
-    {
-      "type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers",
-      "apiVersion": "2020-03-01",
-      "name": "[concat(parameters('appName'), '/cellGeolocation/deviceCellGeolocations')]",
-      "dependsOn": [
-        "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlDatabases', parameters('appName'), 'cellGeolocation')]",
-        "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('appName'))]"
-      ],
-      "properties": {
-        "resource": {
-          "id": "deviceCellGeolocations",
-          "indexingPolicy": {
-            "indexingMode": "consistent",
-            "automatic": true,
-            "includedPaths": [
-              {
-                "path": "/*"
-              }
-            ],
-            "excludedPaths": [
-              {
-                "path": "/\"_etag\"/?"
-              }
-            ]
-          },
-          "partitionKey": {
-            "paths": ["/cellId"],
-            "kind": "Hash"
-          },
-          "conflictResolutionPolicy": {
-            "mode": "LastWriterWins",
-            "conflictResolutionPath": "/_ts"
-          },
-          "compositeIndexes": [
-            [
-              {
-                "path": "/source",
-                "order": "ascending"
-              }
-            ]
-          ]
-        }
       }
     },
     {

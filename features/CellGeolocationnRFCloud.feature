@@ -13,8 +13,7 @@ Feature: nRF Cloud Cell Geolocation
         This enques a mock response on the mock HTTP API the stack is configure
         to use for the nRF Cloud integration
 
-        Given I am run after the "Cell Geolocation API" feature
-        And I am run after the "Login" feature
+        Given I am run after the "Login" feature
         And I store a random number between 1 and 100000000 into "cellId"
         And I store a random number between 0 and 20000 into "accuracy"
         And I store a random float between -90 and 90 into "lat"
@@ -28,7 +27,7 @@ Feature: nRF Cloud Cell Geolocation
                 "fulfilledWith": "SCELL"
             }
             """
-            
+
     Scenario: Query the cell
 
         Given I store "$millis()" into "ts"

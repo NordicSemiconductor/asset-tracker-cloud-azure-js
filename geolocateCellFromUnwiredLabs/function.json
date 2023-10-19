@@ -17,10 +17,10 @@
       "name": "cellGeolocation",
       "type": "cosmosDB",
       "databaseName": "cellGeolocation",
-      "collectionName": "unwiredLabsCache",
+      "containerName": "unwiredLabsCache",
       "createIfNotExists": true,
       "partitionKey": "/cellId",
-      "connectionStringSetting": "COSMOSDB_CONNECTION_STRING",
+      "connection": "COSMOSDB_CONNECTION_STRING",
       "direction": "out"
     }
   ],
