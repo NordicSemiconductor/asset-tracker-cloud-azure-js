@@ -1,9 +1,10 @@
 import { cacheKey } from './cacheKey.js'
 import { gpsDay } from './gpsTime.js'
-
-describe('cacheKey', () => {
-	it('should create a cache key', () =>
-		expect(
+import { describe, it } from 'node:test'
+import assert from 'node:assert'
+void describe('cacheKey', () => {
+	void it('should create a cache key', () =>
+		assert.equal(
 			cacheKey({
 				binHours: 1,
 				request: {
@@ -14,20 +15,18 @@ describe('cacheKey', () => {
 				},
 				defaultGpsDay: gpsDay(),
 			}),
-		).toEqual(
 			`42-240-15160-40655-${new Date()
 				.toISOString()
 				.slice(0, 13)
 				.replace(/[:-]/g, '')}0000`,
 		))
-	it('should create a cache key with defaults', () =>
-		expect(
+	void it('should create a cache key with defaults', () =>
+		assert.equal(
 			cacheKey({
 				request: {},
 				binHours: 1,
 				defaultGpsDay: gpsDay(),
 			}),
-		).toEqual(
 			`42-240-${gpsDay()}-0-${new Date()
 				.toISOString()
 				.slice(0, 13)

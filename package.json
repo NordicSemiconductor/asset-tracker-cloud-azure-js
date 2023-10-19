@@ -5,7 +5,7 @@
   "type": "module",
   "main": "./dist/export.js",
   "scripts": {
-    "test": "jest",
+    "test": "find ./ -type f -name '*.spec.ts' -not -path './node_modules/*' -print | xargs npx tsx --no-warnings --test",
     "test:e2e": "node --unhandled-rejections=strict dist/feature-runner/run-features.js ./features --print-results --progress",
     "prepare": "husky install && check-node-version --package"
   },
@@ -55,10 +55,8 @@
     "@nordicsemiconductor/e2e-bdd-test-runner": "15.1.253",
     "@nordicsemiconductor/eslint-config-asset-tracker-cloud-typescript": "16.0.23",
     "@nordicsemiconductor/firmware-ci-device-helpers": "13.3.66",
-    "@swc/jest": "0.2.24",
     "@types/backoff": "2.5.2",
     "@types/chai-subset": "1.3.3",
-    "@types/jest": "29.5.6",
     "@types/jsonwebtoken": "9.0.1",
     "@types/node": "18.18.6",
     "@types/pem": "1.9.6",
@@ -74,7 +72,6 @@
     "eslint-plugin-prefer-arrow": "1.2.3",
     "eslint-plugin-unicorn": "48.0.1",
     "husky": "8.0.3",
-    "jest": "29.7.0",
     "lint-staged": "13.1.2",
     "semver": "7.3.8",
     "tsx": "3.12.3"
@@ -126,17 +123,6 @@
     "LICENSE",
     "README.md"
   ],
-  "jest": {
-    "transform": {
-      "^.+\\.(t|j)sx?$": [
-        "@swc/jest"
-      ]
-    },
-    "testRegex": ".+\\.spec\\.ts$",
-    "moduleNameMapper": {
-      "^(\\.{1,2}/.*)\\.js$": "$1"
-    }
-  },
   "deploy": {
     "webApp": {
       "repository": "https://github.com/NordicSemiconductor/asset-tracker-cloud-app-js.git",

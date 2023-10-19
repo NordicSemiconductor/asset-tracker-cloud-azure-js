@@ -1,8 +1,9 @@
 import { toQueryString } from './toQueryString.js'
-
-describe('toQueryString', () => {
-	it('should encode query strings', () =>
-		expect(
+import { describe, it } from 'node:test'
+import assert from 'node:assert'
+void describe('toQueryString', () => {
+	void it('should encode query strings', () =>
+		assert.equal(
 			toQueryString({
 				eci: 21626624,
 				tac: 30401,
@@ -11,7 +12,6 @@ describe('toQueryString', () => {
 				mnc: 1,
 				customTypes: [1, 2, 3, 4, 6, 7, 8, 9],
 			}),
-		).toEqual(
 			'?eci=21626624&tac=30401&requestType=custom&mcc=242&mnc=1&customTypes=1,2,3,4,6,7,8,9',
 		))
 })
