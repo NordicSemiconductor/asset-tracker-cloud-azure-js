@@ -8,32 +8,32 @@ Feature: A-GNSS
     two requests, one for type 2 (ephemerides) and one for the rest.
 
     Given I am run after the "Connect a tracker" feature
-    And I store a random number between 100 and 999 into "agpsMcc"
-    And I store a random number between 0 and 99 into "agpsMnc"
-    And I store a random number between 1 and 100000000 into "agpsCellId"
-    And I store a random number between 100 and 199 into "agpsArea"
-    And I enqueue this mock HTTP API response with status code 200 for a HEAD request to api.nrfcloud.com/v1/location/agps?customTypes=1%2C3%2C4%2C6%2C7%2C8%2C9&eci={agpsCellId}&mcc={agpsMcc}&mnc={agpsMnc}&requestType=custom&tac={agpsArea}
+    And I store a random number between 100 and 999 into "agnssMcc"
+    And I store a random number between 0 and 99 into "agnssMnc"
+    And I store a random number between 1 and 100000000 into "agnssCellId"
+    And I store a random number between 100 and 199 into "agnssArea"
+    And I enqueue this mock HTTP API response with status code 200 for a HEAD request to api.nrfcloud.com/v1/location/agnss?customTypes=1%2C3%2C4%2C6%2C7%2C8%2C9&eci={agnssCellId}&mcc={agnssMcc}&mnc={agnssMnc}&requestType=custom&tac={agnssArea}
       """
       Content-Type: application/octet-stream
       Content-Length: 1160
 
 
       """
-    And I enqueue this mock HTTP API response with status code 200 for a GET request to api.nrfcloud.com/v1/location/agps?customTypes=1%2C3%2C4%2C6%2C7%2C8%2C9&eci={agpsCellId}&mcc={agpsMcc}&mnc={agpsMnc}&requestType=custom&tac={agpsArea}
+    And I enqueue this mock HTTP API response with status code 200 for a GET request to api.nrfcloud.com/v1/location/agnss?customTypes=1%2C3%2C4%2C6%2C7%2C8%2C9&eci={agnssCellId}&mcc={agnssMcc}&mnc={agnssMnc}&requestType=custom&tac={agnssArea}
       """
       Content-Type: application/octet-stream
       Content-Length: 1160
 
       01010100f9fffffffeffffff0f7b12890612031f00017b0f00af5ab01b5ffd001a0da1002bcf36004b0a24009c5d89ff7202fdff027b0f009fa5bb0d4cfd00860da10071533300c3e4c2ffd3e294ff6ffdffff037b0f003f1f331256fd00ec0da1004e11610093b3260008ca5d00f4fefcff047b0f00ec0a0b0c4efd00340da10063178dff517285fffa98cfff2aff0000057b0f00ea31b10949fd00240ca100e1855f005b6c27004b9cf3ffcaff0000067b0f008611511b5efd00210ca10011793600d107d8ff367894ff3b000200077b0f00dd7ca1054ffd00880da10015afb6ff0fdda1ff9ad67000ed000200087b0f008834e80f3afd00b80ca1005bf60a00917102008893e7ffdeff0000097b0f00af106c0746fd005b0da1009ffe8aff94db49006642f6ff88fe00000a7b0f00ef371c1256fd00000da10093f3600062dd96ffd82d390040fffeff0b7b0f003104610b4afdff190da100c8c4380007ab4c00aad80a00240001000c7b0f009443a3134cfd00300da100f2f8e3ff311232001cb75200a9ffffff0d7b0f00322bf51055fd00050da100ca1991ffbb0327000a5eceffb40001000e7b0f005308d70840fd00c60ca100d4d0e2ffc1aa7c001b6352001800feff0f7b0f00936e9ff732fd00c60ca10095df86ff6e3a2900dd28c0ff7aff0100107b0f00d663ac134bfd00900da10011bce4ff8da61b0045e0080078fefeff117b0f00166e9a194afd00cd0ca100962f0e006268c0ff5e07e6ff02020200127b0f00e10e161150fd00db0ca1003a3d37008f677600c1b297ff5d01ffff137b0f00a14bad184afd00cf0ca100740510005f234e009d6a47002a000100147b0f00362deffd39fd00a20ca10020045b003d2079000b6fb9ff21020000157b0f00f9c4f00948fd00da0ca100d54e3300b43cd3ffa103eaff90000100167b0f00d237ccfb36fd009f0da10066e65c007cfedaff557cb8ffccfd0300177b0f00a70cd80e52fd00ea0ca10046fa5f00f8fc6b00a54779004a00ffff187b0f00265dd9fa41fd00480da1002170b3ff277e1e0085b398ffdb000300197b0f009450600b42fd004c0ca1002bf0e0ff43772700df144b00c90002001a7b0f003431e8fe34fd006e0ca100e929dfff79fd0b00bec82f00810001001b7b0f00754d851542fd00240da10016b10b0085ee190054aae2ff45fffeff1d7b0f003e10d81a4cfd00640ca10034b30e00432e5d00db7ce6ff60fefeff1e7b0f00ea2bfbfb41fd00d90ca1006755b7ffaba990ffd74c6b001bfeffff1f7b0f00b7526c0853fd004f0ca1005d64b7ff26610b00e7425d0073ffffff207b0f007829fd0949fd002e0da100e56a8bff4d969fffc6c701000800ffff0401000502fffe2603fffc061e00017a0001027a0001037a0001047a0001057a0001067a0001077a0001087a0001097a00010a7a00010c7a00010d7a00010e7a00010f7a0001107a0001117a0001127a0001137a0001147a0001157a0001167a0001177a0001187a0001197a00011a7a00011b7a00011d7a00011e7a00011f7a0001207a00010701005b3b59be00000000000000000000000009010000040008080100bf325a000b69070000004141007f44
       """
-    And I enqueue this mock HTTP API response with status code 200 for a HEAD request to api.nrfcloud.com/v1/location/agps?customTypes=2&eci={agpsCellId}&mcc={agpsMcc}&mnc={agpsMnc}&requestType=custom&tac={agpsArea}
+    And I enqueue this mock HTTP API response with status code 200 for a HEAD request to api.nrfcloud.com/v1/location/agnss?customTypes=2&eci={agnssCellId}&mcc={agnssMcc}&mnc={agnssMnc}&requestType=custom&tac={agnssArea}
       """
       Content-Type: application/octet-stream
       Content-Length: 1864
 
 
       """
-    And I enqueue this mock HTTP API response with status code 200 for a GET request to api.nrfcloud.com/v1/location/agps?customTypes=2&eci={agpsCellId}&mcc={agpsMcc}&mnc={agpsMnc}&requestType=custom&tac={agpsArea}
+    And I enqueue this mock HTTP API response with status code 200 for a GET request to api.nrfcloud.com/v1/location/agnss?customTypes=2&eci={agnssCellId}&mcc={agnssMcc}&mnc={agnssMnc}&requestType=custom&tac={agnssArea}
       """
       Content-Type: application/octet-stream
       Content-Length: 1864
@@ -47,13 +47,13 @@ Feature: A-GNSS
     because A-GNSS Ephemerides data is so large it cannot
     be combined with other types
 
-    When the tracker "{trackerId}" publishes this message to the topic devices/{trackerId}/messages/events/agps=get&%24.ct=application%2Fjson&%24.ce=utf-8
+    When the tracker "{trackerId}" publishes this message to the topic devices/{trackerId}/messages/events/agnss=get&%24.ct=application%2Fjson&%24.ce=utf-8
       """
       {
-        "mcc": {agpsMcc},
-        "mnc": {agpsMnc},
-        "cell": {agpsCellId},
-        "area": {agpsArea},
+        "mcc": {agnssMcc},
+        "mnc": {agnssMnc},
+        "cell": {agnssCellId},
+        "area": {agnssArea},
         "types": [
           1,
           2,
@@ -66,6 +66,6 @@ Feature: A-GNSS
         ]
       }
       """
-    Then the tracker "{trackerId}" receives 2 raw messages on the topic devices/{trackerId}/messages/devicebound/agps=result into "agpsData"
-    And  "$length($filter(agpsData, function($v) { $contains($v, '01010100f9fffffffeffffff0f7b12890612031f00017') })) > 0" should be true
-    And  "$length($filter(agpsData, function($v) { $contains($v, '01021e0001006400c675009cff859f13000b0000c6753') })) > 0" should be true
+    Then the tracker "{trackerId}" receives 2 raw messages on the topic devices/{trackerId}/messages/devicebound/agnss=result into "agnssData"
+    And  "$length($filter(agnssData, function($v) { $contains($v, '01010100f9fffffffeffffff0f7b12890612031f00017') })) > 0" should be true
+    And  "$length($filter(agnssData, function($v) { $contains($v, '01021e0001006400c675009cff859f13000b0000c6753') })) > 0" should be true

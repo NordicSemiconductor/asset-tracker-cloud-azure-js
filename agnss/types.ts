@@ -1,6 +1,6 @@
 import { Type } from '@sinclair/typebox'
 
-export enum AGPSType {
+export enum AGNSSType {
 	'UTC parameters' = 1,
 	'Ephemerides' = 2,
 	'Almanac' = 3,
@@ -13,11 +13,11 @@ export enum AGPSType {
 
 const PositiveInteger = Type.Integer({ minimum: 1, title: 'positive integer' })
 
-export const agpsRequestSchema = Type.Object({
+export const agnssRequestSchema = Type.Object({
 	mcc: Type.Integer({ minimum: 100, maximum: 999 }),
 	mnc: Type.Integer({ minimum: 0, maximum: 99 }),
 	cell: PositiveInteger,
 	area: PositiveInteger,
 	phycell: Type.Optional(PositiveInteger),
-	types: Type.Array(Type.Enum(AGPSType), { minItems: 1 }),
+	types: Type.Array(Type.Enum(AGNSSType), { minItems: 1 }),
 })

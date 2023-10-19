@@ -5,18 +5,18 @@ import {
 	StorageSharedKeyCredential,
 } from '@azure/storage-queue'
 import { Static } from '@sinclair/typebox'
-import { agpsRequestSchema } from '../agps/types.js'
+import { agnssRequestSchema } from '../agnss/types.js'
 import { fromEnv } from '../lib/fromEnv.js'
 import { log, logError } from '../lib/log.js'
 import { validateWithJSONSchema } from '../lib/validateWithJSONSchema.js'
 
-const validateAgpsRequest = validateWithJSONSchema(agpsRequestSchema)
+const validateAgnssRequest = validateWithJSONSchema(agnssRequestSchema)
 
 const config = () =>
 	fromEnv({
 		storageAccountName: 'STORAGE_ACCOUNT_NAME',
 		storageAccessKey: 'STORAGE_ACCESS_KEY',
-		agpsRequestsQueueName: 'AGPS_REQUESTS_QUEUE_NAME',
+		agnssRequestsQueueName: 'AGNSS_REQUESTS_QUEUE_NAME',
 	})({
 		...process.env,
 	})
@@ -29,7 +29,7 @@ const config = () =>
  *
  * The requests are put in a queue for resolving.
  */
-const agpsDeviceRequestsHandler: AzureFunction = async (
+const agnssDeviceRequestsHandler: AzureFunction = async (
 	context: Context,
 	requests: (
 		| {
@@ -48,13 +48,13 @@ const agpsDeviceRequestsHandler: AzureFunction = async (
 	let queueClient: QueueClient
 
 	try {
-		const { storageAccountName, storageAccessKey, agpsRequestsQueueName } =
+		const { storageAccountName, storageAccessKey, agnssRequestsQueueName } =
 			config()
 
 		queueClient = new QueueServiceClient(
 			`https://${storageAccountName}.queue.core.windows.net`,
 			new StorageSharedKeyCredential(storageAccountName, storageAccessKey),
-		).getQueueClient(agpsRequestsQueueName)
+		).getQueueClient(agnssRequestsQueueName)
 		await queueClient.create()
 	} catch (error) {
 		logError(context)({ error: (error as Error).message })
@@ -62,7 +62,7 @@ const agpsDeviceRequestsHandler: AzureFunction = async (
 	}
 
 	// Find A-GNSS requests
-	const agpsRequests = requests
+	const agnssRequests = requests
 		.map((request, i) => ({
 			request,
 			deviceId:
@@ -74,22 +74,22 @@ const agpsDeviceRequestsHandler: AzureFunction = async (
 				string
 			>,
 		}))
-		.filter(({ properties }) => properties.agps === 'get')
+		.filter(({ properties }) => properties.agnss === 'get')
 
-	if (agpsRequests.length === 0) {
+	if (agnssRequests.length === 0) {
 		log(context)(`No A-GNSS requests found.`)
 		return
 	}
 
-	log(context)({ agpsRequests })
+	log(context)({ agnssRequests })
 
 	// Build list of valid requests
 	const deviceRequests: {
-		request: Static<typeof agpsRequestSchema>
+		request: Static<typeof agnssRequestSchema>
 		deviceId: string
 	}[] = []
-	agpsRequests.forEach(({ request, deviceId }) => {
-		const valid = validateAgpsRequest(request)
+	agnssRequests.forEach(({ request, deviceId }) => {
+		const valid = validateAgnssRequest(request)
 		if ('error' in valid) {
 			logError(context)(JSON.stringify(valid.error))
 			return
@@ -120,4 +120,4 @@ const agpsDeviceRequestsHandler: AzureFunction = async (
 	)
 }
 
-export default agpsDeviceRequestsHandler
+export default agnssDeviceRequestsHandler

@@ -1,11 +1,11 @@
 import { Static } from '@sinclair/typebox'
-import { agpsRequestSchema } from './types.js'
+import { agnssRequestSchema } from './types.js'
 
 export const cacheKey = ({
 	request,
 	binHours,
 }: {
-	request: Static<typeof agpsRequestSchema>
+	request: Static<typeof agnssRequestSchema>
 	binHours: number
 }): string => {
 	const binMs = binHours * 60 * 60 * 1000

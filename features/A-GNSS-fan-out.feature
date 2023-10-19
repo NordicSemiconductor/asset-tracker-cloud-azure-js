@@ -18,19 +18,19 @@ Feature: A-GNSS Data Fan Out (The cargo container scenario)
   Scenario: Register and connect device
 
     Given I am run after the "A-GNSS" feature
-    And I have a random UUID in "agpsDevice"
-    And I generate a certificate for the device "{agpsDevice}"
-    And I connect the device "{agpsDevice}"
+    And I have a random UUID in "agnssDevice"
+    And I generate a certificate for the device "{agnssDevice}"
+    And I connect the device "{agnssDevice}"
 
   Scenario: Request A-GNSS data
 
-    When the device "{agpsDevice}" publishes this message to the topic devices/{agpsDevice}/messages/events/agps=get&%24.ct=application%2Fjson&%24.ce=utf-8
+    When the device "{agnssDevice}" publishes this message to the topic devices/{agnssDevice}/messages/events/agnss=get&%24.ct=application%2Fjson&%24.ce=utf-8
       """
       {
-        "mcc": {agpsMcc},
-        "mnc": {agpsMnc},
-        "cell": {agpsCellId},
-        "area": {agpsArea},
+        "mcc": {agnssMcc},
+        "mnc": {agnssMnc},
+        "cell": {agnssCellId},
+        "area": {agnssArea},
         "types": [
           1,
           2,
@@ -43,14 +43,14 @@ Feature: A-GNSS Data Fan Out (The cargo container scenario)
         ]
       }
       """
-    Then the device "{agpsDevice}" receives 2 raw messages on the topic devices/{agpsDevice}/messages/devicebound/agps=result into "agpsData"
-    And  "$length($filter(agpsData, function($v) { $contains($v, '01010100f9fffffffeffffff0f7b12890612031f00017') })) > 0" should be true
-    And  "$length($filter(agpsData, function($v) { $contains($v, '01021e0001006400c675009cff859f13000b0000c6753') })) > 0" should be true
+    Then the device "{agnssDevice}" receives 2 raw messages on the topic devices/{agnssDevice}/messages/devicebound/agnss=result into "agnssData"
+    And  "$length($filter(agnssData, function($v) { $contains($v, '01010100f9fffffffeffffff0f7b12890612031f00017') })) > 0" should be true
+    And  "$length($filter(agnssData, function($v) { $contains($v, '01021e0001006400c675009cff859f13000b0000c6753') })) > 0" should be true
     
   Scenario: Delete device
   
     Given the endpoint is "{apiEndpoint}"
     And the Authorization header is "Bearer {accessToken}"
     And the Content-Type header is "application/json; charset=utf-8"
-    When I DELETE /device/{agpsDevice}
+    When I DELETE /device/{agnssDevice}
     Then the response status code should be 202
