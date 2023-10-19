@@ -53,7 +53,7 @@ const fetchNrfCloudAGPSLocationServiceKey = async ({
 	return latestSecret.value as string
 }
 /**
- * Resolve A-GPS requests from nRF Cloud
+ * Resolve A-GNSS requests from nRF Cloud
  */
 const agpsResolveRequestFromNrfCloud: AzureFunction = async (
 	context: Context,

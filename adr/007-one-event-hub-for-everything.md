@@ -1,10 +1,10 @@
 # ADR 007: One Event Hub for all device messages
 
-Ideally we want to invoke functions that handle A-GPS and P-GPS requests from
+Ideally we want to invoke functions that handle A-GNSS and P-GPS requests from
 devices only for these specific messages.
 
 Azure IoT Hub supports [filters for routing messages][1], however [property
-bags][2] are not supported in these filters. Therefore filtering of A-GPS and
+bags][2] are not supported in these filters. Therefore filtering of A-GNSS and
 P-GPS messages has to be done in the Azure function, with the downside of it
 being called for all device messages.
 

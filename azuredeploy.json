@@ -88,20 +88,6 @@
         "description": "The number of SignalR Unit."
       }
     },
-    "enableUnwiredLabsCellLocation": {
-      "type": "bool",
-      "defaultValue": false,
-      "metadata": {
-        "description": "Whether to enable cell geolocation using Unwired Labs API"
-      }
-    },
-    "unwiredlabsApiEndpoint": {
-      "type": "string",
-      "defaultValue": "https://eu1.unwiredlabs.com/",
-      "metadata": {
-        "description": "Endpoint to use for the unwiredlabs.com cell geolocation API"
-      }
-    },
     "nrfCloudTeamId": {
       "type": "string",
       "metadata": {
@@ -140,14 +126,14 @@
       "type": "string",
       "defaultValue": "1",
       "metadata": {
-        "description": "Number of hours to bin A-GPS requests"
+        "description": "Number of hours to bin A-GNSS requests"
       }
     },
     "agpsRequestDatabaseName": {
       "type": "string",
       "minLength": 3,
       "metadata": {
-        "description": "Name for the database that stores A-GPS requests"
+        "description": "Name for the database that stores A-GNSS requests"
       },
       "defaultValue": "agpsRequests"
     },
@@ -155,7 +141,7 @@
       "type": "string",
       "minLength": 3,
       "metadata": {
-        "description": "Name for the container that stores A-GPS requests"
+        "description": "Name for the container that stores A-GNSS requests"
       },
       "defaultValue": "cache"
     },
@@ -163,7 +149,7 @@
       "type": "string",
       "minLength": 3,
       "metadata": {
-        "description": "Name for the queue that stores A-GPS requests"
+        "description": "Name for the queue that stores A-GNSS requests"
       },
       "defaultValue": "agpsrequests"
     },
@@ -171,7 +157,7 @@
       "type": "string",
       "minLength": 3,
       "metadata": {
-        "description": "Name for the queue that stores A-GPS requests to be resolved using the nRF Cloud API"
+        "description": "Name for the queue that stores A-GNSS requests to be resolved using the nRF Cloud API"
       },
       "defaultValue": "nrfcloudagpsrequests"
     },
@@ -179,7 +165,7 @@
       "type": "string",
       "minLength": 3,
       "metadata": {
-        "description": "Consumer group name for A-GPS device requests"
+        "description": "Consumer group name for A-GNSS device requests"
       },
       "defaultValue": "agpsRequests"
     },
@@ -579,11 +565,6 @@
                 "value": "[listConnectionStrings(resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('appName')), providers('Microsoft.DocumentDb', 'databaseAccounts').apiVersions[0]).connectionStrings[0].connectionString]"
               },
               {
-                "condition": "[parameters('enableUnwiredLabsCellLocation')]",
-                "name": "UNWIREDLABS_API_ENDPOINT",
-                "value": "[parameters('unwiredlabsApiEndpoint')]"
-              },
-              {
                 "condition": "[not(empty(parameters('nrfCloudTeamId')))]",
                 "name": "NRFCLOUD_TEAM_ID",
                 "value": "[parameters('nrfCloudTeamId')]"
@@ -831,52 +812,6 @@
           "id": "cellGeolocation"
         },
         "options": {}
-      }
-    },
-    {
-      "condition": "[parameters('enableUnwiredLabsCellLocation')]",
-      "type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers",
-      "apiVersion": "2020-03-01",
-      "name": "[concat(parameters('appName'), '/cellGeolocation/unwiredLabsCache')]",
-      "dependsOn": [
-        "[resourceId('Microsoft.DocumentDB/databaseAccounts/sqlDatabases', parameters('appName'), 'cellGeolocation')]",
-        "[resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('appName'))]"
-      ],
-      "properties": {
-        "resource": {
-          "id": "unwiredLabsCache",
-          "indexingPolicy": {
-            "indexingMode": "consistent",
-            "automatic": true,
-            "includedPaths": [
-              {
-                "path": "/*"
-              }
-            ],
-            "excludedPaths": [
-              {
-                "path": "/\"_etag\"/?"
-              }
-            ]
-          },
-          "partitionKey": {
-            "paths": ["/cellId"],
-            "kind": "Hash"
-          },
-          "conflictResolutionPolicy": {
-            "mode": "LastWriterWins",
-            "conflictResolutionPath": "/_ts"
-          },
-          "compositeIndexes": [
-            [
-              {
-                "path": "/source",
-                "order": "ascending"
-              }
-            ]
-          ],
-          "defaultTtl": 2592000
-        }
       }
     },
     {

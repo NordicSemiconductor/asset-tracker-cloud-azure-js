@@ -5,11 +5,11 @@ describe('split mock response', () => {
 		expect(
 			splitMockResponse(`Content-Type: application/octet-stream
 
-(binary A-GPS data) other types`),
+(binary A-GNSS data) other types`),
 		).toMatchObject({
 			headers: {
 				'Content-Type': 'application/octet-stream',
 			},
-			body: '(binary A-GPS data) other types',
+			body: '(binary A-GNSS data) other types',
 		}))
 })

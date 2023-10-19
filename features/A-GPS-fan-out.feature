@@ -1,13 +1,13 @@
-Feature: A-GPS Data Fan Out (The cargo container scenario)
+Feature: A-GNSS Data Fan Out (The cargo container scenario)
 
   In this scenario hundreds, or thousands of devices are unloaded from a steel
   walled cargo container (intermodal container). All of them connect to the 
-  cellular network, and the same cell tower, and request A-GPS data, because
+  cellular network, and the same cell tower, and request A-GNSS data, because
   they have been offline for weeks while being shipped over the ocean.
   
-  While all devices should receive A-GPS data as per their request, we do not
+  While all devices should receive A-GNSS data as per their request, we do not
   want to hammer to third-party API with thousands of requests for the same
-  A-GPS data.
+  A-GNSS data.
 
   Contexts:
 
@@ -17,12 +17,12 @@ Feature: A-GPS Data Fan Out (The cargo container scenario)
 
   Scenario: Register and connect device
 
-    Given I am run after the "A-GPS" feature
+    Given I am run after the "A-GNSS" feature
     And I have a random UUID in "agpsDevice"
     And I generate a certificate for the device "{agpsDevice}"
     And I connect the device "{agpsDevice}"
 
-  Scenario: Request A-GPS data
+  Scenario: Request A-GNSS data
 
     When the device "{agpsDevice}" publishes this message to the topic devices/{agpsDevice}/messages/events/agps=get&%24.ct=application%2Fjson&%24.ce=utf-8
       """
