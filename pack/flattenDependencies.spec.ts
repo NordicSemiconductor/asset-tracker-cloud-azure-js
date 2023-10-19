@@ -1,4 +1,4 @@
-import { flattenDependencies } from './flattenDependencies'
+import { flattenDependencies } from './flattenDependencies.js'
 
 describe('flattenDependencies', () => {
 	it('should flatten dependencies', () =>

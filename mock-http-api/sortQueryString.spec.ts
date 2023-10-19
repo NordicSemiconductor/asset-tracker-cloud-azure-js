@@ -1,4 +1,4 @@
-import { sortQueryString } from './sortQueryString'
+import { sortQueryString } from './sortQueryString.js'
 
 describe('sortQueryString', () => {
 	it('should sort the query part of a mock URL', () =>

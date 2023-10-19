@@ -1,4 +1,4 @@
-import { matchDeviceBoundTopic } from './matchDeviceBoundTopic'
+import { matchDeviceBoundTopic } from './matchDeviceBoundTopic.js'
 
 describe('matchTopic', () => {
 	it('should match a simple topic', () =>

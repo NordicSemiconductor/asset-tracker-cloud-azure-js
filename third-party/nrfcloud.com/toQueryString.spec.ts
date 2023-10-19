@@ -1,4 +1,4 @@
-import { toQueryString } from './toQueryString'
+import { toQueryString } from './toQueryString.js'
 
 describe('toQueryString', () => {
 	it('should encode query strings', () =>

@@ -4,9 +4,9 @@ import { connect } from 'mqtt'
 import {
 	DeviceCertificateJSON,
 	deviceFileLocations,
-} from '../../../cli/iot/certificates/deviceFileLocations'
-import { globalIotHubDPSHostname } from '../../../cli/iot/ioTHubDPSInfo'
-import { dpsTopics } from './dpsTopics'
+} from '../../../cli/iot/certificates/deviceFileLocations.js'
+import { globalIotHubDPSHostname } from '../../../cli/iot/ioTHubDPSInfo.js'
+import { dpsTopics } from './dpsTopics.js'
 
 /**
  * Connect the device to the Azure IoT Hub.
@@ -82,10 +82,13 @@ export const provisionDevice = async ({
 						const { operationId, status } = message
 						log?.('Status', status)
 						log?.('Retry after', args.get('retry-after' as string))
-						setTimeout(() => {
-							// Assuming that the device has already subscribed to the $dps/registrations/res/# topic as indicated above, it can publish a get operationstatus message to the $dps/registrations/GET/iotdps-get-operationstatus/?$rid={request_id}&operationId={operationId} topic name. The operation ID in this message should be the value received in the RegistrationOperationStatus response message in the previous step.
-							client.publish(dpsTopics.registationStatus(operationId), '')
-						}, parseInt(args.get('retry-after') ?? '1', 10) * 1000)
+						setTimeout(
+							() => {
+								// Assuming that the device has already subscribed to the $dps/registrations/res/# topic as indicated above, it can publish a get operationstatus message to the $dps/registrations/GET/iotdps-get-operationstatus/?$rid={request_id}&operationId={operationId} topic name. The operation ID in this message should be the value received in the RegistrationOperationStatus response message in the previous step.
+								client.publish(dpsTopics.registationStatus(operationId), '')
+							},
+							parseInt(args.get('retry-after') ?? '1', 10) * 1000,
+						)
 						return
 					}
 					// In the successful case, the service will respond on the $dps/registrations/res/200/?$rid={request_id} topic. The payload of the response will contain the RegistrationOperationStatus object. The device should keep polling the service if the response code is 202 after a delay equal to the retry-after period. The device registration operation is successful if the service returns a 200 status code.

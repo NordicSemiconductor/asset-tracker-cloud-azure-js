@@ -1,4 +1,4 @@
-import { lowerCaseRecord } from './lowerCaseRecord'
+import { lowerCaseRecord } from './lowerCaseRecord.js'
 
 describe('lowerCaseRecord', () => {
 	it('should lower-case all keys', () =>

@@ -126,7 +126,7 @@ const geolocateReport: AzureFunction = async (
 		// Add cache entry
 		cacheEntry = await (
 			await resolvedReportsDbPromise
-		).items.create({ reportId: reportId })
+		).items.create({ reportId })
 
 		// Get the report
 		const reportsContainer = await reportsDbPromise
