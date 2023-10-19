@@ -4,7 +4,7 @@ import {
 	createPrivateKeyAndCSR,
 	flashCertificate,
 	getIMEI,
-} from '@nordicsemiconductor/firmware-ci-device-helpers'
+} from '@nordicsemiconductor/device-helpers'
 import { promises as fs } from 'fs'
 import { readFile } from 'fs/promises'
 import * as os from 'os'

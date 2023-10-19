@@ -1,4 +1,4 @@
-import { flash } from '@nordicsemiconductor/firmware-ci-device-helpers'
+import { flash } from '@nordicsemiconductor/device-helpers'
 import { Octokit } from '@octokit/rest'
 import * as fs from 'fs'
 import * as https from 'https'
