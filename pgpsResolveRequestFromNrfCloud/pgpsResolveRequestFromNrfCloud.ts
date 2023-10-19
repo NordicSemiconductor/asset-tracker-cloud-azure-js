@@ -1,7 +1,5 @@
 import { Container, CosmosClient } from '@azure/cosmos'
 import { AzureFunction, Context } from '@azure/functions'
-import { DefaultAzureCredential } from '@azure/identity'
-import { SecretClient } from '@azure/keyvault-secrets'
 import { Static } from '@sinclair/typebox'
 import { URL } from 'url'
 import { fromEnv } from '../lib/fromEnv.js'
@@ -12,6 +10,7 @@ import { gpsDay } from '../pgps/gpsTime.js'
 import { pgpsRequestSchema } from '../pgps/types.js'
 import { apiClient } from '../third-party/nrfcloud.com/apiclient.js'
 import { resolvePgpsRequest } from './pgps.js'
+import { nrfCloudServiceKeyPromise as fetchServiceKey } from '../third-party/nrfcloud.com/config.js'
 
 const config = () =>
 	fromEnv({
@@ -36,23 +35,8 @@ const config = () =>
 		...process.env,
 	})
 
-let nrfCloudPGPSLocationServiceKeyPromise: Promise<string>
+let nrfCloudServiceKeyPromise: Promise<string>
 
-const fetchNrfCloudPGPSLocationServiceKey = async ({
-	keyVaultName,
-}: {
-	keyVaultName: string
-}) => {
-	const credentials = new DefaultAzureCredential()
-	const keyVaultClient = new SecretClient(
-		`https://${keyVaultName}.vault.azure.net`,
-		credentials,
-	)
-	const latestSecret = await keyVaultClient.getSecret(
-		'nrfCloudPGPSLocationServiceKey',
-	)
-	return latestSecret.value as string
-}
 /**
  * Resolve P-GPS requests from nRF Cloud
  */
@@ -77,13 +61,12 @@ const pgpsResolveRequestFromNrfCloud: AzureFunction = async (
 			pgpsRequestsContainerName,
 		} = config()
 
-		if (nrfCloudPGPSLocationServiceKeyPromise === undefined)
-			nrfCloudPGPSLocationServiceKeyPromise =
-				fetchNrfCloudPGPSLocationServiceKey({ keyVaultName })
+		if (nrfCloudServiceKeyPromise === undefined)
+			nrfCloudServiceKeyPromise = fetchServiceKey(keyVaultName)()
 		resolver = resolvePgpsRequest(
 			apiClient({
 				endpoint: new URL(endpoint),
-				serviceKey: await nrfCloudPGPSLocationServiceKeyPromise,
+				serviceKey: await nrfCloudServiceKeyPromise,
 				teamId,
 			}),
 			log(context),

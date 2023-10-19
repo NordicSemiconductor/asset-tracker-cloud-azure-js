@@ -90,29 +90,9 @@
     },
     "nrfCloudTeamId": {
       "type": "string",
+      "minLength": 1,
       "metadata": {
         "description": "your nRF Cloud team id"
-      }
-    },
-    "enableNrfCloudCellLocationService": {
-      "type": "bool",
-      "defaultValue": false,
-      "metadata": {
-        "description": "Whether to enable cell geolocation using nRF Cloud API"
-      }
-    },
-    "enableNrfCloudAGPSLocationService": {
-      "type": "bool",
-      "defaultValue": false,
-      "metadata": {
-        "description": "Whether to enable nRF Cloud Assisted GPS Location Service"
-      }
-    },
-    "enableNrfCloudPGPSLocationService": {
-      "type": "bool",
-      "defaultValue": false,
-      "metadata": {
-        "description": "Whether to enable nRF Cloud Predicted GPS Location Service"
       }
     },
     "nrfCloudApiEndpoint": {
@@ -352,7 +332,6 @@
       ]
     },
     {
-      "condition": "[parameters('enableNrfCloudAGPSLocationService')]",
       "type": "Microsoft.Devices/iotHubs/eventhubEndpoints/ConsumerGroups",
       "apiVersion": "2020-03-01",
       "name": "[concat(parameters('appName'), 'IotHub', '/events/', parameters('agpsRequestIotEventsConsumerGroupName'))]",
@@ -361,7 +340,6 @@
       ]
     },
     {
-      "condition": "[parameters('enableNrfCloudAGPSLocationService')]",
       "type": "Microsoft.Devices/iotHubs/eventhubEndpoints/ConsumerGroups",
       "apiVersion": "2020-03-01",
       "name": "[concat(parameters('appName'), 'IotHub', '/events/', parameters('pgpsRequestIotEventsConsumerGroupName'))]",
@@ -371,7 +349,6 @@
     },
     {
       "type": "Microsoft.Devices/iotHubs/eventhubEndpoints/ConsumerGroups",
-      "condition": "[parameters('enableNrfCloudCellLocationService')]",
       "apiVersion": "2020-03-01",
       "name": "[concat(parameters('appName'), 'IotHub', '/events/', parameters('ncellmeasReportsIotEventsConsumerGroupName'))]",
       "dependsOn": [
@@ -565,12 +542,10 @@
                 "value": "[listConnectionStrings(resourceId('Microsoft.DocumentDB/databaseAccounts', parameters('appName')), providers('Microsoft.DocumentDb', 'databaseAccounts').apiVersions[0]).connectionStrings[0].connectionString]"
               },
               {
-                "condition": "[not(empty(parameters('nrfCloudTeamId')))]",
                 "name": "NRFCLOUD_TEAM_ID",
                 "value": "[parameters('nrfCloudTeamId')]"
               },
               {
-                "condition": "[not(empty(parameters('nrfCloudTeamId')))]",
                 "name": "NRFCLOUD_API_ENDPOINT",
                 "value": "[parameters('nrfCloudApiEndpoint')]"
               },
@@ -815,7 +790,6 @@
       }
     },
     {
-      "condition": "[parameters('enableNrfCloudCellLocationService')]",
       "type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers",
       "apiVersion": "2020-03-01",
       "name": "[concat(parameters('appName'), '/cellGeolocation/nrfCloudCache')]",
@@ -861,7 +835,6 @@
       }
     },
     {
-      "condition": "[parameters('enableNrfCloudAGPSLocationService')]",
       "type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases",
       "apiVersion": "2020-03-01",
       "name": "[concat(parameters('appName'), '/', parameters('agpsRequestDatabaseName'))]",
@@ -876,7 +849,6 @@
       }
     },
     {
-      "condition": "[parameters('enableNrfCloudAGPSLocationService')]",
       "type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers",
       "apiVersion": "2020-03-01",
       "name": "[concat(parameters('appName'), '/',parameters('agpsRequestDatabaseName'),'/', parameters('agpsRequestContainerName'))]",
@@ -918,7 +890,6 @@
       }
     },
     {
-      "condition": "[parameters('enableNrfCloudAGPSLocationService')]",
       "type": "Microsoft.Storage/storageAccounts/queueServices/queues",
       "apiVersion": "2021-04-01",
       "name": "[concat(parameters('storageAccountName'), '/default/', parameters('agpsRequestQueueName'))]",
@@ -928,7 +899,6 @@
       "properties": {}
     },
     {
-      "condition": "[parameters('enableNrfCloudAGPSLocationService')]",
       "type": "Microsoft.Storage/storageAccounts/queueServices/queues",
       "apiVersion": "2021-04-01",
       "name": "[concat(parameters('storageAccountName'), '/default/', parameters('agpsRequestNrfCloudQueueName'))]",
@@ -938,7 +908,6 @@
       "properties": {}
     },
     {
-      "condition": "[parameters('enableNrfCloudPGPSLocationService')]",
       "type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases",
       "apiVersion": "2020-03-01",
       "name": "[concat(parameters('appName'), '/', parameters('pgpsRequestDatabaseName'))]",
@@ -953,7 +922,6 @@
       }
     },
     {
-      "condition": "[parameters('enableNrfCloudPGPSLocationService')]",
       "type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers",
       "apiVersion": "2020-03-01",
       "name": "[concat(parameters('appName'), '/',parameters('pgpsRequestDatabaseName'),'/', parameters('pgpsRequestContainerName'))]",
@@ -995,7 +963,6 @@
       }
     },
     {
-      "condition": "[parameters('enableNrfCloudPGPSLocationService')]",
       "type": "Microsoft.Storage/storageAccounts/queueServices/queues",
       "apiVersion": "2021-04-01",
       "name": "[concat(parameters('storageAccountName'), '/default/', parameters('pgpsRequestQueueName'))]",
@@ -1005,7 +972,6 @@
       "properties": {}
     },
     {
-      "condition": "[parameters('enableNrfCloudPGPSLocationService')]",
       "type": "Microsoft.Storage/storageAccounts/queueServices/queues",
       "apiVersion": "2021-04-01",
       "name": "[concat(parameters('storageAccountName'), '/default/', parameters('pgpsRequestNrfCloudQueueName'))]",
@@ -1015,7 +981,6 @@
       "properties": {}
     },
     {
-      "condition": "[parameters('enableNrfCloudCellLocationService')]",
       "type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases",
       "apiVersion": "2020-03-01",
       "name": "[concat(parameters('appName'), '/', parameters('ncellmeasReportsDatabaseName'))]",
@@ -1030,7 +995,6 @@
       }
     },
     {
-      "condition": "[parameters('enableNrfCloudCellLocationService')]",
       "type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers",
       "apiVersion": "2020-03-01",
       "name": "[concat(parameters('appName'), '/',parameters('ncellmeasReportsDatabaseName'),'/', parameters('ncellmeasReportsContainerName'))]",
@@ -1072,7 +1036,6 @@
       }
     },
     {
-      "condition": "[parameters('enableNrfCloudCellLocationService')]",
       "type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers",
       "apiVersion": "2020-03-01",
       "name": "[concat(parameters('appName'), '/',parameters('ncellmeasReportsDatabaseName'),'/', parameters('ncellmeasReportsNrfCloudLocationCacheContainerName'))]",
@@ -1114,7 +1077,6 @@
       }
     },
     {
-      "condition": "[parameters('enableNrfCloudCellLocationService')]",
       "type": "Microsoft.Storage/storageAccounts/queueServices/queues",
       "apiVersion": "2021-04-01",
       "name": "[concat(parameters('storageAccountName'), '/default/', parameters('ncellmeasReportsQueueName'))]",
@@ -1124,7 +1086,6 @@
       "properties": {}
     },
     {
-      "condition": "[parameters('enableNrfCloudCellLocationService')]",
       "type": "Microsoft.Storage/storageAccounts/queueServices/queues",
       "apiVersion": "2021-04-01",
       "name": "[concat(parameters('storageAccountName'), '/default/', parameters('ncellmeasReportsNrfCloudQueueName'))]",

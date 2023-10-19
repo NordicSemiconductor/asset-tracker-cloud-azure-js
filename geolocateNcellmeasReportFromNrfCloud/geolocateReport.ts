@@ -9,7 +9,7 @@ import { log, logError } from '../lib/log.js'
 import { parseConnectionString } from '../lib/parseConnectionString.js'
 import { StoredReport } from '../ncellmeas/storedReport.js'
 import { apiClient } from '../third-party/nrfcloud.com/apiclient.js'
-import { nrfCloudCellLocationServiceKeyPromise } from '../third-party/nrfcloud.com/config.js'
+import { nrfCloudServiceKeyPromise } from '../third-party/nrfcloud.com/config.js'
 import {
 	locateRequestSchema,
 	locateResultSchema,
@@ -161,9 +161,7 @@ const geolocateReport: AzureFunction = async (
 		const { endpoint, teamId } = config()
 		const c = apiClient({
 			endpoint: new URL(endpoint),
-			serviceKey: await nrfCloudCellLocationServiceKeyPromise(
-				config().keyVaultName,
-			)(),
+			serviceKey: await nrfCloudServiceKeyPromise(config().keyVaultName)(),
 			teamId,
 		})
 

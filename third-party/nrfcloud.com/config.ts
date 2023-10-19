@@ -1,7 +1,7 @@
 import { DefaultAzureCredential } from '@azure/identity'
 import { SecretClient } from '@azure/keyvault-secrets'
 
-export const nrfCloudCellLocationServiceKeyPromise = (
+export const nrfCloudServiceKeyPromise = (
 	keyVaultName: string,
 ): (() => Promise<string>) => {
 	const p = (async () => {
@@ -10,9 +10,7 @@ export const nrfCloudCellLocationServiceKeyPromise = (
 			`https://${keyVaultName}.vault.azure.net`,
 			credentials,
 		)
-		const latestSecret = await keyVaultClient.getSecret(
-			'nrfCloudCellLocationServiceKey',
-		)
+		const latestSecret = await keyVaultClient.getSecret('nrfCloudServiceKey')
 		return latestSecret.value as string
 	})()
 	return async () => p
