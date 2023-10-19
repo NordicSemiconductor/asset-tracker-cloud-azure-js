@@ -31,17 +31,16 @@ const config = () =>
  */
 const agpsDeviceRequestsHandler: AzureFunction = async (
 	context: Context,
-	requests:
-		| (
-				| {
-						mcc: number
-						mnc: number
-						cell: number
-						area: number
-						types: number[]
-				  }
-				| Record<string, any>
-		  )[],
+	requests: (
+		| {
+				mcc: number
+				mnc: number
+				cell: number
+				area: number
+				types: number[]
+		  }
+		| Record<string, any>
+	)[],
 ): Promise<void> => {
 	log(context)({ context, requests })
 

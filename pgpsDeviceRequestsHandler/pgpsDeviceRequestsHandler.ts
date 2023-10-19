@@ -31,16 +31,15 @@ const config = () =>
  */
 const pgpsDeviceRequestsHandler: AzureFunction = async (
 	context: Context,
-	requests:
-		| (
-				| {
-						n: number
-						int: number
-						day: number
-						time: number
-				  }
-				| Record<string, any>
-		  )[],
+	requests: (
+		| {
+				n: number
+				int: number
+				day: number
+				time: number
+		  }
+		| Record<string, any>
+	)[],
 ): Promise<void> => {
 	log(context)({ context, requests })
 
