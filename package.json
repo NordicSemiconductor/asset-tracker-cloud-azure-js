@@ -74,7 +74,7 @@
     "husky": "8.0.3",
     "lint-staged": "13.3.0",
     "semver": "7.5.4",
-    "tsx": "3.12.3"
+    "tsx": "3.14.0"
   },
   "lint-staged": {
     "*.{md,json,yaml,yml}": [
