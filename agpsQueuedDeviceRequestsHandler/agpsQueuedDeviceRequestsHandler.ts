@@ -53,7 +53,7 @@ type QueuedAGPSRequest = {
 }
 
 /**
- * Resolve A-GPS requests for devices by either fetching the cached data from
+ * Resolve A-GNSS requests for devices by either fetching the cached data from
  * a DB or kicking off the resoluting via a third-party API (currently only
  * nRF Cloud Assisted GPS Location Service is implemented.)
  */
@@ -138,7 +138,7 @@ const agpsQueuedDeviceRequestsHandler: AzureFunction = async (
 				// Cache resolved
 				resolvedRequests[requestCacheKey] = resources[0]
 				if (resources[0].unresolved === true) {
-					logError(context)(requestCacheKey, `A-GPS request is unresolved.`)
+					logError(context)(requestCacheKey, `A-GNSS request is unresolved.`)
 					return
 				}
 			}

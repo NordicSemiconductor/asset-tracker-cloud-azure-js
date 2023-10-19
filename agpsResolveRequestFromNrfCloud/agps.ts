@@ -92,7 +92,7 @@ export const resolveAgpsRequest =
 				return {
 					error: {
 						type: ErrorType.BadGateway,
-						message: `Could not verify A-GPS payload: ${maybeValidAgpsData.error.message}!`,
+						message: `Could not verify A-GNSS payload: ${maybeValidAgpsData.error.message}!`,
 					},
 				}
 			}

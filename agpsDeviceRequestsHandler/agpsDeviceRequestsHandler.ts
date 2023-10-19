@@ -22,9 +22,9 @@ const config = () =>
 	})
 
 /**
- * Queue A-GPS requests from devices
+ * Queue A-GNSS requests from devices
  *
- * This handler filters for A-GPS requests.
+ * This handler filters for A-GNSS requests.
  * See ../adr/007-one-event-hub-for-everything.md for why we have to do filtering of messages here.
  *
  * The requests are put in a queue for resolving.
@@ -61,7 +61,7 @@ const agpsDeviceRequestsHandler: AzureFunction = async (
 		return
 	}
 
-	// Find A-GPS requests
+	// Find A-GNSS requests
 	const agpsRequests = requests
 		.map((request, i) => ({
 			request,
@@ -77,7 +77,7 @@ const agpsDeviceRequestsHandler: AzureFunction = async (
 		.filter(({ properties }) => properties.agps === 'get')
 
 	if (agpsRequests.length === 0) {
-		log(context)(`No A-GPS requests found.`)
+		log(context)(`No A-GNSS requests found.`)
 		return
 	}
 

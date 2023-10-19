@@ -31,7 +31,6 @@ jobs:
       STORAGE_ACCOUNT_NAME: ${{ secrets.STORAGE_ACCOUNT_NAME }}
       B2C_TENANT: ${{ secrets.B2C_TENANT }}
       RESOURCE_GROUP: ${{ secrets.RESOURCE_GROUP }}
-      UNWIRED_LABS_API_KEY: ${{ secrets.UNWIRED_LABS_API_KEY }}
       NRF_CLOUD_TEAM_ID: ${{ secrets.NRF_CLOUD_TEAM_ID }}
       NRF_CLOUD_CELL_LOCATION_SERVICE_KEY:
         ${{ secrets.NRF_CLOUD_CELL_LOCATION_SERVICE_KEY }}
@@ -78,20 +77,6 @@ jobs:
       - name: Set Key Vault name
         run: |
           echo "keyVaultName=${APP_NAME:-nrfassettracker}" >> $GITHUB_ENV
-
-      # Unwired Labs API
-      - name: Enable Unwired Labs API
-        if: env.UNWIRED_LABS_API_KEY != ''
-        run: echo "enableUnwiredLabsCellLocation=true" >> $GITHUB_ENV
-      - name: Disable Unwired Labs API
-        if: env.UNWIRED_LABS_API_KEY == ''
-        run: echo "enableUnwiredLabsCellLocation=false" >> $GITHUB_ENV
-      - name: Set Unwired Labs API key
-        if: env.enableUnwiredLabsCellLocation == 'true'
-        uses: azure/CLI@v1
-        with:
-          inlineScript: |
-            az keyvault secret set --vault-name ${{ env.keyVaultName }} --name unwiredlabsApiKey --value ${{ secrets.UNWIRED_LABS_API_KEY }}
 
       # nRF Cloud Cell Location API
       - name: Enable nRF Cloud Cell Location API
@@ -175,7 +160,6 @@ jobs:
                 storageAccountName=${{ env.STORAGE_ACCOUNT_NAME }} \
                 appRegistrationClientId=${{ env.APP_REG_CLIENT_ID }} \
                 b2cTenant=${{ env.B2C_TENANT }} \
-                enableUnwiredLabsCellLocation=${enableUnwiredLabsCellLocation} \
                 enableNrfCloudCellLocationService=${enableNrfCloudCellLocationService} \
                 enableNrfCloudAGPSLocationService=${enableNrfCloudAGPSLocationService} \
                 nrfCloudTeamId=${{ env.NRF_CLOUD_TEAM_ID }} \
