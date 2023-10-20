@@ -34,7 +34,7 @@
     "@azure/storage-blob": "12.16.0",
     "@azure/storage-queue": "12.15.0",
     "@nordicsemiconductor/cell-geolocation-helpers": "6.0.0",
-    "@nordicsemiconductor/nrfcloud-location-services-tests": "3.0.4",
+    "@nordicsemiconductor/nrfcloud-location-services-tests": "4.0.3",
     "@nordicsemiconductor/object-to-env": "4.1.2",
     "@nordicsemiconductor/random-words": "6.0.1",
     "@octokit/rest": "19.0.13",
