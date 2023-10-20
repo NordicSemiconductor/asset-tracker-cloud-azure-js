@@ -37,7 +37,7 @@
     "@nordicsemiconductor/nrfcloud-location-services-tests": "4.0.3",
     "@nordicsemiconductor/object-to-env": "5.0.0",
     "@nordicsemiconductor/random-words": "7.0.0",
-    "@octokit/rest": "19.0.13",
+    "@octokit/rest": "20.0.2",
     "@sinclair/typebox": "0.31.18",
     "ajv": "8.12.0",
     "azure-iot-provisioning-service": "1.11.2",
