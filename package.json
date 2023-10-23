@@ -52,7 +52,7 @@
     "@azure/logger": "1.0.4",
     "@commitlint/config-conventional": "18.0.0",
     "@nordicsemiconductor/asset-tracker-cloud-code-style": "12.0.101",
-    "@nordicsemiconductor/device-helpers": "15.0.40",
+    "@nordicsemiconductor/device-helpers": "15.0.41",
     "@nordicsemiconductor/e2e-bdd-test-runner": "16.0.229",
     "@nordicsemiconductor/eslint-config-asset-tracker-cloud-typescript": "16.0.23",
     "@types/backoff": "2.5.4",
