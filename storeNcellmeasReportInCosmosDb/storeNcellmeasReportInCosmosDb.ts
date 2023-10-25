@@ -1,4 +1,4 @@
-import { AzureFunction, Context } from '@azure/functions'
+import type { CosmosDBOutput, EventHubHandler } from '@azure/functions'
 import { Static } from '@sinclair/typebox'
 import iothub from 'azure-iothub'
 import { randomUUID } from 'node:crypto'
@@ -26,66 +26,71 @@ const deviceNetwork: Record<string, string> = {}
 /**
  * Store neighbor cell measurement reports in Cosmos DB so it can be queried later
  */
-const storeNcellmeasReportInCosmosDb: AzureFunction = async (
-	context: Context,
-	event: Static<typeof ncellmeasReport> | ReportedUpdateWithNetwork,
-): Promise<void> => {
-	log(context)({ context, event })
+const storeNcellmeasReportInCosmosDb =
+	(cosmosDb: CosmosDBOutput): EventHubHandler =>
+	async (message, context) => {
+		const event = message as
+			| Static<typeof ncellmeasReport>
+			| ReportedUpdateWithNetwork
+		log(context)({ context, event })
 
-	const deviceId =
-		context.bindingData.systemProperties['iothub-connection-device-id']
+		const systemProperties = context.triggerMetadata
+			?.systemProperties as Record<string, unknown>
+		const properties = context.triggerMetadata?.properties as Record<
+			string,
+			unknown
+		>
 
-	// Handle TwinUpdates to store device network reports
-	if (
-		context.bindingData.systemProperties['iothub-message-source'] ===
-			'twinChangeEvents' &&
-		(event as ReportedUpdateWithNetwork).properties.reported.roam !== undefined
-	) {
-		const nw = (event as ReportedUpdateWithNetwork).properties.reported.roam?.v
-			.nw as string
-		deviceNetwork[deviceId] = nw
-		log(context)(`${deviceId} => ${nw}`)
-		return
-	}
+		const deviceId = systemProperties['iothub-connection-device-id'] as string
 
-	// All other messages must be "ncellmeas"
-	if (
-		context.bindingData.systemProperties['iothub-message-source'] !==
-		'Telemetry'
-	) {
-		log(context)(`Ignoring non-telemetry message`)
-		return
+		// Handle TwinUpdates to store device network reports
+		if (
+			systemProperties['iothub-message-source'] === 'twinChangeEvents' &&
+			(event as ReportedUpdateWithNetwork).properties?.reported?.roam !==
+				undefined
+		) {
+			const nw = (event as ReportedUpdateWithNetwork).properties.reported.roam
+				?.v.nw as string
+			deviceNetwork[deviceId] = nw
+			log(context)(`${deviceId} => ${nw}`)
+			return
+		}
+
+		// All other messages must be "ncellmeas"
+		if (systemProperties['iothub-message-source'] !== 'Telemetry') {
+			log(context)(`Ignoring non-telemetry message`)
+			return
+		}
+		if (properties?.ncellmeas === undefined) {
+			log(context)(`Telemetry message does not have ncellmeas property set.`)
+		}
+		const valid = validateNcellmeasReport(event)
+		if ('error' in valid) {
+			logError(context)(JSON.stringify(valid.error))
+			return
+		}
+		let nw = deviceNetwork[deviceId]
+		if (nw === undefined) {
+			const devices = registry.createQuery(
+				`SELECT * FROM devices WHERE deviceId='${deviceId}'`,
+			)
+			const res = await devices.nextAsTwin()
+			nw = res.result[0].properties.reported.roam?.v?.nw
+		}
+		if (nw === undefined) {
+			logError(context)(
+				`Could not determine network mode for device ${deviceId}.`,
+			)
+		}
+		const document: StoredReport & { id: string } = {
+			id: randomUUID(),
+			report: valid,
+			deviceId,
+			nw: nw ?? 'LTE-M',
+			timestamp: systemProperties['iothub-enqueuedtime'] as string,
+		}
+		context.extraOutputs.set(cosmosDb, document)
+		log(context)({ document })
 	}
-	if (context.bindingData?.properties?.ncellmeas === undefined) {
-		log(context)(`Telemetry message does not have ncellmeas property set.`)
-	}
-	const valid = validateNcellmeasReport(event)
-	if ('error' in valid) {
-		logError(context)(JSON.stringify(valid.error))
-		return
-	}
-	let nw = deviceNetwork[deviceId]
-	if (nw === undefined) {
-		const devices = registry.createQuery(
-			`SELECT * FROM devices WHERE deviceId='${deviceId}'`,
-		)
-		const res = await devices.nextAsTwin()
-		nw = res.result[0].properties.reported.roam?.v?.nw
-	}
-	if (nw === undefined) {
-		logError(context)(
-			`Could not determine network mode for device ${deviceId}.`,
-		)
-	}
-	const document: StoredReport & { id: string } = {
-		id: randomUUID(),
-		report: valid,
-		deviceId,
-		nw: nw ?? 'LTE-M',
-		timestamp: context.bindingData.systemProperties['iothub-enqueuedtime'],
-	}
-	context.bindings.report = JSON.stringify(document)
-	log(context)({ document })
-}
 
 export default storeNcellmeasReportInCosmosDb

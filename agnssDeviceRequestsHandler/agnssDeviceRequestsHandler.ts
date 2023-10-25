@@ -1,4 +1,4 @@
-import { AzureFunction, Context } from '@azure/functions'
+import type { EventHubHandler } from '@azure/functions'
 import {
 	QueueClient,
 	QueueServiceClient,
@@ -29,20 +29,13 @@ const config = () =>
  *
  * The requests are put in a queue for resolving.
  */
-const agnssDeviceRequestsHandler: AzureFunction = async (
-	context: Context,
-	requests: (
-		| {
-				mcc: number
-				mnc: number
-				cell: number
-				area: number
-				types: number[]
-		  }
-		| Record<string, any>
-	)[],
-): Promise<void> => {
+const agnssDeviceRequestsHandler: EventHubHandler = async (
+	requests,
+	context,
+) => {
 	log(context)({ context, requests })
+
+	if (!Array.isArray(requests)) return
 
 	const timestamp = new Date()
 	let queueClient: QueueClient
@@ -63,17 +56,21 @@ const agnssDeviceRequestsHandler: AzureFunction = async (
 
 	// Find A-GNSS requests
 	const agnssRequests = requests
-		.map((request, i) => ({
-			request,
-			deviceId:
-				context.bindingData.systemPropertiesArray[i][
-					'iothub-connection-device-id'
-				],
-			properties: context.bindingData.propertiesArray[i] as Record<
-				string,
-				string
-			>,
-		}))
+		.map((request, i) => {
+			const systemPropertiesArray = Array.isArray(
+				context.triggerMetadata?.systemPropertiesArray,
+			)
+				? context.triggerMetadata?.systemPropertiesArray
+				: []
+			const properties = Array.isArray(context.triggerMetadata?.propertiesArray)
+				? context.triggerMetadata?.propertiesArray
+				: []
+			return {
+				request,
+				deviceId: systemPropertiesArray?.[i]['iothub-connection-device-id'],
+				properties: properties?.[i] as Record<string, string>,
+			}
+		})
 		.filter(({ properties }) => properties.agnss === 'get')
 
 	if (agnssRequests.length === 0) {

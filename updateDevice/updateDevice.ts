@@ -1,11 +1,11 @@
-import { AzureFunction, Context, HttpRequest } from '@azure/functions'
+import type { HttpHandler } from '@azure/functions'
 import iothub from 'azure-iothub'
 import { randomUUID } from 'node:crypto'
 import * as url from 'url'
 import { ErrorInfo, ErrorType, toStatusCode } from '../lib/ErrorInfo.js'
 import { fromEnv } from '../lib/fromEnv.js'
 import { result } from '../lib/http.js'
-import { log } from '../lib/log.js'
+import { log, logError } from '../lib/log.js'
 const { Registry } = iothub
 
 const { iotHubConnectionString } = fromEnv({
@@ -14,10 +14,7 @@ const { iotHubConnectionString } = fromEnv({
 
 const registry = Registry.fromConnectionString(iotHubConnectionString)
 
-const updateDevice: AzureFunction = async (
-	context: Context,
-	req: HttpRequest,
-): Promise<void> => {
+const updateDevice: HttpHandler = async (req, context) => {
 	log(context)({ req })
 	try {
 		const devices = registry.createQuery(
@@ -25,7 +22,7 @@ const updateDevice: AzureFunction = async (
 		)
 		const res = await devices.nextAsTwin()
 		if (res.result.length === 0) {
-			context.res = result(context)(
+			return result(context)(
 				{
 					type: ErrorType.EntityNotFound,
 					message: `Device ${req.params.id} not found!`,
@@ -33,7 +30,11 @@ const updateDevice: AzureFunction = async (
 				toStatusCode[ErrorType.EntityNotFound],
 			)
 		} else {
-			const { config: cfg, firmware, ...rest } = req.body
+			const {
+				config: cfg,
+				firmware,
+				...rest
+			} = (await req.json()) as Record<string, any>
 
 			log(context)({
 				tags: rest,
@@ -71,11 +72,11 @@ const updateDevice: AzureFunction = async (
 				res.result[0].etag,
 			)
 
-			context.res = result(context)({ success: true }, 202)
+			return result(context)({ success: true }, 202)
 		}
 	} catch (error) {
-		context.log.error({ error })
-		context.res = result(context)({ error: (error as Error).message }, 500)
+		logError(context)({ error })
+		return result(context)({ error: (error as Error).message }, 500)
 	}
 }
 

@@ -1,4 +1,4 @@
-import { AzureFunction, Context, HttpRequest } from '@azure/functions'
+import type { HttpHandler } from '@azure/functions'
 import {
 	BlobServiceClient,
 	StorageSharedKeyCredential,
@@ -26,13 +26,10 @@ const containerClient = blobServiceClient.getContainerClient(
 	avatarStorageContainer,
 )
 
-const storeImage: AzureFunction = async (
-	context: Context,
-	req: HttpRequest,
-): Promise<void> => {
-	const { body, ...rest } = req
+const storeImage: HttpHandler = async (req, context) => {
+	const body = await req.text()
 	log(context)({
-		req: rest,
+		req: { query: Object.fromEntries(req.query), params: req.params },
 		storageAccountName,
 		storageAccessKey,
 		bodyLength: body.length,
@@ -52,7 +49,7 @@ const storeImage: AzureFunction = async (
 		uploadBlobResponse.requestId,
 	)
 
-	context.res = result(context)(
+	return result(context)(
 		{
 			url: `https://${storageAccountName}.blob.core.windows.net/${avatarStorageContainer}/${blobName}`,
 		},

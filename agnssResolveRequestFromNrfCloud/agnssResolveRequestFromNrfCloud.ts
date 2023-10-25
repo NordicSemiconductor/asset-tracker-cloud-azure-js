@@ -1,5 +1,5 @@
 import { Container, CosmosClient } from '@azure/cosmos'
-import { AzureFunction, Context } from '@azure/functions'
+import type { StorageQueueHandler } from '@azure/functions'
 import { Static } from '@sinclair/typebox'
 import { URL } from 'url'
 import { cacheKey } from '../agnss/cacheKey.js'
@@ -39,10 +39,11 @@ let nrfCloudServiceKeyPromise: Promise<string>
 /**
  * Resolve A-GNSS requests from nRF Cloud
  */
-const agnssResolveRequestFromNrfCloud: AzureFunction = async (
-	context: Context,
-	request: Static<typeof agnssRequestSchema>,
-): Promise<void> => {
+const agnssResolveRequestFromNrfCloud: StorageQueueHandler = async (
+	queueEntry,
+	context,
+) => {
+	const request = queueEntry as Static<typeof agnssRequestSchema>
 	log(context)({ context, request })
 
 	let resolver: ReturnType<typeof resolveAgnssRequest>

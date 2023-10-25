@@ -1,5 +1,5 @@
 import { CosmosClient, ItemResponse } from '@azure/cosmos'
-import { AzureFunction, Context, HttpRequest } from '@azure/functions'
+import type { HttpHandler } from '@azure/functions'
 import { NetworkMode } from '@nordicsemiconductor/cell-geolocation-helpers'
 import { Static, TObject, TProperties } from '@sinclair/typebox'
 import { URL } from 'url'
@@ -77,17 +77,13 @@ const markAsResolved = async (
 		location,
 	})
 
-const geolocateReport: AzureFunction = async (
-	context: Context,
-	req: HttpRequest,
-): Promise<void> => {
+const geolocateReport: HttpHandler = async (req, context) => {
 	log(context)({ req })
 
 	try {
 		config()
 	} catch (error) {
-		context.res = result(context)({ error: (error as Error).message }, 402)
-		return
+		return result(context)({ error: (error as Error).message }, 402)
 	}
 
 	const reportId = req.params.reportId
@@ -104,23 +100,20 @@ const geolocateReport: AzureFunction = async (
 		if (resolvedReport !== undefined) {
 			// Resolution in progress
 			if (resolvedReport.resolved === undefined) {
-				context.res = result(context)(
+				return result(context)(
 					{ error: `Report ${reportId} resolution in progress.` },
 					409,
 				)
-				return
 			}
 			// Failed to resolve
 			if (resolvedReport.resolved === false) {
-				context.res = result(context)(
+				return result(context)(
 					{ error: `Report ${reportId} could not be resolved.` },
 					404,
 				)
-				return
 			}
 			// Resolved
-			context.res = result(context)(resolvedReport.location)
-			return
+			return result(context)(resolvedReport.location)
 		}
 
 		// Add cache entry
@@ -136,25 +129,20 @@ const geolocateReport: AzureFunction = async (
 			await reportsContainer.items.query(reportsSql).fetchNext()
 		).resources[0]
 		if (report === undefined) {
-			context.res = result(context)(
-				{ error: `Report ${reportId} not found.` },
-				404,
-			)
 			// Mark resolution as failed
 			await markAsFailed(reportId, cacheEntry)
-			return
+			return result(context)({ error: `Report ${reportId} not found.` }, 404)
 		}
 
 		log(context)({ report })
 
 		if (report.nw === NetworkMode.NBIoT) {
-			context.res = result(context)(
+			// Mark resolution as failed
+			await markAsFailed(reportId, cacheEntry)
+			return result(context)(
 				{ error: 'Resolving NB-IoT cells is not yet supported.' },
 				422,
 			)
-			// Mark resolution as failed
-			await markAsFailed(reportId, cacheEntry)
-			return
 		}
 
 		// Resolve
@@ -196,14 +184,14 @@ const geolocateReport: AzureFunction = async (
 
 		if ('error' in maybeCellGeoLocation) {
 			logError(context)({ error: maybeCellGeoLocation.error.message })
-			context.res = result(context)(
+			// Mark resolution as failed
+			await markAsFailed(reportId, cacheEntry)
+			return result(context)(
 				{
 					error: `Could not resolve report ${reportId}: ${maybeCellGeoLocation.error.message}`,
 				},
 				404,
 			)
-			// Mark resolution as failed
-			await markAsFailed(reportId, cacheEntry)
 		} else {
 			const location = {
 				lat: maybeCellGeoLocation.lat,
@@ -213,12 +201,12 @@ const geolocateReport: AzureFunction = async (
 			log(context)({ location })
 			// Mark resolution as resolved
 			await markAsResolved(reportId, cacheEntry, location)
-			context.res = result(context)(location)
+			return result(context)(location)
 		}
 	} catch (error) {
 		if (cacheEntry !== undefined) await markAsFailed(reportId, cacheEntry)
-		context.log.error({ error: (error as Error).message })
-		context.res = result(context)({ error: (error as Error).message }, 500)
+		logError(context)({ error: (error as Error).message })
+		return result(context)({ error: (error as Error).message }, 500)
 	}
 }
 
