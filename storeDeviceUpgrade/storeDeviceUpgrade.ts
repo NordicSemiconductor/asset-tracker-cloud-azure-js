@@ -1,4 +1,4 @@
-import { AzureFunction, Context, HttpRequest } from '@azure/functions'
+import type { HttpHandler } from '@azure/functions'
 import {
 	BlobServiceClient,
 	StorageSharedKeyCredential,
@@ -6,7 +6,7 @@ import {
 import { randomUUID } from 'node:crypto'
 import { fromEnv } from '../lib/fromEnv.js'
 import { result } from '../lib/http.js'
-import { log } from '../lib/log.js'
+import { log, logError } from '../lib/log.js'
 
 const { storageAccountName, storageAccessKey } = fromEnv({
 	storageAccountName: 'STORAGE_ACCOUNT_NAME',
@@ -25,11 +25,8 @@ const blobServiceClient = new BlobServiceClient(
 const containerClient =
 	blobServiceClient.getContainerClient(fotaStorageContainer)
 
-const storeDeviceUpgrade: AzureFunction = async (
-	context: Context,
-	req: HttpRequest,
-): Promise<void> => {
-	const { body } = req
+const storeDeviceUpgrade: HttpHandler = async (req, context) => {
+	const body = await req.text()
 	log(context)({
 		storageAccountName,
 		storageAccessKey,
@@ -48,10 +45,10 @@ const storeDeviceUpgrade: AzureFunction = async (
 		})
 		const url = `https://${storageAccountName}.blob.core.windows.net/${fotaStorageContainer}/${blobName}`
 		log(context)(`Upload block blob ${blobName} successfully`, url)
-		context.res = result(context)({ success: true, url })
+		return result(context)({ success: true, url })
 	} catch (error) {
-		context.log.error({ error })
-		context.res = result(context)({ error: (error as Error).message }, 500)
+		logError(context)({ error })
+		return result(context)({ error: (error as Error).message }, 500)
 	}
 }
 

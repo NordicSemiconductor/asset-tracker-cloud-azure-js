@@ -1,5 +1,5 @@
 import { Container, CosmosClient } from '@azure/cosmos'
-import { AzureFunction, Context } from '@azure/functions'
+import type { StorageQueueHandler } from '@azure/functions'
 import { Static } from '@sinclair/typebox'
 import { URL } from 'url'
 import { fromEnv } from '../lib/fromEnv.js'
@@ -40,10 +40,11 @@ let nrfCloudServiceKeyPromise: Promise<string>
 /**
  * Resolve P-GPS requests from nRF Cloud
  */
-const pgpsResolveRequestFromNrfCloud: AzureFunction = async (
-	context: Context,
-	request: Static<typeof pgpsRequestSchema>,
-): Promise<void> => {
+const pgpsResolveRequestFromNrfCloud: StorageQueueHandler = async (
+	queueEntry,
+	context,
+) => {
+	const request = queueEntry as Static<typeof pgpsRequestSchema>
 	log(context)({ context, request })
 
 	let resolver: ReturnType<typeof resolvePgpsRequest>

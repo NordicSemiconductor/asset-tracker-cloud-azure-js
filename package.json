@@ -3,7 +3,7 @@
   "version": "0.0.0-development",
   "description": "A reference implementation of a serverless backend for an IoT product developed using in TypeScript.",
   "type": "module",
-  "main": "./dist/export.js",
+  "main": "./dist/**/handler.mjs",
   "scripts": {
     "test": "find ./ -type f -name '*.spec.ts' -not -path './node_modules/*' -print | xargs npx tsx --no-warnings --test",
     "test:e2e": "node --unhandled-rejections=strict dist/feature-runner/run-features.js ./features --print-results --progress",
@@ -27,7 +27,7 @@
     "@azure/arm-appservice": "14.0.0",
     "@azure/arm-deviceprovisioningservices": "5.1.0",
     "@azure/cosmos": "3.17.3",
-    "@azure/functions": "3.5.1",
+    "@azure/functions": "4.0.1",
     "@azure/keyvault-secrets": "4.7.0",
     "@azure/ms-rest-azure-js": "2.1.0",
     "@azure/ms-rest-nodeauth": "3.1.1",

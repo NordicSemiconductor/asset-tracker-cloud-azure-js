@@ -1,8 +1,8 @@
 import { CosmosClient } from '@azure/cosmos'
-import { AzureFunction, Context, HttpRequest } from '@azure/functions'
+import type { HttpHandler } from '@azure/functions'
 import { fromEnv } from '../lib/fromEnv.js'
 import { result } from '../lib/http.js'
-import { log } from '../lib/log.js'
+import { log, logError } from '../lib/log.js'
 import { parseConnectionString } from '../lib/parseConnectionString.js'
 
 const { connectionString } = fromEnv({
@@ -20,20 +20,17 @@ const container = cosmosClient.database('deviceMessages').container('updates')
 /**
  * Query historical device updates stored in Cosmos DB
  */
-const queryHistoricalDeviceData: AzureFunction = async (
-	context: Context,
-	req: HttpRequest,
-): Promise<void> => {
+const queryHistoricalDeviceData: HttpHandler = async (req, context) => {
 	log(context)({ req })
 	try {
+		const { query } = (await req.json()) as Record<string, any>
 		const res = {
-			result: (await container.items.query(req.body.query).fetchAll())
-				.resources,
+			result: (await container.items.query(query).fetchAll()).resources,
 		}
-		context.res = result(context)(res)
+		return result(context)(res)
 	} catch (error) {
-		context.log.error({ error })
-		context.res = result(context)({ error: (error as Error).message }, 500)
+		logError(context)({ error })
+		return result(context)({ error: (error as Error).message }, 500)
 	}
 }
 

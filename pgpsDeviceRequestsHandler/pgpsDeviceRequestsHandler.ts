@@ -1,4 +1,4 @@
-import { AzureFunction, Context } from '@azure/functions'
+import type { EventHubHandler } from '@azure/functions'
 import {
 	QueueClient,
 	QueueServiceClient,
@@ -29,18 +29,10 @@ const config = () =>
  *
  * The requests are put in a queue for resolving.
  */
-const pgpsDeviceRequestsHandler: AzureFunction = async (
-	context: Context,
-	requests: (
-		| {
-				n: number
-				int: number
-				day: number
-				time: number
-		  }
-		| Record<string, any>
-	)[],
-): Promise<void> => {
+const pgpsDeviceRequestsHandler: EventHubHandler = async (
+	requests: unknown,
+	context,
+) => {
 	log(context)({ context, requests })
 
 	const timestamp = new Date()
@@ -61,18 +53,26 @@ const pgpsDeviceRequestsHandler: AzureFunction = async (
 	}
 
 	// Find P-GPS requests
+	if (!Array.isArray(requests)) return
+
 	const pgpsRequests = requests
-		.map((request, i) => ({
-			request,
-			deviceId:
-				context.bindingData.systemPropertiesArray[i][
-					'iothub-connection-device-id'
-				],
-			properties: context.bindingData.propertiesArray[i] as Record<
-				string,
-				string
-			>,
-		}))
+		.map((request, i) => {
+			const systemPropertiesArray = Array.isArray(
+				context.triggerMetadata?.systemPropertiesArray,
+			)
+				? context.triggerMetadata?.systemPropertiesArray
+				: []
+			const propertiesArray = Array.isArray(
+				context.triggerMetadata?.propertiesArray,
+			)
+				? context.triggerMetadata?.propertiesArray
+				: []
+			return {
+				request,
+				deviceId: systemPropertiesArray?.[i]['iothub-connection-device-id'],
+				properties: propertiesArray?.[i] as Record<string, string>,
+			}
+		})
 		.filter(({ properties }) => properties.pgps === 'get')
 
 	if (pgpsRequests.length === 0) {

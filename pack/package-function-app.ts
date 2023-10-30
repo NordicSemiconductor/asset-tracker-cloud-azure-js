@@ -56,22 +56,26 @@ export const packageFunctionApp = async ({
 }: {
 	outFileId: string
 	functions?: string[]
-	ignoreFunctions?: string
+	ignoreFunctions?: string[]
 	installDependencies?: (_: { targetDir: string }) => Promise<void>
 }): Promise<string> => {
 	const outFile = path.resolve(process.cwd(), 'dist', `${outFileId}.zip`)
 
 	progress('Packaging to', outFile)
 
-	// Find all folder names of functions (they have a function.json in it)
+	// Find all folder names of functions
 	if (functions === undefined) {
-		const rootEntries = await fs.readdir(process.cwd())
+		const rootEntries = await fs.readdir(path.join(process.cwd(), 'dist'))
 		functions = rootEntries
 			.filter((f) => !f.startsWith('.'))
-			.filter((f) => statSync(path.join(process.cwd(), f)).isDirectory())
+			.filter((f) =>
+				statSync(path.join(process.cwd(), 'dist', f)).isDirectory(),
+			)
 			.filter((f) => {
 				try {
-					return statSync(path.join(process.cwd(), f, 'function.json')).isFile()
+					return statSync(
+						path.join(process.cwd(), 'dist', f, 'handler.js'),
+					).isFile()
 				} catch {
 					return false
 				}
@@ -83,7 +87,7 @@ export const packageFunctionApp = async ({
 	const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), path.sep))
 	const c = copy(process.cwd(), tempDir)
 
-	// Copy the neccessary files for Azure functions
+	// Copy the necessary files for Azure functions
 	await c('host.json')
 
 	// ... and for installing dependencies
@@ -99,29 +103,27 @@ export const packageFunctionApp = async ({
 	progress('Packaging app', 'Copying function dependencies')
 	const functionFiles = (
 		await Promise.all(
-			functions.map(async (f) =>
-				fs
-					.readFile(path.join(process.cwd(), f, 'function.json'), 'utf-8')
-					.then(JSON.parse)
-					.then(({ scriptFile }) => {
-						// dependencyTree does not handle the import / export properly
-						const importRx = /import [^ ]+ from ["']([^"']+)["']/
-						const handler = readFileSync(
-							path.resolve(process.cwd(), f, scriptFile),
-							'utf-8',
-						)
-							.split(os.EOL)
-							.filter((l) => l.startsWith('import'))
-							.map((l) => importRx.exec(l)?.[1]) as string[]
-						const handlerScript = path.resolve(process.cwd(), f, handler[0])
-						const deps = dependencyTree({
-							directory: path.join(process.cwd(), 'dist'),
-							filename: handlerScript,
-							filter: (path) => !path.includes('node_modules'),
-						}) as TreeInnerNode
-						return [handlerScript, ...flattenDependencies(deps)]
-					}),
-			),
+			functions.map(async (f) => {
+				const scriptFile = 'handler.js'
+				// dependencyTree does not handle the import / export properly
+				const importRx = /import [^ ]+ from ["']([^"']+)["']/
+				const handler = readFileSync(
+					path.resolve(process.cwd(), 'dist', f, scriptFile),
+					'utf-8',
+				)
+					.split(os.EOL)
+					.filter((l) => l.startsWith('import'))
+					.map((l) => importRx.exec(l)?.[1])
+					.filter((l) => l !== undefined) as string[]
+
+				const handlerScript = path.resolve(process.cwd(), 'dist', f, handler[0])
+				const deps = dependencyTree({
+					directory: path.join(process.cwd(), 'dist'),
+					filename: handlerScript,
+					filter: (path) => !path.includes('node_modules'),
+				}) as TreeInnerNode
+				return [...flattenDependencies(deps)]
+			}),
 		)
 	).flat()
 
@@ -134,23 +136,13 @@ export const packageFunctionApp = async ({
 
 	// Azure functions expect .mjs files.
 	// @see https://docs.microsoft.com/en-us/azure/azure-functions/functions-reference-node?tabs=v2#ecmascript-modules
-	// Copy function.json and handler.mjs
+	// Copy handler.js and rename to handler.mjs
 	progress('Packaging app', 'Copying function definition')
 	await Promise.all(
 		functions.map(async (f) => {
-			const functionFolder = path.resolve(tempDir, f)
-			try {
-				await fs.stat(functionFolder)
-			} catch {
-				await fs.mkdir(functionFolder)
-			}
 			await fs.copyFile(
-				path.join(process.cwd(), f, 'function.json'),
-				path.resolve(tempDir, f, 'function.json'),
-			)
-			await fs.copyFile(
-				path.join(process.cwd(), f, 'handler.mjs'),
-				path.resolve(tempDir, f, 'handler.mjs'),
+				path.join(process.cwd(), 'dist', f, 'handler.js'),
+				path.resolve(tempDir, 'dist', f, 'handler.mjs'),
 			)
 		}),
 	)
