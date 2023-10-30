@@ -1,4 +1,4 @@
-import type { CosmosDBOutput, EventHubHandler } from '@azure/functions'
+import type { CosmosDBOutput, InvocationContext } from '@azure/functions'
 import { Static } from '@sinclair/typebox'
 import iothub from 'azure-iothub'
 import { randomUUID } from 'node:crypto'
@@ -21,31 +21,39 @@ type ReportedUpdateWithNetwork = {
 	properties: { reported: { roam?: { v: { nw: string } } } }
 }
 
+type Context = Omit<InvocationContext, 'triggerMetadata'> & {
+	triggerMetadata: {
+		systemProperties: {
+			'iothub-connection-device-id': string
+			'iothub-message-source': string
+			'iothub-enqueuedtime': string
+		}
+		properties?: {
+			ncellmeas: string
+		}
+	}
+}
+
 const deviceNetwork: Record<string, string> = {}
 
 /**
  * Store neighbor cell measurement reports in Cosmos DB so it can be queried later
  */
 const storeNcellmeasReportInCosmosDb =
-	(cosmosDb: CosmosDBOutput): EventHubHandler =>
-	async (message, context) => {
-		const event = message as
-			| Static<typeof ncellmeasReport>
-			| ReportedUpdateWithNetwork
+	(cosmosDb: CosmosDBOutput) =>
+	async (
+		event: Static<typeof ncellmeasReport> | ReportedUpdateWithNetwork,
+		context: Context,
+	): Promise<void> => {
 		log(context)({ context, event })
 
-		const systemProperties = context.triggerMetadata
-			?.systemProperties as Record<string, unknown>
-		const properties = context.triggerMetadata?.properties as Record<
-			string,
-			unknown
-		>
-
-		const deviceId = systemProperties['iothub-connection-device-id'] as string
+		const deviceId =
+			context.triggerMetadata.systemProperties['iothub-connection-device-id']
 
 		// Handle TwinUpdates to store device network reports
 		if (
-			systemProperties['iothub-message-source'] === 'twinChangeEvents' &&
+			context.triggerMetadata.systemProperties['iothub-message-source'] ===
+				'twinChangeEvents' &&
 			(event as ReportedUpdateWithNetwork).properties?.reported?.roam !==
 				undefined
 		) {
@@ -57,11 +65,14 @@ const storeNcellmeasReportInCosmosDb =
 		}
 
 		// All other messages must be "ncellmeas"
-		if (systemProperties['iothub-message-source'] !== 'Telemetry') {
+		if (
+			context.triggerMetadata.systemProperties['iothub-message-source'] !==
+			'Telemetry'
+		) {
 			log(context)(`Ignoring non-telemetry message`)
 			return
 		}
-		if (properties?.ncellmeas === undefined) {
+		if (context.triggerMetadata?.properties?.ncellmeas === undefined) {
 			log(context)(`Telemetry message does not have ncellmeas property set.`)
 		}
 		const valid = validateNcellmeasReport(event)
@@ -87,7 +98,8 @@ const storeNcellmeasReportInCosmosDb =
 			report: valid,
 			deviceId,
 			nw: nw ?? 'LTE-M',
-			timestamp: systemProperties['iothub-enqueuedtime'] as string,
+			timestamp:
+				context.triggerMetadata.systemProperties['iothub-enqueuedtime'],
 		}
 		context.extraOutputs.set(cosmosDb, document)
 		log(context)({ document })

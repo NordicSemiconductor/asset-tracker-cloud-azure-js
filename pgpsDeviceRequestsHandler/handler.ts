@@ -1,4 +1,4 @@
-import { app } from '@azure/functions'
+import { EventHubHandler, app } from '@azure/functions'
 import handler from './pgpsDeviceRequestsHandler.js'
 
 app.eventHub('pgpsDeviceRequestsHandler', {
@@ -6,5 +6,5 @@ app.eventHub('pgpsDeviceRequestsHandler', {
 	connection: 'IOTHUB_EVENTS_CONNECTION_STRING',
 	cardinality: 'many',
 	consumerGroup: '%PGPS_REQUESTS_IOT_EVENTS_CONSUMER_GROUP_NAME%',
-	handler,
+	handler: handler as EventHubHandler,
 })

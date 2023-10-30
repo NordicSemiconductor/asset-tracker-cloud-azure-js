@@ -1,4 +1,4 @@
-import { app, output } from '@azure/functions'
+import { EventHubHandler, app, output } from '@azure/functions'
 import handler from './publishDeviceUpdatesToSignalR.js'
 
 const signalROutput = output.generic({
@@ -13,5 +13,5 @@ app.eventHub('publishDeviceUpdatesToSignalR', {
 	connection: 'IOTHUB_EVENTS_CONNECTION_STRING',
 	consumerGroup: 'publishdeviceupdates',
 	extraOutputs: [signalROutput],
-	handler: handler(signalROutput),
+	handler: handler(signalROutput) as EventHubHandler,
 })

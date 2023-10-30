@@ -1,4 +1,4 @@
-import type { EventHubHandler } from '@azure/functions'
+import type { InvocationContext } from '@azure/functions'
 import {
 	QueueClient,
 	QueueServiceClient,
@@ -9,6 +9,24 @@ import { fromEnv } from '../lib/fromEnv.js'
 import { log, logError } from '../lib/log.js'
 import { validateWithJSONSchema } from '../lib/validateWithJSONSchema.js'
 import { pgpsRequestSchema } from '../pgps/types.js'
+
+type PGPS = (
+	| {
+			n: number
+			int: number
+			day: number
+			time: number
+	  }
+	| Record<string, any>
+)[]
+type PGPSContext = Omit<InvocationContext, 'triggerMetadata'> & {
+	triggerMetadata: {
+		systemPropertiesArray: {
+			'iothub-connection-device-id': string
+		}[]
+		propertiesArray: Record<string, string>[]
+	}
+}
 
 const validatePgpsRequest = validateWithJSONSchema(pgpsRequestSchema)
 
@@ -29,10 +47,10 @@ const config = () =>
  *
  * The requests are put in a queue for resolving.
  */
-const pgpsDeviceRequestsHandler: EventHubHandler = async (
-	requests: unknown,
-	context,
-) => {
+const pgpsDeviceRequestsHandler = async (
+	requests: PGPS,
+	context: PGPSContext,
+): Promise<void> => {
 	log(context)({ context, requests })
 
 	const timestamp = new Date()
@@ -53,26 +71,15 @@ const pgpsDeviceRequestsHandler: EventHubHandler = async (
 	}
 
 	// Find P-GPS requests
-	if (!Array.isArray(requests)) return
-
 	const pgpsRequests = requests
-		.map((request, i) => {
-			const systemPropertiesArray = Array.isArray(
-				context.triggerMetadata?.systemPropertiesArray,
-			)
-				? context.triggerMetadata?.systemPropertiesArray
-				: []
-			const propertiesArray = Array.isArray(
-				context.triggerMetadata?.propertiesArray,
-			)
-				? context.triggerMetadata?.propertiesArray
-				: []
-			return {
-				request,
-				deviceId: systemPropertiesArray?.[i]['iothub-connection-device-id'],
-				properties: propertiesArray?.[i] as Record<string, string>,
-			}
-		})
+		.map((request, i) => ({
+			request,
+			deviceId:
+				context.triggerMetadata.systemPropertiesArray?.[i][
+					'iothub-connection-device-id'
+				],
+			properties: context.triggerMetadata.propertiesArray?.[i],
+		}))
 		.filter(({ properties }) => properties.pgps === 'get')
 
 	if (pgpsRequests.length === 0) {

@@ -1,4 +1,4 @@
-import type { EventHubHandler } from '@azure/functions'
+import type { InvocationContext } from '@azure/functions'
 import {
 	QueueClient,
 	QueueServiceClient,
@@ -9,6 +9,25 @@ import { agnssRequestSchema } from '../agnss/types.js'
 import { fromEnv } from '../lib/fromEnv.js'
 import { log, logError } from '../lib/log.js'
 import { validateWithJSONSchema } from '../lib/validateWithJSONSchema.js'
+
+type AGNSS = (
+	| {
+			mcc: number
+			mnc: number
+			cell: number
+			area: number
+			types: number[]
+	  }
+	| Record<string, any>
+)[]
+type AGNSSContext = Omit<InvocationContext, 'triggerMetadata'> & {
+	triggerMetadata: {
+		systemPropertiesArray: {
+			'iothub-connection-device-id': string
+		}[]
+		propertiesArray: Record<string, string>[]
+	}
+}
 
 const validateAgnssRequest = validateWithJSONSchema(agnssRequestSchema)
 
@@ -29,13 +48,11 @@ const config = () =>
  *
  * The requests are put in a queue for resolving.
  */
-const agnssDeviceRequestsHandler: EventHubHandler = async (
-	requests,
-	context,
-) => {
+const agnssDeviceRequestsHandler = async (
+	requests: AGNSS,
+	context: AGNSSContext,
+): Promise<void> => {
 	log(context)({ context, requests })
-
-	if (!Array.isArray(requests)) return
 
 	const timestamp = new Date()
 	let queueClient: QueueClient
@@ -56,21 +73,14 @@ const agnssDeviceRequestsHandler: EventHubHandler = async (
 
 	// Find A-GNSS requests
 	const agnssRequests = requests
-		.map((request, i) => {
-			const systemPropertiesArray = Array.isArray(
-				context.triggerMetadata?.systemPropertiesArray,
-			)
-				? context.triggerMetadata?.systemPropertiesArray
-				: []
-			const properties = Array.isArray(context.triggerMetadata?.propertiesArray)
-				? context.triggerMetadata?.propertiesArray
-				: []
-			return {
-				request,
-				deviceId: systemPropertiesArray?.[i]['iothub-connection-device-id'],
-				properties: properties?.[i] as Record<string, string>,
-			}
-		})
+		.map((request, i) => ({
+			request,
+			deviceId:
+				context.triggerMetadata.systemPropertiesArray?.[i][
+					'iothub-connection-device-id'
+				],
+			properties: context.triggerMetadata.propertiesArray?.[i],
+		}))
 		.filter(({ properties }) => properties.agnss === 'get')
 
 	if (agnssRequests.length === 0) {

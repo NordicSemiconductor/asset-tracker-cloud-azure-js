@@ -1,5 +1,5 @@
 import { Container, CosmosClient } from '@azure/cosmos'
-import type { StorageQueueHandler } from '@azure/functions'
+import type { FunctionHandler } from '@azure/functions'
 import {
 	QueueClient,
 	QueueServiceClient,
@@ -59,12 +59,10 @@ type QueuedPGPSRequest = {
  * a DB or kicking off the resoluting via a third-party API (currently only
  * nRF Cloud Predicted GPS Location Service is implemented.)
  */
-const pgpsQueuedDeviceRequestsHandler: StorageQueueHandler = async (
-	queueEntry,
+const pgpsQueuedDeviceRequestsHandler: FunctionHandler = async (
+	{ deviceId, request, delayInSeconds, timestamp }: QueuedPGPSRequest,
 	context,
-) => {
-	const { deviceId, request, delayInSeconds, timestamp } =
-		queueEntry as QueuedPGPSRequest
+): Promise<void> => {
 	log(context)({ request, deviceId, delayInSeconds, timestamp, context })
 
 	let binHours: number

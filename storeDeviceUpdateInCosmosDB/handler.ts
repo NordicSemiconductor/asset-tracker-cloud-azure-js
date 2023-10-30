@@ -1,4 +1,4 @@
-import { app, output } from '@azure/functions'
+import { EventHubHandler, app, output } from '@azure/functions'
 import handler from './storeDeviceUpdateInCosmosDB.js'
 
 const deviceUpdate = output.cosmosDB({
@@ -15,5 +15,5 @@ app.eventHub('storeDeviceUpdateInCosmosDB', {
 	connection: 'IOTHUB_EVENTS_CONNECTION_STRING',
 	consumerGroup: 'storedeviceupdate',
 	extraOutputs: [deviceUpdate],
-	handler: handler(deviceUpdate),
+	handler: handler(deviceUpdate) as EventHubHandler,
 })

@@ -1,38 +1,35 @@
-import type { EventHubHandler, FunctionOutput } from '@azure/functions'
+import type { FunctionOutput, InvocationContext } from '@azure/functions'
 import { DeviceUpdate, TwinChangeEvent } from '../lib/iotMessages.js'
 import { log } from '../lib/log.js'
+
+type Context = Omit<InvocationContext, 'triggerMetadata'> & {
+	triggerMetadata: {
+		systemPropertiesArray: {
+			'iothub-message-source': string
+			'iothub-connection-device-id': string
+		}[]
+		propertiesArray: unknown[]
+	}
+}
 
 /**
  * Publishes Device Twin Update to SignalR so the web application can receive real-time notifications
  */
 const publishDeviceUpdatesToSignalR =
-	(signalROutput: FunctionOutput): EventHubHandler =>
-	async (eventMessages, context) => {
-		const updates = eventMessages as DeviceUpdate[]
-
-		const systemPropertiesArray = Array.isArray(
-			context.triggerMetadata?.systemPropertiesArray,
-		)
-			? context.triggerMetadata?.systemPropertiesArray
-			: []
-		const propertiesArray = Array.isArray(
-			context.triggerMetadata?.propertiesArray,
-		)
-			? context.triggerMetadata?.propertiesArray
-			: []
-
+	(signalROutput: FunctionOutput) =>
+	async (updates: DeviceUpdate[], context: Context): Promise<void> => {
 		log(context)({
 			messages: updates,
-			systemPropertiesArray,
-			propertiesArray,
+			systemPropertiesArray: context.triggerMetadata.systemPropertiesArray,
+			propertiesArray: context.triggerMetadata.propertiesArray,
 		})
 
 		const signalRMessages: Record<string, unknown>[] = []
 
 		const addProperties = (message: DeviceUpdate, k: number) => ({
 			message,
-			systemProperties: systemPropertiesArray?.[k],
-			propertiesArray: propertiesArray?.[k],
+			systemProperties: context.triggerMetadata.systemPropertiesArray?.[k],
+			propertiesArray: context.triggerMetadata.propertiesArray?.[k],
 		})
 
 		const reportedUpdates = updates

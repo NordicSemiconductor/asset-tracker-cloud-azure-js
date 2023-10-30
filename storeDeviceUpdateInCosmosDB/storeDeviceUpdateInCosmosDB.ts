@@ -1,40 +1,48 @@
-import type { CosmosDBOutput, EventHubHandler } from '@azure/functions'
+import type { CosmosDBOutput, InvocationContext } from '@azure/functions'
 import { randomUUID } from 'node:crypto'
 import { batchToDoc } from '../lib/batchToDoc.js'
 import { BatchDeviceUpdate, DeviceUpdate } from '../lib/iotMessages.js'
 import { log } from '../lib/log.js'
 
+type Context = Omit<InvocationContext, 'triggerMetadata'> & {
+	triggerMetadata: {
+		systemProperties: {
+			'iothub-connection-device-id': string
+			'iothub-enqueuedtime': string
+			'iothub-message-source': string
+		}
+		properties?: Record<string, unknown>
+	}
+}
 /**
  * Store Device Twin Update in Cosmos DB so it can be queried later
  */
 const storeDeviceUpdateInCosmosDB =
-	(cosmosDb: CosmosDBOutput): EventHubHandler =>
-	async (message, context) => {
-		const update = message as DeviceUpdate | BatchDeviceUpdate
-
+	(cosmosDb: CosmosDBOutput) =>
+	async (
+		update: DeviceUpdate | BatchDeviceUpdate,
+		context: Context,
+	): Promise<void> => {
 		log(context)({ context, update })
-		const systemProperties = context.triggerMetadata
-			?.systemProperties as Record<string, unknown>
 		const baseDoc = {
-			deviceId: systemProperties['iothub-connection-device-id'],
-			timestamp: systemProperties['iothub-enqueuedtime'],
-			source: systemProperties['iothub-message-source'],
+			deviceId:
+				context.triggerMetadata.systemProperties['iothub-connection-device-id'],
+			timestamp:
+				context.triggerMetadata.systemProperties['iothub-enqueuedtime'],
+			source: context.triggerMetadata.systemProperties['iothub-message-source'],
 		} as const
 
-		const properties = context.triggerMetadata?.properties as Record<
-			string,
-			unknown
-		>
-		const isBatch = properties?.batch !== undefined
+		const isBatch = context.triggerMetadata?.properties?.batch !== undefined
 
 		if (
 			!isBatch &&
-			systemProperties['iothub-message-source'] === 'Telemetry' &&
-			Object.keys(properties ?? {}).length > 0
+			context.triggerMetadata.systemProperties['iothub-message-source'] ===
+				'Telemetry' &&
+			Object.keys(context.triggerMetadata?.properties ?? {}).length > 0
 		) {
 			log(context)(
 				`Ignoring telemetry message with property bag ${JSON.stringify(
-					properties,
+					context.triggerMetadata?.properties,
 				)}`,
 			)
 			return

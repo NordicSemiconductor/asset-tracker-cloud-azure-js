@@ -1,4 +1,4 @@
-import { app, output } from '@azure/functions'
+import { EventHubHandler, app, output } from '@azure/functions'
 import handler from './storeNcellmeasReportInCosmosDb.js'
 
 const report = output.cosmosDB({
@@ -14,5 +14,5 @@ app.eventHub('storeNcellmeasReportInCosmosDb', {
 	connection: 'IOTHUB_EVENTS_CONNECTION_STRING',
 	consumerGroup: '%NCELLMEAS_REPORTS_IOT_EVENTS_CONSUMER_GROUP_NAME%',
 	extraOutputs: [report],
-	handler: handler(report),
+	handler: handler(report) as EventHubHandler,
 })
