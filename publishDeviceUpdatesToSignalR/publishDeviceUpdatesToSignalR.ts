@@ -8,7 +8,7 @@ type Context = Omit<InvocationContext, 'triggerMetadata'> & {
 			'iothub-message-source': string
 			'iothub-connection-device-id': string
 		}[]
-		propertiesArray: unknown[]
+		propertiesArray: Record<string, string>[]
 	}
 }
 
@@ -28,8 +28,8 @@ const publishDeviceUpdatesToSignalR =
 
 		const addProperties = (message: DeviceUpdate, k: number) => ({
 			message,
-			systemProperties: context.triggerMetadata.systemPropertiesArray?.[k],
-			propertiesArray: context.triggerMetadata.propertiesArray?.[k],
+			systemProperties: context.triggerMetadata.systemPropertiesArray[k],
+			propertiesArray: context.triggerMetadata.propertiesArray[k],
 		})
 
 		const reportedUpdates = updates

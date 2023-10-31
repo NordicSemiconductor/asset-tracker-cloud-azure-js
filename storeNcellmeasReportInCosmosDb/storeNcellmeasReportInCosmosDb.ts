@@ -28,9 +28,7 @@ type Context = Omit<InvocationContext, 'triggerMetadata'> & {
 			'iothub-message-source': string
 			'iothub-enqueuedtime': string
 		}
-		properties?: {
-			ncellmeas: string
-		}
+		properties: Record<string, string>
 	}
 }
 
@@ -72,7 +70,7 @@ const storeNcellmeasReportInCosmosDb =
 			log(context)(`Ignoring non-telemetry message`)
 			return
 		}
-		if (context.triggerMetadata?.properties?.ncellmeas === undefined) {
+		if (context.triggerMetadata.properties?.ncellmeas === undefined) {
 			log(context)(`Telemetry message does not have ncellmeas property set.`)
 		}
 		const valid = validateNcellmeasReport(event)

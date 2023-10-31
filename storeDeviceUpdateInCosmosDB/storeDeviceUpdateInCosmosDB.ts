@@ -11,7 +11,7 @@ type Context = Omit<InvocationContext, 'triggerMetadata'> & {
 			'iothub-enqueuedtime': string
 			'iothub-message-source': string
 		}
-		properties?: Record<string, unknown>
+		properties: Record<string, string>
 	}
 }
 /**
@@ -32,17 +32,17 @@ const storeDeviceUpdateInCosmosDB =
 			source: context.triggerMetadata.systemProperties['iothub-message-source'],
 		} as const
 
-		const isBatch = context.triggerMetadata?.properties?.batch !== undefined
+		const isBatch = context.triggerMetadata.properties?.batch !== undefined
 
 		if (
 			!isBatch &&
 			context.triggerMetadata.systemProperties['iothub-message-source'] ===
 				'Telemetry' &&
-			Object.keys(context.triggerMetadata?.properties ?? {}).length > 0
+			Object.keys(context.triggerMetadata.properties ?? {}).length > 0
 		) {
 			log(context)(
 				`Ignoring telemetry message with property bag ${JSON.stringify(
-					context.triggerMetadata?.properties,
+					context.triggerMetadata.properties,
 				)}`,
 			)
 			return

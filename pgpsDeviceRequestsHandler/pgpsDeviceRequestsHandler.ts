@@ -75,10 +75,10 @@ const pgpsDeviceRequestsHandler = async (
 		.map((request, i) => ({
 			request,
 			deviceId:
-				context.triggerMetadata.systemPropertiesArray?.[i][
+				context.triggerMetadata.systemPropertiesArray[i][
 					'iothub-connection-device-id'
 				],
-			properties: context.triggerMetadata.propertiesArray?.[i],
+			properties: context.triggerMetadata.propertiesArray[i],
 		}))
 		.filter(({ properties }) => properties.pgps === 'get')
 
