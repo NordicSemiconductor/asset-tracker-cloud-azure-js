@@ -1,6 +1,7 @@
 {
   "extends": "@nordicsemiconductor/asset-tracker-cloud-code-style/tsconfig.json",
   "include": ["**/*.ts"],
+  "exclude": ["dist"],
   "compilerOptions": {
     "outDir": "dist/",
     "moduleResolution": "node",

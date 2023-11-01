@@ -1,13 +1,11 @@
 import { AzureNamedKeyCredential, TableClient } from '@azure/data-tables'
-import { AzureFunction, Context, HttpRequest } from '@azure/functions'
+import type { HttpHandler } from '@azure/functions'
 import { setLogLevel } from '@azure/logger'
 import { randomUUID } from 'node:crypto'
 import { URL } from 'url'
 import { fromEnv } from '../lib/fromEnv.js'
 import { result } from '../lib/http.js'
 import { log, logError } from '../lib/log.js'
-import { encodeQuery } from './encodeQuery.js'
-import { sortQueryString } from './sortQueryString.js'
 
 setLogLevel('verbose')
 
@@ -26,17 +24,24 @@ const createTableClient = (table: string) =>
 const requestsClient = createTableClient('Requests')
 const responsesClient = createTableClient('Responses')
 
-const mockHTTPAPI: AzureFunction = async (
-	context: Context,
-	req: HttpRequest,
-): Promise<void> => {
-	log(context)({ req })
+const mockHTTPAPI: HttpHandler = async (req, context) => {
+	const query = Object.fromEntries(req.query)
+	const headers = Object.fromEntries(req.headers)
+
+	log(context)({
+		req: {
+			params: req.params,
+			query,
+			headers,
+		},
+	})
 
 	try {
 		const path = new URL(req.url).pathname.replace(/^\/api\//, '')
-		const pathWithQuery = sortQueryString(
-			`${path}${encodeQuery(req.query as Record<string, string>)}`,
-		)
+		req.query.sort()
+		const pathWithQuery = `${path}${
+			req.query.size > 0 ? '?' : ''
+		}${req.query.toString()}`
 		const methodPathQuery = `${req.method} ${pathWithQuery}`
 		const requestId = randomUUID()
 		const request = {
@@ -44,10 +49,10 @@ const mockHTTPAPI: AzureFunction = async (
 			rowKey: encodeURIComponent(methodPathQuery),
 			method: req.method,
 			path,
-			query: JSON.stringify(req.query),
+			query: JSON.stringify(query),
 			methodPathQuery,
-			headers: JSON.stringify(req.headers),
-			body: JSON.stringify(req.body),
+			headers: JSON.stringify(headers),
+			body: await req.text(),
 		}
 		log(context)({ request })
 		await requestsClient.createEntity(request)
@@ -80,7 +85,7 @@ const mockHTTPAPI: AzureFunction = async (
 
 			if (isBinary) {
 				const binaryBody = Buffer.from(response.body as string, 'hex')
-				context.res = result(context)(
+				return result(context)(
 					binaryBody,
 					response.statusCode ?? 200,
 					{
@@ -91,7 +96,7 @@ const mockHTTPAPI: AzureFunction = async (
 					true,
 				)
 			} else {
-				context.res = result(context)(
+				return result(context)(
 					response.body ?? '',
 					response.statusCode ?? 200,
 					{
@@ -101,12 +106,11 @@ const mockHTTPAPI: AzureFunction = async (
 					false,
 				)
 			}
-			return
 		}
-		context.res = result(context)('', 404)
+		return result(context)('', 404)
 	} catch (err) {
-		context.res = result(context)((err as Error).message, 500)
 		logError(context)({ error: (err as Error).message })
+		return result(context)((err as Error).message, 500)
 	}
 }
 

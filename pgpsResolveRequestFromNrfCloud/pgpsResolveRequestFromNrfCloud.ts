@@ -1,5 +1,5 @@
 import { Container, CosmosClient } from '@azure/cosmos'
-import { AzureFunction, Context } from '@azure/functions'
+import type { FunctionHandler } from '@azure/functions'
 import { Static } from '@sinclair/typebox'
 import { URL } from 'url'
 import { fromEnv } from '../lib/fromEnv.js'
@@ -40,9 +40,9 @@ let nrfCloudServiceKeyPromise: Promise<string>
 /**
  * Resolve P-GPS requests from nRF Cloud
  */
-const pgpsResolveRequestFromNrfCloud: AzureFunction = async (
-	context: Context,
+const pgpsResolveRequestFromNrfCloud: FunctionHandler = async (
 	request: Static<typeof pgpsRequestSchema>,
+	context,
 ): Promise<void> => {
 	log(context)({ context, request })
 

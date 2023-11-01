@@ -1,5 +1,5 @@
 import { Container, CosmosClient } from '@azure/cosmos'
-import { AzureFunction, Context } from '@azure/functions'
+import type { FunctionHandler } from '@azure/functions'
 import {
 	QueueClient,
 	QueueServiceClient,
@@ -57,9 +57,9 @@ type QueuedAGNSSRequest = {
  * a DB or kicking off the resoluting via a third-party API (currently only
  * nRF Cloud Assisted GPS Location Service is implemented.)
  */
-const agnssQueuedDeviceRequestsHandler: AzureFunction = async (
-	context: Context,
+const agnssQueuedDeviceRequestsHandler: FunctionHandler = async (
 	{ deviceId, request, delayInSeconds, timestamp }: QueuedAGNSSRequest,
+	context,
 ): Promise<void> => {
 	log(context)({ request, deviceId, delayInSeconds, timestamp, context })
 
@@ -205,16 +205,10 @@ const agnssQueuedDeviceRequestsHandler: AzureFunction = async (
 		logError(context)(
 			`Cancelling request because of resolution timeout after ${ageInSeconds} seconds.`,
 		)
-		logError(context)(
-			JSON.stringify(
-				{
-					cancelled: request,
-					maxResolutionTimeInSeconds,
-				},
-				null,
-				2,
-			),
-		)
+		logError(context)({
+			cancelled: request,
+			maxResolutionTimeInSeconds,
+		})
 		return
 	}
 

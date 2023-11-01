@@ -1,9 +1,10 @@
-import { Context } from '@azure/functions'
+import type { InvocationContext } from '@azure/functions'
 import { log } from './log.js'
 import { lowerCaseRecord } from './lowerCaseRecord.js'
+import type { BodyInit } from 'undici'
 
 export const result =
-	(context: Context) =>
+	(context: InvocationContext) =>
 	(
 		result: unknown,
 		status = 200,
@@ -12,10 +13,16 @@ export const result =
 	): {
 		headers: Record<string, string>
 		status: number
-		body: unknown
-		isRaw: boolean
+		body: BodyInit
 	} => {
 		// @see https://docs.microsoft.com/en-us/azure/azure-functions/functions-reference-node?tabs=v2#response-object
+		if (
+			isRaw !== true &&
+			(Array.isArray(result) || typeof result === 'object')
+		) {
+			result = JSON.stringify(result)
+		}
+
 		const response = {
 			headers: lowerCaseRecord({
 				'Content-Type': 'application/json; charset=utf-8',
@@ -23,18 +30,15 @@ export const result =
 				...headers,
 			}),
 			status,
-			body: result,
-			isRaw,
+			body: result as BodyInit,
 		}
-		log(context)(
-			[
-				`> Status ${response.status}`,
-				Object.entries(response.headers).map(([k, v]) =>
-					log(context)(`> ${k}: ${v}`),
-				),
-				'',
-				JSON.stringify(result),
-			].join('\n'),
+
+		log(context)(`> Status ${response.status}`)
+		Object.entries(response.headers).map(([k, v]) =>
+			log(context)(`> ${k}: ${v}`),
 		)
+		log(context)(`> Body`, result)
+		log(context)(`> isRaw ${isRaw}`)
+
 		return response
 	}

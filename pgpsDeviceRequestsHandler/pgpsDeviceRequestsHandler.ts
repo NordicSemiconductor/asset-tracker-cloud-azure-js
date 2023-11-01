@@ -1,4 +1,4 @@
-import { AzureFunction, Context } from '@azure/functions'
+import type { InvocationContext } from '@azure/functions'
 import {
 	QueueClient,
 	QueueServiceClient,
@@ -9,6 +9,24 @@ import { fromEnv } from '../lib/fromEnv.js'
 import { log, logError } from '../lib/log.js'
 import { validateWithJSONSchema } from '../lib/validateWithJSONSchema.js'
 import { pgpsRequestSchema } from '../pgps/types.js'
+
+type PGPS = (
+	| {
+			n: number
+			int: number
+			day: number
+			time: number
+	  }
+	| Record<string, any>
+)[]
+type PGPSContext = Omit<InvocationContext, 'triggerMetadata'> & {
+	triggerMetadata: {
+		systemPropertiesArray: {
+			'iothub-connection-device-id': string
+		}[]
+		propertiesArray: Record<string, string>[]
+	}
+}
 
 const validatePgpsRequest = validateWithJSONSchema(pgpsRequestSchema)
 
@@ -29,17 +47,9 @@ const config = () =>
  *
  * The requests are put in a queue for resolving.
  */
-const pgpsDeviceRequestsHandler: AzureFunction = async (
-	context: Context,
-	requests: (
-		| {
-				n: number
-				int: number
-				day: number
-				time: number
-		  }
-		| Record<string, any>
-	)[],
+const pgpsDeviceRequestsHandler = async (
+	requests: PGPS,
+	context: PGPSContext,
 ): Promise<void> => {
 	log(context)({ context, requests })
 
@@ -65,13 +75,10 @@ const pgpsDeviceRequestsHandler: AzureFunction = async (
 		.map((request, i) => ({
 			request,
 			deviceId:
-				context.bindingData.systemPropertiesArray[i][
+				context.triggerMetadata.systemPropertiesArray[i][
 					'iothub-connection-device-id'
 				],
-			properties: context.bindingData.propertiesArray[i] as Record<
-				string,
-				string
-			>,
+			properties: context.triggerMetadata.propertiesArray[i],
 		}))
 		.filter(({ properties }) => properties.pgps === 'get')
 

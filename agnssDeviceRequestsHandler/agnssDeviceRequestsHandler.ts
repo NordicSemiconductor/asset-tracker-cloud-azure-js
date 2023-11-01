@@ -1,4 +1,4 @@
-import { AzureFunction, Context } from '@azure/functions'
+import type { InvocationContext } from '@azure/functions'
 import {
 	QueueClient,
 	QueueServiceClient,
@@ -9,6 +9,25 @@ import { agnssRequestSchema } from '../agnss/types.js'
 import { fromEnv } from '../lib/fromEnv.js'
 import { log, logError } from '../lib/log.js'
 import { validateWithJSONSchema } from '../lib/validateWithJSONSchema.js'
+
+type AGNSS = (
+	| {
+			mcc: number
+			mnc: number
+			cell: number
+			area: number
+			types: number[]
+	  }
+	| Record<string, any>
+)[]
+type AGNSSContext = Omit<InvocationContext, 'triggerMetadata'> & {
+	triggerMetadata: {
+		systemPropertiesArray: {
+			'iothub-connection-device-id': string
+		}[]
+		propertiesArray: Record<string, string>[]
+	}
+}
 
 const validateAgnssRequest = validateWithJSONSchema(agnssRequestSchema)
 
@@ -29,18 +48,9 @@ const config = () =>
  *
  * The requests are put in a queue for resolving.
  */
-const agnssDeviceRequestsHandler: AzureFunction = async (
-	context: Context,
-	requests: (
-		| {
-				mcc: number
-				mnc: number
-				cell: number
-				area: number
-				types: number[]
-		  }
-		| Record<string, any>
-	)[],
+const agnssDeviceRequestsHandler = async (
+	requests: AGNSS,
+	context: AGNSSContext,
 ): Promise<void> => {
 	log(context)({ context, requests })
 
@@ -66,13 +76,10 @@ const agnssDeviceRequestsHandler: AzureFunction = async (
 		.map((request, i) => ({
 			request,
 			deviceId:
-				context.bindingData.systemPropertiesArray[i][
+				context.triggerMetadata.systemPropertiesArray[i][
 					'iothub-connection-device-id'
 				],
-			properties: context.bindingData.propertiesArray[i] as Record<
-				string,
-				string
-			>,
+			properties: context.triggerMetadata.propertiesArray[i],
 		}))
 		.filter(({ properties }) => properties.agnss === 'get')
 
