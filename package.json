@@ -54,7 +54,7 @@
     "@commitlint/config-conventional": "18.1.0",
     "@nordicsemiconductor/asset-tracker-cloud-code-style": "12.0.104",
     "@nordicsemiconductor/device-helpers": "15.0.58",
-    "@nordicsemiconductor/e2e-bdd-test-runner": "16.0.245",
+    "@nordicsemiconductor/e2e-bdd-test-runner": "16.0.246",
     "@nordicsemiconductor/eslint-config-asset-tracker-cloud-typescript": "16.0.23",
     "@types/backoff": "2.5.5",
     "@types/chai-subset": "1.3.5",
