@@ -36,7 +36,7 @@
     "@nordicsemiconductor/cell-geolocation-helpers": "6.0.0",
     "@nordicsemiconductor/nrfcloud-location-services-tests": "4.0.3",
     "@nordicsemiconductor/object-to-env": "5.0.0",
-    "@nordicsemiconductor/random-words": "7.0.0",
+    "@nordicsemiconductor/random-words": "8.0.0",
     "@octokit/rest": "20.0.2",
     "@sinclair/typebox": "0.31.24",
     "ajv": "8.12.0",
