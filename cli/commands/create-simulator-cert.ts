@@ -69,7 +69,7 @@ export const createSimulatorCertCommand = ({
 		expires?: string
 		debug?: boolean
 	}) => {
-		const id = deviceId ?? (await randomWords({ numWords: 3 })).join('-')
+		const id = deviceId ?? randomWords({ numWords: 3 }).join('-')
 
 		const certsDir = await certsDirPromise()
 
