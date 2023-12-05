@@ -57,15 +57,15 @@ export const deviceStepRunners = ({
 					'utf-8',
 				),
 				readFile(
-					path.resolve(
-						process.cwd(),
-						'data',
-						'DigiCertTLSECCP384RootG5.crt.pem',
-					),
+					path.resolve(process.cwd(), 'data', 'DigiCertGlobalRootG2.pem'),
 					'utf-8',
 				),
 				readFile(
-					path.resolve(process.cwd(), 'data', 'DigiCertGlobalRootG2.pem'),
+					path.resolve(
+						process.cwd(),
+						'data',
+						'MicrosoftRSARootCertificateAuthority2017.pem',
+					),
 					'utf-8',
 				),
 			])

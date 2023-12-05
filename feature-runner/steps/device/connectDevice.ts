@@ -29,27 +29,32 @@ export const connectDevice = async ({
 		certsDir,
 		id: intermediateCertId,
 	})
+
 	const [
 		deviceKey,
 		deviceCert,
 		intermediateCA,
-		baltimore,
-		digiCertG5,
-		digiCert,
+		BaltimoreCyberTrustRoot,
+		DigiCertGlobalRootG2,
+		MicrosoftRSARootCertificateAuthority2017,
 	] = await Promise.all([
 		fs.readFile(deviceFiles.privateKey, 'utf-8'),
 		fs.readFile(deviceFiles.cert, 'utf-8'),
 		fs.readFile(intermediateCAFiles.cert, 'utf-8'),
 		fs.readFile(
-			path.join(process.cwd(), 'data', 'BaltimoreCyberTrustRoot.pem'),
+			path.resolve(process.cwd(), 'data', 'BaltimoreCyberTrustRoot.pem'),
 			'utf-8',
 		),
 		fs.readFile(
-			path.resolve(process.cwd(), 'data', 'DigiCertTLSECCP384RootG5.crt.pem'),
+			path.resolve(process.cwd(), 'data', 'DigiCertGlobalRootG2.pem'),
 			'utf-8',
 		),
 		fs.readFile(
-			path.join(process.cwd(), 'data', 'DigiCertGlobalRootG2.pem'),
+			path.resolve(
+				process.cwd(),
+				'data',
+				'MicrosoftRSARootCertificateAuthority2017.pem',
+			),
 			'utf-8',
 		),
 	])
@@ -94,7 +99,11 @@ export const connectDevice = async ({
 			username: `${iotHub}/${deviceId}/?api-version=2020-09-30`,
 			protocolVersion: 4,
 			clean: true,
-			ca: [baltimore, digiCertG5, digiCert].join(os.EOL),
+			ca: [
+				BaltimoreCyberTrustRoot,
+				DigiCertGlobalRootG2,
+				MicrosoftRSARootCertificateAuthority2017,
+			].join(os.EOL),
 		})
 		client.on('connect', async () => {
 			log?.('Connected', deviceId)

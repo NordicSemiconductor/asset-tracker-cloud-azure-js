@@ -30,7 +30,6 @@ import { CommandDefinition } from './CommandDefinition.js'
 
 export const defaultPort = '/dev/ttyACM0'
 export const defaultSecTag = 11
-export const defaultSecondarySecTag = defaultSecTag + 1
 
 export const createAndProvisionDeviceCertCommand = ({
 	certsDir: certsDirPromise,
@@ -58,10 +57,6 @@ export const createAndProvisionDeviceCertCommand = ({
 		},
 		{
 			flags: '-s, --sec-tag <secTag>',
-			description: `Use this secTag, defaults to ${defaultSecTag}`,
-		},
-		{
-			flags: '-S, --secondary-sec-tag <secTag>',
 			description: `Use this secTag, defaults to ${defaultSecTag}`,
 		},
 		{
@@ -94,7 +89,6 @@ export const createAndProvisionDeviceCertCommand = ({
 		intermediateCertId,
 		expires,
 		secTag,
-		secondarySecTag,
 		deletePrivateKey,
 	}) => {
 		const logFn = debug === true ? log : undefined
@@ -185,18 +179,28 @@ export const createAndProvisionDeviceCertCommand = ({
 
 		const intermediateCert = await readFile(caIntermediateFiles.cert, 'utf-8')
 
-		const effectiveSecondarySecTag = secondarySecTag ?? defaultSecondarySecTag
-		const caCerts = await Promise.all([
+		const [
+			// Keep the Baltimore CyberTrust Root in your devices' trusted root store.
+			BaltimoreCyberTrustRoot,
+			// Add the DigiCert Global Root G2
+			DigiCertGlobalRootG2,
+			// and the Microsoft RSA Root Certificate Authority 2017 certificates
+			MicrosoftRSARootCertificateAuthority2017,
+		] = await Promise.all([
 			readFile(
 				path.resolve(process.cwd(), 'data', 'BaltimoreCyberTrustRoot.pem'),
 				'utf-8',
 			),
 			readFile(
-				path.resolve(process.cwd(), 'data', 'DigiCertTLSECCP384RootG5.crt.pem'),
+				path.resolve(process.cwd(), 'data', 'DigiCertGlobalRootG2.pem'),
 				'utf-8',
 			),
 			readFile(
-				path.resolve(process.cwd(), 'data', 'DigiCertGlobalRootG2.pem'),
+				path.resolve(
+					process.cwd(),
+					'data',
+					'MicrosoftRSARootCertificateAuthority2017.pem',
+				),
 				'utf-8',
 			),
 		])
@@ -206,18 +210,11 @@ export const createAndProvisionDeviceCertCommand = ({
 			clientCert: [await readFile(cert, 'utf-8'), intermediateCert].join(
 				os.EOL,
 			),
-			caCert: caCerts.join(os.EOL),
-			secondaryCaCert: {
-				secTag: effectiveSecondarySecTag,
-				caCert: await readFile(
-					path.resolve(
-						process.cwd(),
-						'data',
-						'DigiCertTLSECCP384RootG5.crt.pem',
-					),
-					'utf-8',
-				),
-			},
+			caCert: [
+				BaltimoreCyberTrustRoot,
+				DigiCertGlobalRootG2,
+				MicrosoftRSARootCertificateAuthority2017,
+			].join(os.EOL),
 		})
 		success('Certificate written to device')
 
