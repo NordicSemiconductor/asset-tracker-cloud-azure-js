@@ -426,7 +426,7 @@ const jsonRequestOptions = ({
 		...(method === 'POST'
 			? {
 					'Content-Length': JSON.stringify(payload).length,
-			  }
+				}
 			: {}),
 	},
 })
