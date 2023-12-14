@@ -148,7 +148,7 @@ jobs:
         with:
           inlineScript: |
             az functionapp deployment source config-zip -g ${RESOURCE_GROUP:-nrfassettrackerci} -n ${APP_NAME:-nrfassettrackerci}api --src dist/functionapp.zip
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         if: always()
         with:
           if-no-files-found: error
