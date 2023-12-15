@@ -115,7 +115,7 @@ jobs:
           inlineScript: |
             az functionapp deployment source config-zip -g ${{ env.RESOURCE_GROUP }} -n ${APP_NAME:-nrfassettracker}api --src dist/functionapp.zip
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           if-no-files-found: error
           name: functionapp-${{ github.sha }}
