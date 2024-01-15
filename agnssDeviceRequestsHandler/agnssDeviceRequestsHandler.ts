@@ -8,7 +8,7 @@ import { Static } from '@sinclair/typebox'
 import { agnssRequestSchema } from '../agnss/types.js'
 import { fromEnv } from '../lib/fromEnv.js'
 import { log, logError } from '../lib/log.js'
-import { validateWithJSONSchema } from '../lib/validateWithJSONSchema.js'
+import { validate } from '../lib/validate.js'
 
 type AGNSS = (
 	| {
@@ -29,7 +29,7 @@ type AGNSSContext = Omit<InvocationContext, 'triggerMetadata'> & {
 	}
 }
 
-const validateAgnssRequest = validateWithJSONSchema(agnssRequestSchema)
+const validateAgnssRequest = validate(agnssRequestSchema)
 
 const config = () =>
 	fromEnv({
@@ -102,7 +102,7 @@ const agnssDeviceRequestsHandler = async (
 			return
 		}
 		deviceRequests.push({
-			request: valid,
+			request: valid.value,
 			deviceId,
 		})
 	})

@@ -2,7 +2,7 @@ import { verify } from '@nordicsemiconductor/nrfcloud-location-services-tests'
 import { Static, Type } from '@sinclair/typebox'
 import { agnssRequestSchema, AGNSSType } from '../agnss/types.js'
 import { ErrorInfo, ErrorType } from '../lib/ErrorInfo.js'
-import { validateWithJSONSchema } from '../lib/validateWithJSONSchema.js'
+import { validate } from '../lib/validate.js'
 import { apiClient } from '../third-party/nrfcloud.com/apiclient.js'
 
 const PositiveInteger = Type.Integer({ minimum: 1, title: 'positive integer' })
@@ -11,7 +11,7 @@ const apiRequestSchema = Type.Object(
 	{
 		eci: PositiveInteger,
 		tac: PositiveInteger,
-		requestType: Type.RegEx(/^custom$/),
+		requestType: Type.RegExp(/^custom$/),
 		mcc: Type.Integer({ minimum: 100, maximum: 999 }),
 		mnc: Type.Integer({ minimum: 0, maximum: 99 }),
 		customTypes: Type.Array(Type.Enum(AGNSSType), { minItems: 1 }),
@@ -19,7 +19,7 @@ const apiRequestSchema = Type.Object(
 	{ additionalProperties: false },
 )
 
-const validateInput = validateWithJSONSchema(agnssRequestSchema)
+const validateInput = validate(agnssRequestSchema)
 
 export const resolveAgnssRequest =
 	(
@@ -37,7 +37,7 @@ export const resolveAgnssRequest =
 			return valid
 		}
 
-		const { mcc, mnc, cell, area, types } = valid
+		const { mcc, mnc, cell, area, types } = valid.value
 
 		// Split requests, so that request for Ephemerides is a separate one
 		const otherTypesInRequest = types.filter((t) => t !== AGNSSType.Ephemerides)

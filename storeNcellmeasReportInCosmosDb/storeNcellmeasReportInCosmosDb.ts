@@ -4,7 +4,7 @@ import iothub from 'azure-iothub'
 import { randomUUID } from 'node:crypto'
 import { fromEnv } from '../lib/fromEnv.js'
 import { log, logError } from '../lib/log.js'
-import { validateWithJSONSchema } from '../lib/validateWithJSONSchema.js'
+import { validate } from '../lib/validate.js'
 import { ncellmeasReport } from '../ncellmeas/report.js'
 import { StoredReport } from '../ncellmeas/storedReport.js'
 const { Registry } = iothub
@@ -15,7 +15,7 @@ const { iotHubConnectionString } = fromEnv({
 
 const registry = Registry.fromConnectionString(iotHubConnectionString)
 
-const validateNcellmeasReport = validateWithJSONSchema(ncellmeasReport)
+const validateNcellmeasReport = validate(ncellmeasReport)
 
 type ReportedUpdateWithNetwork = {
 	properties: { reported: { roam?: { v: { nw: string } } } }
@@ -93,7 +93,7 @@ const storeNcellmeasReportInCosmosDb =
 		}
 		const document: StoredReport & { id: string } = {
 			id: randomUUID(),
-			report: valid,
+			report: valid.value,
 			deviceId,
 			nw: nw ?? 'LTE-M',
 			timestamp:

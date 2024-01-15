@@ -7,7 +7,7 @@ import {
 import { Static } from '@sinclair/typebox'
 import { fromEnv } from '../lib/fromEnv.js'
 import { log, logError } from '../lib/log.js'
-import { validateWithJSONSchema } from '../lib/validateWithJSONSchema.js'
+import { validate } from '../lib/validate.js'
 import { pgpsRequestSchema } from '../pgps/types.js'
 
 type PGPS = (
@@ -28,7 +28,7 @@ type PGPSContext = Omit<InvocationContext, 'triggerMetadata'> & {
 	}
 }
 
-const validatePgpsRequest = validateWithJSONSchema(pgpsRequestSchema)
+const validatePgpsRequest = validate(pgpsRequestSchema)
 
 const config = () =>
 	fromEnv({
@@ -101,7 +101,7 @@ const pgpsDeviceRequestsHandler = async (
 			return
 		}
 		deviceRequests.push({
-			request: valid,
+			request: valid.value,
 			deviceId,
 		})
 	})

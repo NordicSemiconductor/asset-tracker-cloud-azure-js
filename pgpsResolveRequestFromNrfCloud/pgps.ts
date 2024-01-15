@@ -1,6 +1,6 @@
 import { Static, Type } from '@sinclair/typebox'
 import { ErrorInfo } from '../lib/ErrorInfo.js'
-import { validateWithJSONSchema } from '../lib/validateWithJSONSchema.js'
+import { validate } from '../lib/validate.js'
 import {
 	defaultInterval,
 	defaultNumberOfPredictions,
@@ -54,7 +54,7 @@ const apiResponseSchema = Type.Object(
 	{ additionalProperties: false },
 )
 
-const validateInput = validateWithJSONSchema(pgpsRequestSchema)
+const validateInput = validate(pgpsRequestSchema)
 
 export const resolvePgpsRequest =
 	(
@@ -72,7 +72,7 @@ export const resolvePgpsRequest =
 			return valid
 		}
 
-		const { n, int, day, time } = valid
+		const { n, int, day, time } = valid.value
 
 		const result = await client.get({
 			resource: 'location/pgps',

@@ -1,39 +1,33 @@
 import { Static, TObject, TProperties } from '@sinclair/typebox'
-import Ajv from 'ajv'
 import { IncomingHttpHeaders, OutgoingHttpHeaders } from 'http'
 import { request as nodeRequest, RequestOptions } from 'https'
 import jwt from 'jsonwebtoken'
 import { URL } from 'url'
 import { ErrorInfo, ErrorType } from '../../lib/ErrorInfo.js'
 import { toQueryString } from './toQueryString.js'
+import { TypeCompiler } from '@sinclair/typebox/compiler'
 
-const ajv = new Ajv()
-// see @https://github.com/sinclairzx81/typebox/issues/51
-ajv.addKeyword('kind')
-ajv.addKeyword('modifier')
-
-const validate =
-	<Schema extends TObject<TProperties>>({
-		schema,
-		errorType,
-		errorMessage,
-	}: {
-		schema: Schema
-		errorType: ErrorType
-		errorMessage: string
-	}) =>
-	(
+const validate = <Schema extends TObject<TProperties>>({
+	schema,
+	errorType,
+	errorMessage,
+}: {
+	schema: Schema
+	errorType: ErrorType
+	errorMessage: string
+}) => {
+	const C = TypeCompiler.Compile(schema)
+	return (
 		payload: Record<string, any>,
 	): { error: ErrorInfo } | Static<typeof schema> => {
-		const v = ajv.compile(schema)
-		const valid = v(payload)
-		if (valid !== true) {
+		const firstError = C.Errors(payload).First()
+		if (firstError !== undefined) {
 			return {
 				error: {
 					type: errorType,
 					message: errorMessage,
 					detail: {
-						errors: v.errors,
+						errors: [...C.Errors(payload)],
 						input: payload,
 					},
 				},
@@ -41,6 +35,7 @@ const validate =
 		}
 		return payload as Static<typeof schema>
 	}
+}
 
 const doRequest =
 	({
