@@ -7,7 +7,7 @@
   "scripts": {
     "test": "find ./ -type f -name '*.spec.ts' -not -path './node_modules/*' -print | xargs npx tsx --no-warnings --test",
     "test:e2e": "node --unhandled-rejections=strict dist/feature-runner/run-features.js ./features --print-results --progress",
-    "prepare": "husky install && check-node-version --package"
+    "prepare": "husky && check-node-version --package"
   },
   "repository": {
     "type": "git",
@@ -71,7 +71,7 @@
     "eslint-plugin-import": "2.29.1",
     "eslint-plugin-prefer-arrow": "1.2.3",
     "eslint-plugin-unicorn": "50.0.1",
-    "husky": "8.0.3",
+    "husky": "9.0.7",
     "lint-staged": "15.2.0",
     "semver": "7.5.4",
     "tsx": "4.7.0"
