@@ -1,22 +1,15 @@
 {
-  "name": "@nordicsemiconductor/asset-tracker-cloud-azure",
+  "name": "@nordicsemiconductor/asset-tracker-cloud-code-style",
   "version": "0.0.0-development",
-  "description": "A reference implementation of a serverless backend for an IoT product developed using in TypeScript.",
-  "type": "module",
-  "main": "./dist/**/handler.mjs",
-  "scripts": {
-    "test": "find ./ -type f -name '*.spec.ts' -not -path './node_modules/*' -print | xargs npx tsx --no-warnings --test",
-    "test:e2e": "node --unhandled-rejections=strict dist/feature-runner/run-features.js ./features --print-results --progress",
-    "prepare": "husky install && check-node-version --package"
-  },
+  "description": "Code style definitions for all nRF Asset Tracker projects.",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/NordicSemiconductor/asset-tracker-cloud-azure-js.git"
+    "url": "git+https://github.com/NordicSemiconductor/asset-tracker-cloud-code-style-js.git"
   },
   "bugs": {
-    "url": "https://github.com/NordicSemiconductor/asset-tracker-cloud-azure-js/issues"
+    "url": "https://github.com/NordicSemiconductor/asset-tracker-cloud-code-style-js/issues"
   },
-  "homepage": "https://nordicsemiconductor.github.io/asset-tracker-cloud-docs/",
+  "homepage": "https://github.com/NordicSemiconductor/asset-tracker-cloud-code-style-js#readme",
   "keywords": [
     "nrf-asset-tracker",
     "iot"
@@ -24,65 +17,17 @@
   "author": "Nordic Semiconductor ASA | nordicsemi.no",
   "license": "BSD-3-Clause",
   "dependencies": {
-    "@azure/arm-appservice": "14.1.0",
-    "@azure/arm-deviceprovisioningservices": "5.1.0",
-    "@azure/cosmos": "4.0.0",
-    "@azure/functions": "4.1.0",
-    "@azure/keyvault-secrets": "4.7.0",
-    "@azure/ms-rest-azure-js": "2.1.0",
-    "@azure/ms-rest-nodeauth": "3.1.1",
-    "@azure/storage-blob": "12.17.0",
-    "@azure/storage-queue": "12.16.0",
-    "@nordicsemiconductor/cell-geolocation-helpers": "6.0.0",
-    "@nordicsemiconductor/nrfcloud-location-services-tests": "6.0.0",
-    "@nordicsemiconductor/object-to-env": "7.0.6",
-    "@nordicsemiconductor/random-words": "8.0.0",
-    "@octokit/rest": "20.0.2",
-    "@sinclair/typebox": "0.32.9",
-    "azure-iot-common": "1.13.2",
-    "azure-iot-provisioning-service": "1.11.2",
-    "azure-iothub": "1.16.4",
-    "backoff": "2.5.0",
-    "mqtt": "5.3.4"
-  },
-  "devDependencies": {
-    "@azure/arm-iothub": "6.3.0",
-    "@azure/arm-resources-subscriptions": "2.1.0",
-    "@azure/data-tables": "13.2.2",
-    "@azure/logger": "1.0.4",
-    "@commitlint/config-conventional": "18.4.4",
-    "@nordicsemiconductor/asset-tracker-cloud-code-style": "13.1.8",
-    "@nordicsemiconductor/device-helpers": "17.0.46",
-    "@nordicsemiconductor/e2e-bdd-test-runner": "17.0.1",
-    "@nordicsemiconductor/eslint-config-asset-tracker-cloud-typescript": "17.0.0",
-    "@types/backoff": "2.5.5",
-    "@types/chai-subset": "1.3.5",
-    "@types/jsonwebtoken": "9.0.5",
-    "@types/node": "20.11.4",
-    "@types/pem": "1.14.4",
-    "@types/semver": "7.5.6",
-    "@typescript-eslint/eslint-plugin": "6.19.0",
-    "chai-subset": "1.6.0",
-    "chalk": "5.3.0",
-    "check-node-version": "4.2.1",
-    "commander": "11.1.0",
-    "dependency-tree": "^10.0.9",
-    "eslint-config-prettier": "9.1.0",
-    "eslint-plugin-import": "2.29.1",
-    "eslint-plugin-prefer-arrow": "1.2.3",
-    "eslint-plugin-unicorn": "50.0.1",
-    "husky": "8.0.3",
+    "@commitlint/cli": "18.6.0",
+    "eslint": "8.56.0",
     "lint-staged": "15.2.0",
-    "semver": "7.5.4",
-    "tsx": "4.7.0"
+    "pinst": "3.0.0",
+    "prettier": "3.2.4",
+    "prettier-plugin-organize-imports": "3.2.4",
+    "typescript": "5.3.3"
   },
   "lint-staged": {
-    "*.{md,json,yaml,yml}": [
-      "prettier --write"
-    ],
-    "*.{ts,tsx}": [
-      "prettier --write",
-      "eslint --ext .js,.ts"
+    "*.{yml,md,js,json}": [
+      "prettier --write --config .prettierrc.js"
     ]
   },
   "engines": {
@@ -91,11 +36,7 @@
   },
   "release": {
     "branches": [
-      "saga",
-      {
-        "name": "!(saga|v[0-9].[0-9].x|*_*|*/*)",
-        "prerelease": true
-      }
+      "saga"
     ],
     "remoteTags": true,
     "plugins": [
@@ -116,18 +57,19 @@
   },
   "files": [
     "package-lock.json",
-    "dist/export.js",
-    "dist/export.d.ts",
-    "dist/cli/iot/certificates",
-    "dist/cli/process",
+    "index.js",
     "LICENSE",
-    "README.md"
+    "README.md",
+    ".prettierrc.js",
+    "tsconfig.json",
+    "templates"
   ],
-  "deploy": {
-    "webApp": {
-      "repository": "https://github.com/NordicSemiconductor/asset-tracker-cloud-app-js.git",
-      "branch": "saga"
-    }
+  "scripts": {
+    "prepare": "husky",
+    "test": "npm exec -- renovate-config-validator"
   },
-  "prettier": "@nordicsemiconductor/asset-tracker-cloud-code-style/.prettierrc"
+  "devDependencies": {
+    "@commitlint/config-conventional": "18.6.0",
+    "husky": "9.0.7"
+  }
 }
