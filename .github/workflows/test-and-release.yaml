@@ -169,7 +169,7 @@ jobs:
           ./cli.sh create-ca-intermediate
 
       - name: Run End-to-End Tests
-        uses: nick-invision/retry@v2
+        uses: nick-invision/retry@v3
         env:
           FORCE_COLOR: 3
         with:
