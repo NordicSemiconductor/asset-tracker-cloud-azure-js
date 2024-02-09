@@ -23,7 +23,7 @@ const command = async ({
 			(err, stdout, stderr) => {
 				if (err !== null) {
 					debug?.(`[${cmd}] «`, stderr)
-					return reject(stderr)
+					return reject(err)
 				}
 				if (stdout.length > 0) debug?.(`[${cmd}] «`, stdout)
 				return resolve(stdout)
