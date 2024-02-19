@@ -110,7 +110,7 @@ export const connectDevice = async ({
 			resolve(client)
 		})
 		client.on('error', (err) => {
-			console.error(`Error while connecting device: ${err}`)
+			console.error(`Error while connecting device: ${err.message}`)
 			reject(err)
 		})
 	})

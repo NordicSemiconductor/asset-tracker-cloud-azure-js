@@ -30,7 +30,7 @@ void describe('encodePropertyBag', () => {
 				'%24.ct=application%2Fjson&%24.ce=utf-8',
 			],
 		]) {
-			void test(`${JSON.stringify(props)} => ${expected}`, () =>
+			void test(`${JSON.stringify(props)} => ${JSON.stringify(expected)}`, () =>
 				assert.equal(encodePropertyBag(props as any), expected))
 		}
 	})
@@ -54,7 +54,7 @@ void describe('encodePropertyBag', () => {
 				'prop1&prop3=a%20string&%24.ct=application%2Fjson&%24.ce=utf-8',
 			],
 		]) {
-			void test(`${JSON.stringify(props)} => ${expected}`, () =>
+			void test(`${JSON.stringify(props)} => ${JSON.stringify(expected)}`, () =>
 				assert.equal(encodePropertyBag(props as any), expected))
 		}
 	})
