@@ -52,7 +52,7 @@
     "@azure/logger": "1.0.4",
     "@bifravst/eslint-config-typescript": "6.0.4",
     "@bifravst/prettier-config": "1.0.0",
-    "@commitlint/config-conventional": "18.4.4",
+    "@commitlint/config-conventional": "18.6.3",
     "@nordicsemiconductor/device-helpers": "17.0.46",
     "@nordicsemiconductor/e2e-bdd-test-runner": "17.0.1",
     "@types/backoff": "2.5.5",
