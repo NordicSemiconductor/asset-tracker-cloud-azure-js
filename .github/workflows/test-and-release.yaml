@@ -37,7 +37,7 @@ jobs:
 
     steps:
       - name: Print azure CLI version
-        uses: azure/CLI@v1
+        uses: azure/CLI@v2
         with:
           inlineScript: az --version
 
@@ -49,7 +49,7 @@ jobs:
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
       - name: List Azure accounts
-        uses: azure/CLI@v1
+        uses: azure/CLI@v2
         with:
           inlineScript: |
             az account list --output table
@@ -79,7 +79,7 @@ jobs:
         run: npm test
 
       - name: Deploy Mock HTTP API
-        uses: azure/CLI@v1
+        uses: azure/CLI@v2
         with:
           inlineScript: |
             az deployment group create \
@@ -91,7 +91,7 @@ jobs:
                 storageAccountName=${MOCK_HTTP_API_STORAGE_ACCOUNT_NAME:-mockhttpapi}
 
       - name: Determine Mock API endpoint
-        uses: azure/CLI@v1
+        uses: azure/CLI@v2
         with:
           inlineScript: |
             echo "MOCK_HTTP_API_ENDPOINT=`az functionapp show -g ${RESOURCE_GROUP:-nrfassettrackerci} -n ${MOCK_HTTP_API_STORAGE_ACCOUNT_NAME:-mockhttpapi}Functions | jq -r '.defaultHostName'`" >> $GITHUB_ENV
@@ -100,7 +100,7 @@ jobs:
         run: node scripts/pack-mock-http-api-app.js
 
       - name: Deploy mock functions
-        uses: azure/CLI@v1
+        uses: azure/CLI@v2
         with:
           inlineScript: |
             az functionapp deployment source config-zip -g ${RESOURCE_GROUP:-nrfassettrackerci} -n ${MOCK_HTTP_API_STORAGE_ACCOUNT_NAME:-mockhttpapi}Functions --src dist/mock-http-api.zip
@@ -117,13 +117,13 @@ jobs:
         run: openssl ecparam -name prime256v1 -genkey > nrfcloudservice.key
 
       - name: Set secrets for nRF Cloud API
-        uses: azure/CLI@v1
+        uses: azure/CLI@v2
         with:
           inlineScript: |
             az keyvault secret set --vault-name ${keyVaultName} --name nrfCloudServiceKey --file nrfcloudservice.key
 
       - name: Deploy solution
-        uses: azure/CLI@v1
+        uses: azure/CLI@v2
         with:
           inlineScript: |
             az deployment group create \
@@ -144,7 +144,7 @@ jobs:
         run: node scripts/pack-app.js
 
       - name: Deploy Function App
-        uses: azure/CLI@v1
+        uses: azure/CLI@v2
         with:
           inlineScript: |
             az functionapp deployment source config-zip -g ${RESOURCE_GROUP:-nrfassettrackerci} -n ${APP_NAME:-nrfassettrackerci}api --src dist/functionapp.zip
