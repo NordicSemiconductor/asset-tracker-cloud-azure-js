@@ -160,7 +160,7 @@ jobs:
         id: certs-cache
         with:
           path: ./certificates
-          key: certificates2023
+          key: certificates
 
       - name: Create Intermediate CA certificate
         if: steps.certs-cache.outputs.cache-hit != 'true'
