@@ -76,10 +76,6 @@ export const createAndProvisionDeviceCertCommand = ({
 			description:
 				'ID of the CA intermediate certificate to use, if left blank the first will be used',
 		},
-		{
-			flags: '-e, --expires <expires>',
-			description: `Validity of device certificate in days. Defaults to ${defaultDeviceCertificateValidityInDays} days.`,
-		},
 	],
 	action: async ({
 		port,
