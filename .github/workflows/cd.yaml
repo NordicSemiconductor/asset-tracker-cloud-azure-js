@@ -46,7 +46,7 @@ jobs:
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
       - name: List Azure Accounts
-        uses: azure/CLI@v1
+        uses: azure/CLI@v2
         with:
           inlineScript: |
             az account list --output table
@@ -74,7 +74,7 @@ jobs:
           echo "keyVaultName=${APP_NAME:-nrfassettracker}" >> $GITHUB_ENV
 
       - name: Set nRF Cloud Location Service key
-        uses: azure/CLI@v1
+        uses: azure/CLI@v2
         with:
           inlineScript: |
             echo "${{ secrets.NRF_CLOUD_SERVICE_KEY }}" > nrfcloudservice.key
@@ -90,7 +90,7 @@ jobs:
           echo "VERSION=${VERSION}" >> $GITHUB_ENV
 
       - name: Deploy solution
-        uses: azure/CLI@v1
+        uses: azure/CLI@v2
         with:
           inlineScript: |
             az deployment group create \
@@ -110,7 +110,7 @@ jobs:
         run: node scripts/pack-app.js
 
       - name: Deploy Function App
-        uses: azure/CLI@v1
+        uses: azure/CLI@v2
         with:
           inlineScript: |
             az functionapp deployment source config-zip -g ${{ env.RESOURCE_GROUP }} -n ${APP_NAME:-nrfassettracker}api --src dist/functionapp.zip
@@ -122,7 +122,7 @@ jobs:
           path: dist/functionapp.zip
 
       - name: Enable static site hosting for the app
-        uses: azure/CLI@v1
+        uses: azure/CLI@v2
         with:
           inlineScript: |
             az storage blob service-properties update --account-name ${{ env.STORAGE_ACCOUNT_NAME }} --static-website --404-document index.html --index-document index.html
@@ -132,7 +132,7 @@ jobs:
 
       - name: Determine public URL
         id: web-app-url
-        uses: azure/CLI@v1
+        uses: azure/CLI@v2
         with:
           inlineScript: |
             PUBLIC_URL=`az storage account show -g ${{ env.RESOURCE_GROUP }} -n ${{ env.STORAGE_ACCOUNT_NAME }} --query 'primaryEndpoints.web' --output tsv | tr -d '\n'`
@@ -153,7 +153,7 @@ jobs:
           npm run build
 
       - name: Deploy Web App
-        uses: azure/CLI@v1
+        uses: azure/CLI@v2
         with:
           inlineScript: |
             az storage blob upload-batch --account-name ${{ env.STORAGE_ACCOUNT_NAME }} --overwrite -s ./app/build -d '$web'
