@@ -49,7 +49,7 @@
     "@azure/arm-iothub": "6.3.0",
     "@azure/arm-resources-subscriptions": "2.1.0",
     "@azure/data-tables": "13.2.2",
-    "@azure/logger": "1.0.4",
+    "@azure/logger": "1.1.0",
     "@bifravst/eslint-config-typescript": "6.0.11",
     "@bifravst/prettier-config": "1.0.0",
     "@commitlint/config-conventional": "19.1.0",
