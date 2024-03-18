@@ -16,8 +16,8 @@
     "forceConsistentCasingInFileNames": true,
     "noImplicitAny": true,
     "outDir": "dist/",
-    "moduleResolution": "node",
-    "module": "ES2022",
+    "moduleResolution": "nodenext",
+    "module": "nodenext",
     "allowSyntheticDefaultImports": true
   }
 }
