@@ -1,4 +1,4 @@
-import { DeviceRegistrationState } from 'azure-iot-provisioning-service/dist/interfaces'
+import { DeviceRegistrationState } from 'azure-iot-provisioning-service/dist/interfaces.js'
 import { promises as fs } from 'fs'
 import { connect } from 'mqtt'
 import {
