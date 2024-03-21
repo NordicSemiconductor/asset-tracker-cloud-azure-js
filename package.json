@@ -50,7 +50,7 @@
     "@azure/arm-resources-subscriptions": "2.1.0",
     "@azure/data-tables": "13.2.2",
     "@azure/logger": "1.1.1",
-    "@bifravst/eslint-config-typescript": "6.0.14",
+    "@bifravst/eslint-config-typescript": "6.0.15",
     "@bifravst/prettier-config": "1.0.0",
     "@commitlint/config-conventional": "19.1.0",
     "@nordicsemiconductor/device-helpers": "17.0.110",
