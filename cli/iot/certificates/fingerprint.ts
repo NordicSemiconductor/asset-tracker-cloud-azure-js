@@ -1,4 +1,4 @@
-import { run } from '../../process/run.js'
+import run from '@bifravst/run'
 
 export const fingerprint = async (certLocation: string): Promise<string> =>
 	(

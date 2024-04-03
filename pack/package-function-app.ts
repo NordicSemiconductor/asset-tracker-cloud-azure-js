@@ -16,7 +16,7 @@ import { promises as fs, readFileSync, statSync } from 'fs'
 import os from 'os'
 import path from 'path'
 import { debug, progress } from '../cli/logging.js'
-import { run } from '../cli/process/run.js'
+import run from '@bifravst/run'
 import { flattenDependencies } from './flattenDependencies.js'
 import { copy, copyFile } from './lib/copy.js'
 
@@ -30,8 +30,10 @@ const installDependenciesFromPackageJSON = async ({
 		command: 'npm',
 		args: ['ci', '--ignore-scripts', '--only=prod', '--no-audit'],
 		cwd: targetDir,
-		log: (info) => progress('Installing dependencies', info),
-		debug: (info) => debug('[npm]', info),
+		log: {
+			debug: (info) => debug('[npm]', info),
+			stdout: (info) => progress('Installing dependencies', info.toString()),
+		},
 	})
 }
 
@@ -43,8 +45,10 @@ export const installPackagesFromList =
 			command: 'npm',
 			args: ['i', '--ignore-scripts', '--no-audit', ...packageList],
 			cwd: targetDir,
-			log: (info) => progress('Installing dependencies', info),
-			debug: (info) => debug('[npm]', info),
+			log: {
+				debug: (info) => progress('Installing dependencies', info),
+				stdout: (info) => debug('[npm]', info.toString()),
+			},
 		})
 	}
 
@@ -152,14 +156,18 @@ export const packageFunctionApp = async ({
 		command: 'zip',
 		args: ['-r', outFile, './'],
 		cwd: tempDir,
-		log: (info) => progress('[ZIP]', info),
+		log: {
+			stdout: (info) => progress('[ZIP]', info.toString()),
+		},
 	})
 
 	// Remove the temp folder
 	await run({
 		command: 'rm',
 		args: ['-rf', tempDir],
-		log: (info) => progress('Cleanup', info),
+		log: {
+			stdout: (info) => progress('Cleanup', info.toString()),
+		},
 	})
 
 	return outFile

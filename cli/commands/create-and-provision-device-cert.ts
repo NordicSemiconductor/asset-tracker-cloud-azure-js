@@ -25,7 +25,7 @@ import {
 	setting,
 	success,
 } from '../logging.js'
-import { run } from '../process/run.js'
+import run from '@bifravst/run'
 import { CommandDefinition } from './CommandDefinition.js'
 
 export const defaultPort = '/dev/ttyACM0'

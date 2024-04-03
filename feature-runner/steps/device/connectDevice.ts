@@ -4,7 +4,7 @@ import os from 'node:os'
 import path from 'path'
 import { CAIntermediateFileLocations } from '../../../cli/iot/certificates/caFileLocations.js'
 import { deviceFileLocations } from '../../../cli/iot/certificates/deviceFileLocations.js'
-import { run } from '../../../cli/process/run.js'
+import run from '@bifravst/run'
 
 /**
  * Connect the device to the Azure IoT Hub.
@@ -78,7 +78,9 @@ export const connectDevice = async ({
 				certsDir,
 				deviceId,
 			],
-			log,
+			log: {
+				debug: log,
+			},
 			env: {
 				DONT_DIE_ON_UNHANDLED_EXCEPTIONS: '1',
 				...process.env,
