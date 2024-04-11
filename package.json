@@ -112,7 +112,6 @@
     "access": "public"
   },
   "files": [
-    "package-lock.json",
     "dist/export.js",
     "dist/export.d.ts",
     "dist/cli/iot/certificates",
