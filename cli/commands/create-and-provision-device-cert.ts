@@ -26,7 +26,7 @@ import {
 	success,
 } from '../logging.js'
 import run from '@bifravst/run'
-import { CommandDefinition } from './CommandDefinition.js'
+import type { CommandDefinition } from './CommandDefinition.js'
 
 export const defaultPort = '/dev/ttyACM0'
 export const defaultSecTag = 11

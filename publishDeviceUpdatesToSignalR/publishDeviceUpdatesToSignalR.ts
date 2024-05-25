@@ -1,5 +1,5 @@
 import type { FunctionOutput, InvocationContext } from '@azure/functions'
-import { DeviceUpdate, TwinChangeEvent } from '../lib/iotMessages.js'
+import type { DeviceUpdate, TwinChangeEvent } from '../lib/iotMessages.js'
 import { log } from '../lib/log.js'
 
 type Context = Omit<InvocationContext, 'triggerMetadata'> & {

@@ -1,6 +1,6 @@
 import { IotDpsClient } from '@azure/arm-deviceprovisioningservices'
 import { IotHubClient } from '@azure/arm-iothub'
-import { AzureCliCredential } from '@azure/identity'
+import type { AzureCliCredential } from '@azure/identity'
 
 export const globalIotHubDPSHostname = 'global.azure-devices-provisioning.net'
 

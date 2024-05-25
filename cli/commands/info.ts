@@ -1,8 +1,9 @@
-import { IotDpsClient } from '@azure/arm-deviceprovisioningservices'
-import { AzureCliCredential } from '@azure/identity'
-import { globalIotHubDPSHostname, ioTHubDPSInfo } from '../iot/ioTHubDPSInfo.js'
+import type { IotDpsClient } from '@azure/arm-deviceprovisioningservices'
+import type { AzureCliCredential } from '@azure/identity'
+import type { ioTHubDPSInfo } from '../iot/ioTHubDPSInfo.js'
+import { globalIotHubDPSHostname } from '../iot/ioTHubDPSInfo.js'
 import { setting } from '../logging.js'
-import { CommandDefinition } from './CommandDefinition.js'
+import type { CommandDefinition } from './CommandDefinition.js'
 
 export const infoCommand = ({
 	dpsName,

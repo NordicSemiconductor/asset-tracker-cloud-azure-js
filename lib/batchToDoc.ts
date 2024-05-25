@@ -1,4 +1,4 @@
-import { BatchDeviceUpdate, DeviceMessage } from '../lib/iotMessages.js'
+import type { BatchDeviceUpdate, DeviceMessage } from '../lib/iotMessages.js'
 
 export const batchToDoc = (batchUpdate: BatchDeviceUpdate): DeviceMessage[] =>
 	Object.entries(batchUpdate)

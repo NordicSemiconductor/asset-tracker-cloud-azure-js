@@ -1,10 +1,10 @@
 import type { InvocationContext } from '@azure/functions'
+import type { QueueClient } from '@azure/storage-queue'
 import {
-	QueueClient,
 	QueueServiceClient,
 	StorageSharedKeyCredential,
 } from '@azure/storage-queue'
-import { Static } from '@sinclair/typebox'
+import type { Static } from '@sinclair/typebox'
 import { fromEnv } from '../lib/fromEnv.js'
 import { log, logError } from '../lib/log.js'
 import { validate } from '../lib/validate.js'

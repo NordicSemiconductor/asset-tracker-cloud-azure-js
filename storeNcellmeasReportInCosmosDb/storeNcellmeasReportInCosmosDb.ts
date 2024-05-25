@@ -1,12 +1,12 @@
 import type { CosmosDBOutput, InvocationContext } from '@azure/functions'
-import { Static } from '@sinclair/typebox'
+import type { Static } from '@sinclair/typebox'
 import iothub from 'azure-iothub'
 import { randomUUID } from 'node:crypto'
 import { fromEnv } from '../lib/fromEnv.js'
 import { log, logError } from '../lib/log.js'
 import { validate } from '../lib/validate.js'
 import { ncellmeasReport } from '../ncellmeas/report.js'
-import { StoredReport } from '../ncellmeas/storedReport.js'
+import type { StoredReport } from '../ncellmeas/storedReport.js'
 const { Registry } = iothub
 
 const { iotHubConnectionString } = fromEnv({

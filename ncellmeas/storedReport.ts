@@ -1,5 +1,5 @@
-import { Static } from '@sinclair/typebox'
-import { ncellmeasReport } from './report.js'
+import type { Static } from '@sinclair/typebox'
+import type { ncellmeasReport } from './report.js'
 
 export type StoredReport = {
 	report: Static<typeof ncellmeasReport>

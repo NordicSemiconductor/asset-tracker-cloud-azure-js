@@ -1,5 +1,5 @@
-import { Static } from '@sinclair/typebox'
-import { pgpsRequestSchema } from './types.js'
+import type { Static } from '@sinclair/typebox'
+import type { pgpsRequestSchema } from './types.js'
 
 // Default values, all properties for requests are optional
 export const defaultNumberOfPredictions = 42

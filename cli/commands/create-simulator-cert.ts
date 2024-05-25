@@ -7,10 +7,8 @@ import {
 	CARootFileLocations,
 } from '../iot/certificates/caFileLocations.js'
 import { createSimulatorKeyAndCSR } from '../iot/certificates/createSimulatorKeyAndCSR.js'
-import {
-	DeviceCertificateJSON,
-	deviceFileLocations,
-} from '../iot/certificates/deviceFileLocations.js'
+import type { DeviceCertificateJSON } from '../iot/certificates/deviceFileLocations.js'
+import { deviceFileLocations } from '../iot/certificates/deviceFileLocations.js'
 import {
 	defaultDeviceCertificateValidityInDays,
 	generateDeviceCertificate,
@@ -26,7 +24,7 @@ import {
 	setting,
 	success,
 } from '../logging.js'
-import { CommandDefinition } from './CommandDefinition.js'
+import type { CommandDefinition } from './CommandDefinition.js'
 
 export const createSimulatorCertCommand = ({
 	certsDir: certsDirPromise,

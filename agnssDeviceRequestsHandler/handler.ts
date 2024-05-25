@@ -1,4 +1,5 @@
-import { EventHubHandler, app } from '@azure/functions'
+import type { EventHubHandler } from '@azure/functions'
+import { app } from '@azure/functions'
 import handler from './agnssDeviceRequestsHandler.js'
 
 app.eventHub('agnssDeviceRequestsHandler', {

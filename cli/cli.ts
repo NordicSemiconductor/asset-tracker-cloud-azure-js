@@ -1,6 +1,6 @@
 import { WebSiteManagementClient } from '@azure/arm-appservice'
 import { IotDpsClient } from '@azure/arm-deviceprovisioningservices'
-import { AzureCliCredential } from '@azure/identity'
+import type { AzureCliCredential } from '@azure/identity'
 import { program } from 'commander'
 import * as fs from 'fs'
 import * as path from 'path'

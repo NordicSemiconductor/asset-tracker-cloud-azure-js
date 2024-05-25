@@ -1,4 +1,4 @@
-import { CommandDefinition } from './CommandDefinition.js'
+import type { CommandDefinition } from './CommandDefinition.js'
 
 export const cliConfigCommand = ({
 	resourceGroup,

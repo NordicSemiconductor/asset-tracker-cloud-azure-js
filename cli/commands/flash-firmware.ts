@@ -6,7 +6,7 @@ import { randomUUID } from 'node:crypto'
 import * as os from 'os'
 import * as path from 'path'
 import { progress, success } from '../logging.js'
-import { CommandDefinition } from './CommandDefinition.js'
+import type { CommandDefinition } from './CommandDefinition.js'
 
 export const defaultFirmwareRepository = {
 	owner: 'NordicSemiconductor',

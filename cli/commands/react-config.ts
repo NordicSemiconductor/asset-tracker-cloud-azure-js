@@ -1,7 +1,7 @@
-import { WebSiteManagementClient } from '@azure/arm-appservice'
+import type { WebSiteManagementClient } from '@azure/arm-appservice'
 import { objectToEnv } from '@nordicsemiconductor/object-to-env'
 import { fromEnv } from '../../lib/fromEnv.js'
-import { CommandDefinition } from './CommandDefinition.js'
+import type { CommandDefinition } from './CommandDefinition.js'
 
 export const reactConfigCommand = ({
 	websiteClient,

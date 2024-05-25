@@ -1,4 +1,5 @@
-import { EventHubHandler, app, output } from '@azure/functions'
+import type { EventHubHandler } from '@azure/functions'
+import { app, output } from '@azure/functions'
 import handler from './publishDeviceUpdatesToSignalR.js'
 
 const signalROutput = output.generic({
