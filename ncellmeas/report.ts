@@ -12,7 +12,7 @@ export const TimingAdvance = Type.Integer({
 	title: 'Timing advance',
 })
 
-/** @see https://nordicsemiconductor.github.io/asset-tracker-cloud-docs/saga/docs/cloud-protocol/ncellmeas.schema.json */
+/** @see https://github.com/NordicSemiconductor/asset-tracker-cloud-docs/blob/saga/docs/cloud-protocol/ncellmeas.json */
 export const ncellmeasReport = Type.Object({
 	mcc: Type.Integer({ minimum: 100, maximum: 999 }),
 	mnc: Type.Integer({ minimum: 0, maximum: 99 }),

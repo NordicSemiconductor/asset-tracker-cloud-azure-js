@@ -14,4 +14,4 @@ in [TypeScript](https://www.typescriptlang.org/).
 > [is incomplete](https://github.com/NordicSemiconductor/asset-tracker-cloud-docs/issues/339)!**
 
 > :information_source:
-> [Read the complete nRF Asset Tracker documentation](https://nordicsemiconductor.github.io/asset-tracker-cloud-docs/).
+> [Read the complete nRF Asset Tracker documentation](https://docs.nordicsemi.com/bundle/nrf-asset-tracker-saga/).
