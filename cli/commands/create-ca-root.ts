@@ -1,4 +1,4 @@
-import { IotDpsClient } from '@azure/arm-deviceprovisioningservices'
+import type { IotDpsClient } from '@azure/arm-deviceprovisioningservices'
 import { readFile, writeFile } from 'fs/promises'
 import { randomUUID } from 'node:crypto'
 import { CARootFileLocations } from '../iot/certificates/caFileLocations.js'
@@ -15,7 +15,7 @@ import {
 	setting,
 	success,
 } from '../logging.js'
-import { CommandDefinition } from './CommandDefinition.js'
+import type { CommandDefinition } from './CommandDefinition.js'
 
 export const createCARootCommand = ({
 	certsDir: certsDirPromise,

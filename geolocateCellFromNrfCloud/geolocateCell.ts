@@ -4,7 +4,7 @@ import {
 	cellId,
 	NetworkMode,
 } from '@nordicsemiconductor/cell-geolocation-helpers'
-import { Static, TObject, TProperties } from '@sinclair/typebox'
+import type { Static, TObject, TProperties } from '@sinclair/typebox'
 import { URL } from 'url'
 import { fromEnv } from '../lib/fromEnv.js'
 import { result } from '../lib/http.js'

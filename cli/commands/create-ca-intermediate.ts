@@ -15,7 +15,7 @@ import {
 	setting,
 	success,
 } from '../logging.js'
-import { CommandDefinition } from './CommandDefinition.js'
+import type { CommandDefinition } from './CommandDefinition.js'
 
 export const createCAIntermediateCommand = ({
 	certsDir: certsDirPromise,

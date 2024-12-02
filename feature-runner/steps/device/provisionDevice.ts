@@ -1,10 +1,8 @@
-import { DeviceRegistrationState } from 'azure-iot-provisioning-service/dist/interfaces.js'
+import type { DeviceRegistrationState } from 'azure-iot-provisioning-service/dist/interfaces.js'
 import { promises as fs } from 'fs'
 import { connect } from 'mqtt'
-import {
-	DeviceCertificateJSON,
-	deviceFileLocations,
-} from '../../../cli/iot/certificates/deviceFileLocations.js'
+import type { DeviceCertificateJSON } from '../../../cli/iot/certificates/deviceFileLocations.js'
+import { deviceFileLocations } from '../../../cli/iot/certificates/deviceFileLocations.js'
 import { globalIotHubDPSHostname } from '../../../cli/iot/ioTHubDPSInfo.js'
 import { dpsTopics } from './dpsTopics.js'
 

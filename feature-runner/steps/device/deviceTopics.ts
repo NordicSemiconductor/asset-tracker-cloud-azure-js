@@ -1,4 +1,5 @@
-import { encodePropertyBag, PropertyBag } from './encodePropertyBag.js'
+import type { PropertyBag } from './encodePropertyBag.js'
+import { encodePropertyBag } from './encodePropertyBag.js'
 
 const encodingProperties = {
 	'$.ct': 'application/json',

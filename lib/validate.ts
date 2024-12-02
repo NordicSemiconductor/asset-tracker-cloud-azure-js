@@ -1,6 +1,7 @@
 import type { Static, TSchema } from '@sinclair/typebox'
 import { TypeCompiler } from '@sinclair/typebox/compiler'
-import { ErrorInfo, ErrorType } from './ErrorInfo.js'
+import type { ErrorInfo } from './ErrorInfo.js'
+import { ErrorType } from './ErrorInfo.js'
 
 /**
  * Validate the value against the given TypeBox schema

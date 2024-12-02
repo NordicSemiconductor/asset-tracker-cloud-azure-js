@@ -1,4 +1,4 @@
-import { TreeInnerNode } from 'dependency-tree'
+import type { TreeInnerNode } from 'dependency-tree'
 
 export const flattenDependencies = (
 	deps: TreeInnerNode,

@@ -1,9 +1,9 @@
-import { TableClient } from '@azure/data-tables'
-import {
+import type { TableClient } from '@azure/data-tables'
+import type {
 	InterpolatedStep,
-	regexGroupMatcher,
 	StepRunnerFunc,
 } from '@nordicsemiconductor/e2e-bdd-test-runner'
+import { regexGroupMatcher } from '@nordicsemiconductor/e2e-bdd-test-runner'
 import * as chai from 'chai'
 import { expect } from 'chai'
 import chaiSubset from 'chai-subset'

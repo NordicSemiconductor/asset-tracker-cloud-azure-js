@@ -1,6 +1,7 @@
 import type { HttpHandler } from '@azure/functions'
 import iothub from 'azure-iothub'
-import { ErrorInfo, ErrorType, toStatusCode } from '../lib/ErrorInfo.js'
+import type { ErrorInfo } from '../lib/ErrorInfo.js'
+import { ErrorType, toStatusCode } from '../lib/ErrorInfo.js'
 import { fromEnv } from '../lib/fromEnv.js'
 import { result } from '../lib/http.js'
 import { log, logError } from '../lib/log.js'

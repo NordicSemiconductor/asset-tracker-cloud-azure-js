@@ -1,7 +1,7 @@
 import type { CosmosDBOutput, InvocationContext } from '@azure/functions'
 import { randomUUID } from 'node:crypto'
 import { batchToDoc } from '../lib/batchToDoc.js'
-import { BatchDeviceUpdate, DeviceUpdate } from '../lib/iotMessages.js'
+import type { BatchDeviceUpdate, DeviceUpdate } from '../lib/iotMessages.js'
 import { log } from '../lib/log.js'
 
 type Context = Omit<InvocationContext, 'triggerMetadata'> & {

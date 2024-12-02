@@ -1,11 +1,12 @@
-import { Container, CosmosClient } from '@azure/cosmos'
+import type { Container } from '@azure/cosmos'
+import { CosmosClient } from '@azure/cosmos'
 import type { FunctionHandler } from '@azure/functions'
+import type { QueueClient } from '@azure/storage-queue'
 import {
-	QueueClient,
 	QueueServiceClient,
 	StorageSharedKeyCredential,
 } from '@azure/storage-queue'
-import { Static } from '@sinclair/typebox'
+import type { Static } from '@sinclair/typebox'
 import iothubCommon from 'azure-iot-common'
 import iothub from 'azure-iothub'
 import { URL } from 'url'
@@ -14,7 +15,7 @@ import { log, logError } from '../lib/log.js'
 import { parseConnectionString } from '../lib/parseConnectionString.js'
 import { cacheKey } from '../pgps/cacheKey.js'
 import { gpsDay } from '../pgps/gpsTime.js'
-import { pgpsRequestSchema } from '../pgps/types.js'
+import type { pgpsRequestSchema } from '../pgps/types.js'
 
 const config = () =>
 	fromEnv({

@@ -1,5 +1,5 @@
-import { Static } from '@sinclair/typebox'
-import { agnssRequestSchema } from './types.js'
+import type { Static } from '@sinclair/typebox'
+import type { agnssRequestSchema } from './types.js'
 
 export const cacheKey = ({
 	request,

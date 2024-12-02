@@ -1,5 +1,6 @@
 import { promises as fs } from 'fs'
-import { connect, MqttClient } from 'mqtt'
+import type { MqttClient } from 'mqtt'
+import { connect } from 'mqtt'
 import os from 'node:os'
 import path from 'path'
 import { CAIntermediateFileLocations } from '../../../cli/iot/certificates/caFileLocations.js'

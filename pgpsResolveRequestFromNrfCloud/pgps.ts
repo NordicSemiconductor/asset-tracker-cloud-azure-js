@@ -1,5 +1,6 @@
-import { Static, Type } from '@sinclair/typebox'
-import { ErrorInfo } from '../lib/ErrorInfo.js'
+import type { Static } from '@sinclair/typebox'
+import { Type } from '@sinclair/typebox'
+import type { ErrorInfo } from '../lib/ErrorInfo.js'
 import { validate } from '../lib/validate.js'
 import {
 	defaultInterval,
@@ -8,7 +9,7 @@ import {
 } from '../pgps/cacheKey.js'
 import { gpsDay, minimumGpsDay } from '../pgps/gpsTime.js'
 import { pgpsRequestSchema } from '../pgps/types.js'
-import { apiClient } from '../third-party/nrfcloud.com/apiclient.js'
+import type { apiClient } from '../third-party/nrfcloud.com/apiclient.js'
 
 enum Interval {
 	twoHours = 120,

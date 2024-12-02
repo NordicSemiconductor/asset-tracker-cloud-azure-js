@@ -1,7 +1,5 @@
-import {
-	regexGroupMatcher,
-	StepRunner,
-} from '@nordicsemiconductor/e2e-bdd-test-runner'
+import type { StepRunner } from '@nordicsemiconductor/e2e-bdd-test-runner'
+import { regexGroupMatcher } from '@nordicsemiconductor/e2e-bdd-test-runner'
 import {
 	getClientAccessToken,
 	getUserAccessToken,

@@ -1,23 +1,23 @@
-import {
+import type {
 	InterpolatedStep,
+	StepRunnerFunc,
+} from '@nordicsemiconductor/e2e-bdd-test-runner'
+import {
 	regexGroupMatcher,
 	regexMatcher,
-	StepRunnerFunc,
 } from '@nordicsemiconductor/e2e-bdd-test-runner'
 import * as chai from 'chai'
 import { expect } from 'chai'
 import chaiSubset from 'chai-subset'
 import { readFile, writeFile } from 'fs/promises'
-import { MqttClient } from 'mqtt'
+import type { MqttClient } from 'mqtt'
 import { randomUUID } from 'node:crypto'
 import os from 'node:os'
 import path from 'node:path'
 import { CAIntermediateFileLocations } from '../../cli/iot/certificates/caFileLocations.js'
 import { createSimulatorKeyAndCSR } from '../../cli/iot/certificates/createSimulatorKeyAndCSR.js'
-import {
-	DeviceCertificateJSON,
-	deviceFileLocations,
-} from '../../cli/iot/certificates/deviceFileLocations.js'
+import type { DeviceCertificateJSON } from '../../cli/iot/certificates/deviceFileLocations.js'
+import { deviceFileLocations } from '../../cli/iot/certificates/deviceFileLocations.js'
 import { generateDeviceCertificate } from '../../cli/iot/certificates/generateDeviceCertificate.js'
 import { connectDevice } from './device/connectDevice.js'
 import { deviceTopics } from './device/deviceTopics.js'

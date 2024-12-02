@@ -11,7 +11,8 @@
  * Therefore, the scriptFiles are renamed to .mjs while packaging.
  */
 
-import dependencyTree, { TreeInnerNode } from 'dependency-tree'
+import type { TreeInnerNode } from 'dependency-tree'
+import dependencyTree from 'dependency-tree'
 import { promises as fs, readFileSync, statSync } from 'fs'
 import os from 'os'
 import path from 'path'
